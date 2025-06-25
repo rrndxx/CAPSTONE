@@ -1,21 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database.session import engine, Base
+from app.database.session import Base, engine
 from app.api import testapi
 
-app = FastAPI(title="NetDetect API")
+app = FastAPI(title="Netdetect")
 
-# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allowroigins=["*"],
+    allowcredentials=True,
+    allowmethods=["*"],
+    allowheaders=["*"],
 )
 
 app.include_router(testapi.router)
+
 @app.get("/")
 def root():
     Base.metadata.create_all(bind=engine)
-    return {"message": "NetDetect backend is walking"}
+    return {"message": "Welcome to Netdetect!"}

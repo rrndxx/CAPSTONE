@@ -1,0 +1,20 @@
+netdetect_backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # Entry point of FastAPI app
+│   ├── api/                   # API route definitions
+│   │   ├── __init__.py
+│   │   └── testapi.py         # Sample routes (Test CRUD)
+│   ├── models/                # SQLAlchemy models
+│   │   ├── __init__.py
+│   │   └── testmodel.py       # Sample DB model
+│   ├── schemas/               # Pydantic schemas
+│   │   ├── __init__.py
+│   │   └── test_schema.py     # Request/response validation
+│   ├── database/              # DB connection and dependencies
+│   │   ├── __init__.py
+│   │   ├── session.py         # DB engine and session maker
+│   │   └── deps.py            # Dependency for DB access
+├── .env                       # Environment variables (Postgres URL)
+├── requirements.txt           # Project dependencies
+└── venv/                      # Python virtual environment (excluded from version control)
