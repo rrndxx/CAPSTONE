@@ -1,21 +1,6 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.database.session import Base, engine
-from app.api import testapi
+from app.api.routes import devices
 
-app = FastAPI(title="Netdetect")
+app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allowroigins=["*"],
-    allowcredentials=True,
-    allowmethods=["*"],
-    allowheaders=["*"],
-)
-
-app.include_router(testapi.router)
-
-@app.get("/")
-def root():
-    Base.metadata.create_all(bind=engine)
-    return {"message": "Welcome to Netdetect!"}
+app.include_router(devices.router, prefix="/api/devices", tags=["Devices"])
