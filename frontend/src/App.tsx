@@ -1,9 +1,19 @@
-import { Button } from "./components/ui/button"
+import Sidebar from "./components/Sidebar"
+import Navbar from "./components/Navbar"
+import { type ReactNode } from "react"
 
-const App = () => {
-  return (
-    <div>
-      <Button>Sample button</Button>
+type Props = {
+  children: ReactNode
+}
+
+const App = ({ children }: Props) => {
+  return (  
+    <div className="flex">
+      <Sidebar />
+      <main className="w-full">
+        <Navbar />
+        <div className="px-4">{children}</div>
+      </main>
     </div>
   )
 }
