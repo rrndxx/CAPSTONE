@@ -16,7 +16,7 @@ const Navbar = () => {
   return (
     <nav className="flex p-4 items-center justify-between">
       {/* left */}
-      <div></div>
+      <div className="text-md font-extralight">Hello, Admin!</div>
 
       {/* right */}
       <div className="flex items-center gap-4">
