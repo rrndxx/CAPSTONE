@@ -1,19 +1,22 @@
-import Sidebar from "./components/Sidebar"
+import AppSidebar from "./components/AppSidebar"
 import Navbar from "./components/Navbar"
 import { type ReactNode } from "react"
+import { SidebarProvider } from "./components/ui/sidebar"
 
 type Props = {
   children: ReactNode
 }
 
 const App = ({ children }: Props) => {
-  return (  
+  return (
     <div className="flex">
-      <Sidebar />
-      <main className="w-full">
-        <Navbar />
-        <div className="px-4">{children}</div>
-      </main>
+      <SidebarProvider defaultOpen = {false}>
+        <AppSidebar />
+        <main className="w-full">
+          <Navbar />
+          <div className="px-4">{children}</div>
+        </main>
+      </SidebarProvider>
     </div>
   )
 }
