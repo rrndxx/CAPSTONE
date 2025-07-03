@@ -1,12 +1,12 @@
-import { Home, ArrowUpDown, ChartBar, Monitor, Plus, Bell } from "lucide-react"
+import { Home, ArrowUpDown, ChartBar, Monitor } from "lucide-react"
 
 export const sidebarNavs = [
     { title: "Home", url: "/", icon: <Home /> },
     {
         title: "Devices", icon: <Monitor />,
         children: [
-            { title: "All Devices", url: "/devices", icon: <Monitor /> },
-            { title: "Add Device", url: "/devices/add", icon : <Plus /> },
+            { title: "All Devices", url: "/devices" },
+            { title: "Add Device", url: "/devices/add" },
         ],
     },
     { title: "Bandwidth Usage", url: "/bandwidth-usage", icon: <ArrowUpDown /> },

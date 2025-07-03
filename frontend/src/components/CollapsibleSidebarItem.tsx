@@ -13,7 +13,7 @@ import {
 type NavItem = {
   title: string
   icon: React.ReactNode
-  children: { title: string; url: string, icon: ReactNode}[]
+  children: { title: string; url: string}[]
 }
 
 export const CollapsibleSidebarItem = ({ nav }: { nav: NavItem }) => {
@@ -36,7 +36,7 @@ export const CollapsibleSidebarItem = ({ nav }: { nav: NavItem }) => {
           {nav.children.map((child) => (
             <SidebarMenuSubItem key={child.title}>
               <SidebarMenuSubButton asChild>
-                <Link to={child.url}>{child.icon}{child.title}</Link>
+                <Link to={child.url}>{child.title}</Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           ))}
