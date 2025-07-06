@@ -1,5 +1,4 @@
 import { Bell, Settings, User } from "lucide-react"
-// import { Link } from "react-router-dom"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,30 +10,42 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from "./ui/mode-toggle"
+import { useSidebar } from "./ui/sidebar"
 
 const Navbar = () => {
+  const { toggleSidebar } = useSidebar()
+
   return (
     <nav className="flex p-4 items-center justify-between">
-      {/* left */}
-      <div className="text-md font-extralight">Hello, Admin!</div>
+      {/* Left side */}
+      <div className="flex items-center gap-2">
+        {/* Sidebar trigger - visible only on mobile */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="md:hidden text-2xl font-bold"
+        >
+          N
+        </Button>
 
-      {/* right */}
+        {/* Greeting */}
+        <span className="text-md font-extralight">Hello, Admin!</span>
+      </div>
+
+      {/* Right side */}
       <div className="flex items-center gap-4">
-        {/* <Link to="/dashboard">Dashboard</Link> */}
-
-        {/* Theme toggle button */}
         <ModeToggle />
 
-        {/* Notifications button ni */}
-        <Button variant="outline" size="icon" >
+        {/* Notification button */}
+        <Button variant="outline" size="icon">
           <Bell className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
           <Bell className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
         </Button>
 
-
-        {/* Profile Dropdown ni */}
+        {/* Profile dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Avatar>
               <AvatarImage src="https://avatars.githubusercontent.com/u/163083905?s=400&u=43d0e424d2bb037322a5ae668d9db4fe3d32e00e&v=4" />
               <AvatarFallback>N</AvatarFallback>
@@ -46,16 +57,13 @@ const Navbar = () => {
             <DropdownMenuItem>
               <User className="h-[1.2rem] w-[1.2rem] mr-2" /> Profile
             </DropdownMenuItem>
-            <DropdownMenuItem >
+            <DropdownMenuItem>
               <Settings className="h-[1.2rem] w-[1.2rem] mr-2" /> Settings
             </DropdownMenuItem>
-            {/* <DropdownMenuItem variant="destructive">
-              <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" /> Logout
-            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div >
-    </nav >
+      </div>
+    </nav>
   )
 }
 

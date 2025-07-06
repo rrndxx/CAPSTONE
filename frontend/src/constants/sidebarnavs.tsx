@@ -5,7 +5,7 @@ export const sidebarNavs = [
     {
         title: "Devices", icon: <Monitor />,
         children: [
-            { title: "All Devices", url: "/devices" },
+            { title: "All Devices", url: "/sample" },
             { title: "Add Device", url: "/devices/add" },
         ],
     },
