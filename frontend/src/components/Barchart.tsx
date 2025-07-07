@@ -35,9 +35,9 @@ const chartConfig = {
 
 const chartData = [
   { month: "Mon", desktop: 5, mobile: 2 },
-  { month: "Tue", desktop: 0, mobile: 1 },
-  { month: "Wed", desktop: 0, mobile: 0 },
-  { month: "Thu", desktop: 0, mobile: 0 },
+  { month: "Tue", desktop: 2, mobile: 1 },
+  { month: "Wed", desktop: 4, mobile: 2 },
+  { month: "Thu", desktop: 2, mobile: 6 },
   { month: "Fri", desktop: 3, mobile: 3 },
   { month: "Sat", desktop: 2, mobile: 5 },
   { month: "Sun", desktop: 7, mobile: 1 },

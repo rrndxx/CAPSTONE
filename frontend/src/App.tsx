@@ -10,8 +10,7 @@ const App = () => {
         <AppSidebar />
         <main className="w-full">
           <Navbar />
-          {/* <div className="px-4 pb-4">{children}</div> */}
-          <div className="px-4 pb-4"><Outlet /></div>
+          <div className="pb-4"><Outlet /></div>
         </main>
       </SidebarProvider>
     </div>

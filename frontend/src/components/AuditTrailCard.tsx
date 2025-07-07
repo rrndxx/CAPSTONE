@@ -43,11 +43,10 @@ export default function AuditTrailCard() {
               key={log.id}
               className="flex justify-between items-center text-sm border-b border-muted pb-2"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {log.icon}
                 <div className="flex flex-col">
-                  {/* <span className="font-medium leading-tight">{log.admin}</span> */}
-                  <span className="text-xxs">
+                  <span className="text-sm">
                     {log.action}
                   </span>
                 </div>
@@ -58,7 +57,7 @@ export default function AuditTrailCard() {
         </ul>
       </ScrollArea>
 
-      <Button size="sm" className="mt-4 self-end lg:self-center bg-chart-2">
+      <Button size="sm" className="mt-4 self-end lg:self-center font-medium px-4 bg-chart-2">
         View All Actions
       </Button>
     </div>

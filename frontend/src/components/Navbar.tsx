@@ -17,20 +17,21 @@ const Navbar = () => {
 
   return (
     <nav className="flex p-4 items-center justify-between">
-      {/* Left side */}
-      <div className="flex items-center gap-2">
-        {/* Sidebar trigger - visible only on mobile */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="md:hidden text-2xl font-bold"
-        >
-          N
-        </Button>
+      {/* Sidebar trigger*/}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleSidebar}
+        className="md:hidden text-2xl font-bold"
+      >
+        N
+      </Button>
 
+      {/* Middle side */}
+      <div className="flex items-center">
         {/* Greeting */}
         <span className="text-md font-extralight">Hello, Admin!</span>
+
       </div>
 
       {/* Right side */}

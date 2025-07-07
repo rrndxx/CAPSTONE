@@ -5,8 +5,9 @@ export const sidebarNavs = [
     {
         title: "Devices", icon: <Monitor />,
         children: [
-            { title: "All Devices", url: "/sample" },
-            { title: "Add Device", url: "/devices/add" },
+            { title: "All Devices", url: "/devices/all" },
+            { title: "Whitelist", url: "/devices/whitelist" },
+            { title: "Blacklist", url: "/devices/blacklist" },
         ],
     },
     { title: "Bandwidth Usage", url: "/bandwidth-usage", icon: <ArrowUpDown /> },
