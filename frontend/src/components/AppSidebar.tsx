@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from "./ui/sidebar"
 import { Link } from "react-router-dom"
-import { LogOut } from "lucide-react"
+import { LogOut, Wifi } from "lucide-react"
 import { sidebarNavs } from "@/constants/sidebarnavs"
 import { CollapsibleSidebarItem } from "@/components/CollapsibleSidebarItem"
 
@@ -26,13 +26,14 @@ const AppSidebar = () => {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="flex justify-center items-center">
-              <button onClick={toggleSidebar} className="text-2xl font-bold">N</button>
+            <SidebarMenuButton onClick={toggleSidebar} asChild >
+              <span className="flex justify-center items-center cursor-pointer">
+                <span></span><Wifi /><span >Netdetect</span>
+              </span>
             </SidebarMenuButton>
-            <SidebarSeparator />
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarHeader>
+      </SidebarHeader >
 
       <SidebarContent>
         <SidebarGroup>
@@ -73,7 +74,7 @@ const AppSidebar = () => {
           </SidebarMenuButton>
         </SidebarMenu>
       </SidebarFooter>
-    </Sidebar>
+    </Sidebar >
   )
 }
 

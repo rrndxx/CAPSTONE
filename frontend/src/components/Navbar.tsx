@@ -1,4 +1,4 @@
-import { Bell, Settings, User } from "lucide-react"
+import { Bell, Settings, User, Wifi } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,7 +24,7 @@ const Navbar = () => {
         onClick={toggleSidebar}
         className="md:hidden text-2xl font-bold"
       >
-        N
+        <Wifi size={14}/>
       </Button>
 
       {/* Middle side */}
