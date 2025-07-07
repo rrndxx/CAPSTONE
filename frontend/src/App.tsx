@@ -1,20 +1,27 @@
-import AppSidebar from "./components/AppSidebar"
-import Navbar from "./components/Navbar"
-import { SidebarProvider } from "./components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { Outlet } from "react-router-dom"
+import { useSidebar } from "@/components/ui/sidebar"
+import Navbar from "./components/navbar"
 
-const App = () => {
+export function LayoutWrapper() {
+  const { state } = useSidebar()
+
   return (
-    <div className="flex">
-      <SidebarProvider defaultOpen = {false}>
-        <AppSidebar />
-        <main className="w-full">
-          <Navbar />
-          <div className="pb-4"><Outlet /></div>
-        </main>
-      </SidebarProvider>
+    <div className="flex w-full transition-all data-[collapsible=collapsed]/pl-16 data-[collapsible=expanded]/pl-64" data-collapsible={state}>
+      <AppSidebar />
+      <main className="flex-1">
+        <Navbar />
+        <Outlet />
+      </main>
     </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <SidebarProvider>
+      <LayoutWrapper />
+    </SidebarProvider>
+  )
+}
