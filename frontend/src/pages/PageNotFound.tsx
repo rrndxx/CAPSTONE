@@ -19,8 +19,8 @@ const NotFound = () => {
                     transition={{ delay: 0.2, duration: 0.3 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <FileWarning className="h-12 w-12 text-destructive" />
-                    <h1 id="error-heading" className="text-5xl font-extrabold text-destructive">
+                    <FileWarning className="h-12 w-12 text-chart-2" />
+                    <h1 id="error-heading" className="text-5xl font-extrabold text-chart-2">
                         404
                     </h1>
                     <p className="text-base md:text-lg text-muted-foreground">
@@ -28,7 +28,7 @@ const NotFound = () => {
                     </p>
                     <Link
                         to="/"
-                        className="mt-6 inline-block rounded-md bg-destructive px-6 py-3 text-white text-sm font-medium transition-colors hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive"
+                        className="mt-6 inline-block rounded-md bg-chart-2 px-6 py-3 text-white text-sm font-medium transition-colors hover:bg-chart-2/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive"
                     >
                         Go back home
                     </Link>

@@ -257,7 +257,7 @@ export function ChartArea() {
                             stroke="var(--color-desktop)"
                             stackId="a"
                         />
-                        <ChartLegend content={<ChartLegendContent payload={undefined}/>} />
+                        <ChartLegend content={<ChartLegendContent payload={undefined} />} />
                     </AreaChart>
                 </ChartContainer>
             </CardContent>

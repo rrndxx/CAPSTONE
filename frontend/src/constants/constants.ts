@@ -24,8 +24,7 @@ export const sidebarNavs = {
       url: "/devices/all",
       items: [
         { title: "All Devices", url: "/devices/all" },
-        { title: "Whitelist", url: "/devices/whitelist" },
-        { title: "Blacklist", url: "/devices/blacklist" },
+        { title: "Whitelist/Blacklist", url: "/devices/whitelist-blacklist" },
       ],
     },
     {
@@ -35,12 +34,11 @@ export const sidebarNavs = {
       items: [
         { title: "Overview", url: "/bandwidth-usage" },
         { title: "Per Device", url: "/bandwidth/device" },
-        { title: "Threshold Settings", url: "/bandwidth/settings" },
       ],
     },
     {
       title: "ISP Status",
-      url: "/isp",
+      url: "/isp-status",
       icon: Wifi,
     },
     {
@@ -75,27 +73,27 @@ export const sidebarNavs = {
 };
 
 export const chartConfig = {
-    visitors: {
-        label: "Visitors",
-    },
-    chrome: {
-        label: "Chrome",
-        color: "var(--chart-1)",
-    },
-    safari: {
-        label: "Safari",
-        color: "var(--chart-2)",
-    },
-    firefox: {
-        label: "Firefox",
-        color: "var(--chart-3)",
-    },
-    edge: {
-        label: "Edge",
-        color: "var(--chart-4)",
-    },
-    other: {
-        label: "Other",
-        color: "var(--chart-5)",
-    },
+  visitors: {
+    label: "Visitors",
+  },
+  chrome: {
+    label: "Chrome",
+    color: "var(--chart-1)",
+  },
+  safari: {
+    label: "Safari",
+    color: "var(--chart-2)",
+  },
+  firefox: {
+    label: "Firefox",
+    color: "var(--chart-3)",
+  },
+  edge: {
+    label: "Edge",
+    color: "var(--chart-4)",
+  },
+  other: {
+    label: "Other",
+    color: "var(--chart-5)",
+  },
 } satisfies ChartConfig
