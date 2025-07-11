@@ -27,7 +27,7 @@ const NotFound = () => {
                         Sorry, the page you're looking for was not found.
                     </p>
                     <Link
-                        to="/"
+                        to="/dashboard"
                         className="mt-6 inline-block rounded-md bg-chart-2 px-6 py-3 text-white text-sm font-medium transition-colors hover:bg-chart-2/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive"
                     >
                         Go back home

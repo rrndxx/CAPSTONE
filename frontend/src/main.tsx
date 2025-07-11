@@ -10,19 +10,34 @@ import NotFound from "./pages/PageNotFound"
 import WhitelistBlacklistPage from "./pages/WhitelistBlacklistPage"
 import BandwidthUsagePage from "./pages/BandwidthUsagePage"
 import { ISPStatusPage } from "./pages/ISPStatusPage"
+import LoginPage from "./pages/LoginPage"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<App />}>
+          <Route path="/" element={<LoginPage />} />
+
+          <Route path="/dashboard" element={<App />}>
             <Route index element={<MainDashboardPage />} />
-            <Route path="devices/all" element={<DevicesPage />} />
-            <Route path="devices/whitelist-blacklist" element={<WhitelistBlacklistPage />} />
-            <Route path="/bandwidth-usage" element={<BandwidthUsagePage />} />
-            <Route path="/isp-status" element={<ISPStatusPage provider="FiberNet" speed="42 Mbps" status="online" />} />
           </Route>
+
+          <Route path="/devices" element={<App />}>
+            <Route index element={<DevicesPage />} />
+            <Route path="all" element={<DevicesPage />} />
+            <Route path="whitelist-blacklist" element={<WhitelistBlacklistPage />} />
+          </Route>
+
+          <Route path="/bandwidth-usage" element={<App />}>
+            <Route index element={<BandwidthUsagePage />} />
+            <Route path="overview" element={<BandwidthUsagePage />} />
+          </Route>
+
+          <Route path="/isp-status" element={<App />}>
+            <Route index element={<ISPStatusPage provider="FiberNet" speed="42 Mbps" status="online" />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

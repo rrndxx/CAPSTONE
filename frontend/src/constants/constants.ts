@@ -15,13 +15,13 @@ export const sidebarNavs = {
   sidebarNavsMain: [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: SquareTerminal,
     },
     {
       title: "Devices",
       icon: Laptop,
-      url: "/devices/all",
+      url: "/devices",
       items: [
         { title: "All Devices", url: "/devices/all" },
         { title: "Whitelist/Blacklist", url: "/devices/whitelist-blacklist" },
@@ -32,8 +32,8 @@ export const sidebarNavs = {
       icon: Gauge,
       url: "/bandwidth-usage",
       items: [
-        { title: "Overview", url: "/bandwidth-usage" },
-        { title: "Per Device", url: "/bandwidth/device" },
+        { title: "Overview", url: "/bandwidth-usage/overview" },
+        { title: "Per Device", url: "/bandwidth-usage/per-device" },
       ],
     },
     {

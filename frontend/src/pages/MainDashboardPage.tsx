@@ -16,7 +16,7 @@ export default function MainDashboardPage() {
                                     <Smartphone className="w-10 h-10 text-chart-1" />
                                     <div className="flex flex-col justify-start">
                                         <p className="text-xl font-semibold">128</p>
-                                        <p className="text-sm text-muted-foreground">Connected Devices</p>
+                                        <p className="text-sm text-muted-foreground">Devices</p>
                                     </div>
                                 </div>
                             </div>
@@ -24,8 +24,8 @@ export default function MainDashboardPage() {
                                 <div className="flex items-center gap-3">
                                     <Wifi className="w-10 h-10 text-chart-1" />
                                     <div className="flex flex-col justify-start">
-                                        <p className="text-base font-semibold">42 Mbps</p>
-                                        <p className="text-sm text-muted-foreground">ISP Status</p>
+                                        <p className="text-xl font-semibold">42</p>
+                                        <p className="text-sm text-muted-foreground">Mbps</p>
                                     </div>
                                 </div>
                             </div>
@@ -33,7 +33,7 @@ export default function MainDashboardPage() {
                                 <div className="flex items-center gap-3">
                                     <AlertCircle className="w-10 h-10 text-chart-1" />
                                     <div className="flex flex-col justify-start">
-                                        <p className="text-xl font-semibold`">3 Active</p>
+                                        <p className="text-xl font-semibold">3</p>
                                         <p className="text-sm text-muted-foreground">Critical Alerts</p>
                                     </div>
                                 </div>
@@ -43,7 +43,7 @@ export default function MainDashboardPage() {
                                     <Smartphone className="w-10 h-10 text-chart-1" />
                                     <div className="flex flex-col justify-start">
                                         <p className="text-xl font-semibold">128</p>
-                                        <p className="text-sm text-muted-foreground">Connected Devices</p>
+                                        <p className="text-sm text-muted-foreground">Devices</p>
                                     </div>
                                 </div>
                             </div>
