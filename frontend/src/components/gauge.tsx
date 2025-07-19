@@ -37,7 +37,7 @@ export function Gauge() {
   const totalVisitors = chartData[0].desktop + chartData[0].mobile
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col min-h-full">
       <CardHeader className="items-center pb-0">
         <CardTitle>Radial Chart - Stacked</CardTitle>
         <CardDescription>January - June 2024</CardDescription>
@@ -45,7 +45,7 @@ export function Gauge() {
       <CardContent className="flex flex-1 items-center pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square w-full max-w-[250px]"
+          className="mx-auto aspect-square w-full max-w-[250px] rounded-full bg-muted/50"
         >
           <RadialBarChart
             data={chartData}

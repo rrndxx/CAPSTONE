@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/provider/ThemeProvider"
+import { useNavigate } from "react-router-dom"
 
 type navUserProps = {
   name: string
@@ -15,8 +16,13 @@ export function NavUser({ user }: { user: navUserProps }) {
   const { isMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
   const isDark = theme === "dark"
+  const navigate = useNavigate()
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark")
+  }
+
+  const handleNavigate = (url: string) => {
+    navigate(url)
   }
 
   const menuItems = [
@@ -98,7 +104,7 @@ export function NavUser({ user }: { user: navUserProps }) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleNavigate('/')}>
               <LogOut className="w-4 h-4" />
               <span className="ml-2">Log out</span>
             </DropdownMenuItem>

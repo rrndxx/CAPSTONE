@@ -6,25 +6,23 @@ const DevicesPage = () => {
   return (
     <SidebarInset>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex gap-4 items-stretch">
-          {/* Sidebar Cards */}
-          <div className="w-[250px] flex flex-col gap-4">
-            {[1, 2, 3].map((card) => (
-              <Card key={card} className="flex-1 min-h-[120px]">
-                <CardHeader>
-                  <CardTitle>Card {card}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Sample</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Cards section - now above the table and responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((card) => (
+            <Card key={card} className="min-h-[150px]">
+              <CardHeader>
+                <CardTitle>Card {card}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Sample</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          {/* Table Section */}
-          <div className="flex-1 bg-white dark:bg-muted/50 rounded-xl shadow p-4">
-            <DevicesTable />
-          </div>
+        {/* Table Section */}
+        <div className="bg-white dark:bg-muted/50 rounded-xl shadow p-4">
+          <DevicesTable />
         </div>
       </div>
     </SidebarInset>

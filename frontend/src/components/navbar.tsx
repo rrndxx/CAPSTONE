@@ -2,7 +2,6 @@ import { Wifi } from 'lucide-react'
 import { useSidebar } from './ui/sidebar'
 import { useLocation } from 'react-router-dom'
 import { routes } from "@/constants/routes"
-import { ModeToggle } from './ui/mode-toggle'
 
 const Navbar = () => {
     const { toggleSidebar } = useSidebar()
@@ -20,9 +19,6 @@ const Navbar = () => {
                 <div className="text-xl font-semibold">NetDetect</div>
             </div>
             <div className="hidden md:block text-2xl font-semibold">{title}</div>
-            <div className='block md:hidden'>
-                <ModeToggle />
-            </div>
         </header >
     )
 }

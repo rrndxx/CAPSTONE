@@ -22,7 +22,7 @@ export function NavMain({ items }: { items: navProps[] }) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Application</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>
           !item.items ? (
