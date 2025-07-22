@@ -1,0 +1,1 @@
+export default function deviceRoutes() { return { "name": "Rendyll" } }
