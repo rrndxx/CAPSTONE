@@ -7,6 +7,16 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table"
 
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -46,16 +56,40 @@ const columns: ColumnDef<Device>[] = [
   {
     id: "actions",
     header: "Action",
-    cell: ({ row }) => (
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => alert(`Action for ${row.original.hostname}`)}
-      >
-        ...
-      </Button>
-    ),
-  },
+    cell: ({ row }) => {
+      const device = row.original
+
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline">...</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Device Actions</DialogTitle>
+              <DialogDescription>
+                Actions for <span className="font-semibold">{device.hostname}</span>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <p><strong>IP:</strong> {device.ip}</p>
+              <p><strong>MAC:</strong> {device.mac}</p>
+              <p><strong>Type:</strong> {device.type}</p>
+              <p><strong>OS:</strong> {device.os}</p>
+            </div>
+
+            <DialogFooter className="mt-4 flex justify-end gap-2">
+              <Button variant="destructive" onClick={() => alert(`Blocked ${device.hostname}`)}>
+                Block
+              </Button>
+              <Button variant="secondary">Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )
+    }
+  }
 ]
 
 export function DevicesTable() {
