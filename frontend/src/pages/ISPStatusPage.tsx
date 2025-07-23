@@ -35,7 +35,7 @@ const getStatusBadge = (status: ISPStatus["status"]) => {
     }
 }
 
-export function ISPStatusPage({ provider, speed, status }: ISPStatus) {
+export default function ISPStatusPage({ provider, speed, status }: ISPStatus) {
     const badge = getStatusBadge(status)
 
     return (

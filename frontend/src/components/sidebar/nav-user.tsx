@@ -105,8 +105,8 @@ export function NavUser({ user }: { user: navUserProps }) {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onClick={() => handleNavigate('/')}>
-              <LogOut className="w-4 h-4" />
-              <span className="ml-2">Log out</span>
+              <LogOut className="w-4 h-4 text-red-400" />
+              <span className="ml-2 text-red-400">Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

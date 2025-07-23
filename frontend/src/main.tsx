@@ -2,7 +2,6 @@ import "./index.css"
 import App from "./App"
 import { createRoot } from "react-dom/client"
 import { StrictMode } from "react"
-// import { ClerkProvider } from '@clerk/clerk-react'
 import { ThemeProvider } from "./provider/ThemeProvider"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import MainDashboardPage from "./pages/MainDashboardPage"
@@ -10,8 +9,14 @@ import DevicesPage from "./pages/DevicesPage"
 import NotFound from "./pages/PageNotFound"
 import WhitelistBlacklistPage from "./pages/WhitelistBlacklistPage"
 import BandwidthUsagePage from "./pages/BandwidthUsagePage"
-import { ISPStatusPage } from "./pages/ISPStatusPage"
+import ISPStatusPage from "./pages/ISPStatusPage"
 import LoginPage from "./pages/LoginPage"
+import SettingsPage from "./pages/SettingsPage"
+import AccessLogs from "./pages/AccessLogsPage"
+import Reports from "./pages/ReportsPage"
+import Alerts from "./pages/AlertsPage"
+import BandwidthPerDevicePage from "./pages/BandwidthPerDevicePage"
+// import { ClerkProvider } from '@clerk/clerk-react'
 
 // const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -39,10 +44,27 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/bandwidth-usage" element={<App />}>
             <Route index element={<BandwidthUsagePage />} />
             <Route path="overview" element={<BandwidthUsagePage />} />
+            <Route path="per-device" element={<BandwidthPerDevicePage />} />
           </Route>
 
           <Route path="/isp-status" element={<App />}>
             <Route index element={<ISPStatusPage provider="FiberNet" speed="42 Mbps" status="online" />} />
+          </Route>
+
+          <Route path="/settings" element={<App />}>
+            <Route index element={<SettingsPage />} />
+          </Route>
+
+          <Route path="/logs" element={<App />}>
+            <Route index element={<AccessLogs />} />
+          </Route>
+
+          <Route path="/reports" element={<App />}>
+            <Route index element={<Reports />} />
+          </Route>
+
+          <Route path="/alerts" element={<App />}>
+            <Route index element={<Alerts />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

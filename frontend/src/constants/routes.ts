@@ -7,4 +7,8 @@ export const routes: Record<string, string> = {
     "/bandwidth-usage/overview": "Bandwidth Usage Overview",
     "/bandwidth-usage/per-device": "Bandwidth Usage Per Device",
     "/isp-status": "ISP Status",
+    "/settings": "Settings",
+    "/logs": "Access Logs",
+    "/reports": "Reports",
+    "/alerts": "Alerts",
 }
