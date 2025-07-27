@@ -15,7 +15,7 @@ export function SidebarLogo({ team }: { team: Team }) {
       <SidebarMenuItem>
         <SidebarMenuButton
           size="lg"
-          className="cursor-default bg-sidebar-accent text-sidebar-accent-foreground"
+          className="cursor-default text-sidebar-accent-foreground"
         >
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
             <team.logo className="size-4" />

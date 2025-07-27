@@ -1,6 +1,7 @@
 import { ChartArea } from "@/components/areachart"
 import { DevicesTable } from "@/components/devicestable"
 import { SidebarInset } from "@/components/ui/sidebar"
+import { devices } from "@/constants/constants"
 
 const BandwidthUsagePage = () => {
     return (
@@ -10,7 +11,11 @@ const BandwidthUsagePage = () => {
                     <ChartArea />
                 </div>
                 <div className="bg-white dark:bg-muted/50 rounded-xl shadow min-h-[300px] p-4">
-                    <DevicesTable />
+                    {Array.isArray(devices) && devices.length > 0 ? (
+                        <DevicesTable devices={devices} />
+                    ) : (
+                        <div>No devices found.</div>
+                    )}
                 </div>
             </div>
         </SidebarInset>
