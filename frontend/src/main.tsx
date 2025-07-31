@@ -16,6 +16,7 @@ import AccessLogs from "./pages/AccessLogsPage"
 import Reports from "./pages/ReportsPage"
 import Alerts from "./pages/AlertsPage"
 import BandwidthPerDevicePage from "./pages/BandwidthPerDevicePage"
+import AiInsightsPage from "./pages/AIInsightsPage"
 // import { ClerkProvider } from '@clerk/clerk-react'
 
 // const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -48,7 +49,7 @@ createRoot(document.getElementById("root")!).render(
           </Route>
 
           <Route path="/isp-status" element={<App />}>
-            <Route index element={<ISPStatusPage provider="FiberNet" speed="42 Mbps" status="online" />} />
+            <Route index element={<ISPStatusPage />} />
           </Route>
 
           <Route path="/settings" element={<App />}>
@@ -65,6 +66,10 @@ createRoot(document.getElementById("root")!).render(
 
           <Route path="/alerts" element={<App />}>
             <Route index element={<Alerts />} />
+          </Route>
+
+          <Route path="/ai-insights" element={<App />}>
+            <Route index element={<AiInsightsPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

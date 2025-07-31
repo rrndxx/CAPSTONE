@@ -108,7 +108,7 @@ export default function MainDashboardPage() {
                     </div>
                     <div className="bg-white dark:bg-muted/50 rounded-xl shadow min-h-[300px] p-4">
                         {Array.isArray(devices) && devices.length > 0 ? (
-                            <DevicesTable devices={filteredDevices} />
+                            <DevicesTable devices={filteredDevices} viewType="all" />
                         ) : (
                             <div>No devices found.</div>
                         )}

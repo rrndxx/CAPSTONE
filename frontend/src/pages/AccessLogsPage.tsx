@@ -1,99 +1,132 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
 import { useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Laptop, MapPin, Clock, User, Shield } from "lucide-react"
 
-type LogEntry = {
+type AccessLogEntry = {
     id: number
     timestamp: string
-    user: string
-    action: string
-    target: string
-    details: string
+    deviceName: string
+    ip: string
+    mac: string
+    location: string
+    status: "allowed" | "blocked"
 }
 
-const sampleLogs: LogEntry[] = [
+const sampleLogs: AccessLogEntry[] = [
     {
         id: 1,
-        timestamp: "2025-07-23 10:21:00",
-        user: "admin",
-        action: "Blocked Device",
-        target: "MAC: 00:1A:2B:3C:4D:5E",
-        details: "Manual block issued from Dashboard",
+        timestamp: "2025-07-23 12:30",
+        deviceName: "Admin-PC",
+        ip: "192.168.1.10",
+        mac: "00:11:22:33:44:55",
+        location: "New York, USA",
+        status: "allowed",
     },
     {
         id: 2,
-        timestamp: "2025-07-23 09:12:33",
-        user: "system",
-        action: "Alert Triggered",
-        target: "Device: IoT-Camera",
-        details: "Abnormal traffic pattern detected",
+        timestamp: "2025-07-23 12:32",
+        deviceName: "Mobile-John",
+        ip: "192.168.1.20",
+        mac: "66:77:88:99:AA:BB",
+        location: "Los Angeles, USA",
+        status: "blocked",
     },
     {
         id: 3,
-        timestamp: "2025-07-22 18:44:10",
-        user: "admin",
-        action: "Unblocked Device",
-        target: "MAC: BC:AE:C5:33:22:11",
-        details: "Device re-approved after review",
+        timestamp: "2025-07-22 18:44",
+        deviceName: "Tablet-Mary",
+        ip: "192.168.1.30",
+        mac: "CC:DD:EE:FF:00:11",
+        location: "Chicago, USA",
+        status: "allowed",
     },
 ]
 
-const AccessLogs = () => {
-    const [search, setSearch] = useState("")
+const statusColors: Record<"allowed" | "blocked", string> = {
+    allowed: "bg-green-100 text-green-700",
+    blocked: "bg-red-100 text-red-700",
+}
 
-    const filteredLogs = sampleLogs.filter((log) =>
-        Object.values(log).some((value) =>
+const filterOptions = ["All", "allowed", "blocked"] as const
+type FilterType = typeof filterOptions[number]
+
+const AccessLogsPage = () => {
+    const [search, setSearch] = useState("")
+    const [filter, setFilter] = useState<FilterType>("All")
+
+    const filteredLogs = sampleLogs.filter(log =>
+        (filter === "All" || log.status === filter) &&
+        Object.values(log).some(value =>
             value.toString().toLowerCase().includes(search.toLowerCase())
         )
     )
 
     return (
-        <div className="p-4 sm:p-6">
-            <h1 className="text-2xl font-semibold mb-4">Audit Trail / Access Logs</h1>
+        <div className="p-4 sm:p-6 space-y-4">
+            <div className="flex items-center gap-2">
+                <Shield className="text-primary" />
+                <h1 className="text-2xl font-semibold">Access Logs</h1>
+            </div>
 
             <Card>
                 <CardContent className="p-4 space-y-4">
-                    <Input
-                        type="text"
-                        placeholder="Search logs..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <Input
+                            type="text"
+                            placeholder="Search logs..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="max-w-sm"
+                        />
+                        <div className="flex gap-2 flex-wrap">
+                            {filterOptions.map(option => (
+                                <Button
+                                    key={option}
+                                    variant={filter === option ? "default" : "outline"}
+                                    onClick={() => setFilter(option)}
+                                >
+                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
 
-                    <div className="overflow-x-auto rounded-lg border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="whitespace-nowrap">Timestamp</TableHead>
-                                    <TableHead className="whitespace-nowrap">User</TableHead>
-                                    <TableHead className="whitespace-nowrap">Action</TableHead>
-                                    <TableHead className="whitespace-nowrap">Target</TableHead>
-                                    <TableHead className="whitespace-nowrap">Details</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredLogs.length > 0 ? (
-                                    filteredLogs.map((log) => (
-                                        <TableRow key={log.id}>
-                                            <TableCell>{log.timestamp}</TableCell>
-                                            <TableCell>{log.user}</TableCell>
-                                            <TableCell className="font-semibold text-blue-600">
-                                                {log.action}
-                                            </TableCell>
-                                            <TableCell>{log.target}</TableCell>
-                                            <TableCell>{log.details}</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center text-gray-500">
-                                            No logs found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                    <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                        {filteredLogs.length > 0 ? (
+                            filteredLogs.map(log => (
+                                <div
+                                    key={log.id}
+                                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted transition dark:hover:bg-gray-800"
+                                >
+                                    <Laptop className="text-blue-500 mt-1" size={20} />
+                                    <div className="flex-1">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <h2 className="font-semibold text-base">{log.deviceName}</h2>
+                                            <Badge className={statusColors[log.status]}>
+                                                {log.status}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                            <Clock className="w-4 h-4" /> {log.timestamp}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                            <User className="w-4 h-4" /> MAC: {log.mac}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                            <MapPin className="w-4 h-4" /> {log.location}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                            IP: {log.ip}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-foreground py-4">No logs found.</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -101,4 +134,4 @@ const AccessLogs = () => {
     )
 }
 
-export default AccessLogs
+export default AccessLogsPage

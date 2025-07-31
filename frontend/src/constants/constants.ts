@@ -115,6 +115,7 @@ export const devices: Device[] = [
     ping: 8,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 100,
   },
   {
     uid: 2,
@@ -131,6 +132,7 @@ export const devices: Device[] = [
     ping: 0,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 0,
   },
   {
     uid: 3,
@@ -147,6 +149,7 @@ export const devices: Device[] = [
     ping: 12,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 50,
   },
   {
     uid: 4,
@@ -163,6 +166,7 @@ export const devices: Device[] = [
     ping: 14,
     authorized: false,
     blocked: true,
+    bandwidthLimit: 20,
   },
   {
     uid: 5,
@@ -179,6 +183,7 @@ export const devices: Device[] = [
     ping: 20,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 0,
   },
   {
     uid: 6,
@@ -195,6 +200,7 @@ export const devices: Device[] = [
     ping: 0,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 5,
   },
   {
     uid: 7,
@@ -211,6 +217,7 @@ export const devices: Device[] = [
     ping: 25,
     authorized: false,
     blocked: true,
+    bandwidthLimit: 10,
   },
   {
     uid: 8,
@@ -227,6 +234,7 @@ export const devices: Device[] = [
     ping: 18,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 8,
   },
   {
     uid: 9,
@@ -243,6 +251,7 @@ export const devices: Device[] = [
     ping: 10,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 15,
   },
   {
     uid: 10,
@@ -259,6 +268,7 @@ export const devices: Device[] = [
     ping: 0,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 0,
   },
   {
     uid: 11,
@@ -275,6 +285,7 @@ export const devices: Device[] = [
     ping: 6,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 150,
   },
   {
     uid: 12,
@@ -291,6 +302,7 @@ export const devices: Device[] = [
     ping: 9,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 25,
   },
   {
     uid: 13,
@@ -307,6 +319,7 @@ export const devices: Device[] = [
     ping: 5,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 200,
   },
   {
     uid: 14,
@@ -323,6 +336,7 @@ export const devices: Device[] = [
     ping: 22,
     authorized: false,
     blocked: false,
+    bandwidthLimit: 10,
   },
   {
     uid: 15,
@@ -339,6 +353,7 @@ export const devices: Device[] = [
     ping: 0,
     authorized: false,
     blocked: false,
+    bandwidthLimit: 0,
   },
   {
     uid: 16,
@@ -355,6 +370,7 @@ export const devices: Device[] = [
     ping: 30,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 12,
   },
   {
     uid: 17,
@@ -371,6 +387,7 @@ export const devices: Device[] = [
     ping: 4,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 100,
   },
   {
     uid: 18,
@@ -387,6 +404,7 @@ export const devices: Device[] = [
     ping: 0,
     authorized: false,
     blocked: true,
+    bandwidthLimit: 0,
   },
   {
     uid: 19,
@@ -403,6 +421,7 @@ export const devices: Device[] = [
     ping: 11,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 30,
   },
   {
     uid: 20,
@@ -419,5 +438,7 @@ export const devices: Device[] = [
     ping: 3,
     authorized: true,
     blocked: false,
+    bandwidthLimit: 250,
   }
 ]
+

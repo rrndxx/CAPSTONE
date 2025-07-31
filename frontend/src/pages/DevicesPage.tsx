@@ -28,12 +28,9 @@ const DevicesPage = () => {
       <div className="flex flex-col gap-6 p-4 pt-0">
 
         {/* 🧠 Summary Section */}
-        <section className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">Network Overview</h2>
-          <DevicesStatsSummary devices={devices} />
-        </section>
+        <DevicesStatsSummary devices={devices} />
 
-        <section className="flex flex-col sm:flex-row md:items-center md:justify-between gap-3">
+        <section className="flex flex-col sm:flex-row md:items-center md:justify-between gap-3 mt-2">
           <div className="flex flex-wrap gap-2">
             <Badge
               className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
@@ -87,7 +84,8 @@ const DevicesPage = () => {
           {view === "table" ? (
             <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
               {filteredDevices.length > 0 ? (
-                <DevicesTable devices={filteredDevices} />
+                <DevicesTable devices={filteredDevices} viewType="all" />
+
               ) : (
                 <div className="text-muted-foreground text-sm text-center py-8">
                   No devices match the filter.

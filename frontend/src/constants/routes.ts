@@ -11,4 +11,5 @@ export const routes: Record<string, string> = {
     "/logs": "Access Logs",
     "/reports": "Reports",
     "/alerts": "Alerts",
+    "/ai-insights": "AI Insights",
 }

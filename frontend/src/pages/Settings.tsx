@@ -19,49 +19,64 @@ export function SettingsDialog() {
           Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>System Settings</DialogTitle>
-          <DialogDescription>Adjust preferences and configuration</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">System Settings</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Manage system behavior and preferences
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
-          <div>
-            <label className="text-sm font-medium">Network Name</label>
-            <input
-              type="text"
-              defaultValue="CRMC MainNet"
-              className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-            />
+        <div className="mt-6 space-y-6">
+          {/* Network Settings */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Network Configuration</h3>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Network Name</label>
+              <input
+                type="text"
+                defaultValue="CRMC MainNet"
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Polling Interval (seconds)</label>
+              <input
+                type="number"
+                defaultValue={60}
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Polling Interval (sec)</label>
-            <input
-              type="number"
-              defaultValue={60}
-              className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-            />
+          {/* Notifications */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Notifications</h3>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email Alerts</label>
+              <select className="w-full px-3 py-2 border rounded-md bg-background">
+                <option>Enabled</option>
+                <option>Disabled</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Enable Email Alerts</label>
-            <select className="w-full mt-1 px-3 py-2 border rounded-md bg-background">
-              <option>Enabled</option>
-              <option>Disabled</option>
-            </select>
+          {/* Appearance */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Appearance</h3>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Theme</label>
+              <select className="w-full px-3 py-2 border rounded-md bg-background">
+                <option>System</option>
+                <option>Light</option>
+                <option>Dark</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Theme</label>
-            <select className="w-full mt-1 px-3 py-2 border rounded-md bg-background">
-              <option>System</option>
-              <option>Light</option>
-              <option>Dark</option>
-            </select>
-          </div>
-
-          <div className="flex justify-end gap-2">
+          {/* Actions */}
+          <div className="flex justify-end gap-2 pt-4">
             <DialogClose asChild>
               <Button variant="secondary">Cancel</Button>
             </DialogClose>

@@ -1,110 +1,117 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { useState } from "react"
+import { ShieldAlert, User, Clock, Target, Info } from "lucide-react"
 
-export default function ReportsPage() {
+type LogEntry = {
+    id: number
+    timestamp: string
+    user: string
+    action: string
+    target: string
+    details: string
+}
+
+const sampleLogs: LogEntry[] = [
+    {
+        id: 1,
+        timestamp: "2025-07-23 10:21:00",
+        user: "admin",
+        action: "Blocked Device",
+        target: "MAC: 00:1A:2B:3C:4D:5E",
+        details: "Manual block issued from Dashboard",
+    },
+    {
+        id: 2,
+        timestamp: "2025-07-23 09:12:33",
+        user: "system",
+        action: "Alert Triggered",
+        target: "Device: IoT-Camera",
+        details: "Abnormal traffic pattern detected",
+    },
+    {
+        id: 3,
+        timestamp: "2025-07-22 18:44:10",
+        user: "admin",
+        action: "Unblocked Device",
+        target: "MAC: BC:AE:C5:33:22:11",
+        details: "Device re-approved after review",
+    },
+]
+
+const getColor = (action: string) => {
+    if (action.includes("Blocked")) return "text-red-600"
+    if (action.includes("Unblocked")) return "text-green-600"
+    if (action.includes("Alert")) return "text-yellow-600"
+    return "text-blue-600"
+}
+
+const AccessLogsPage = () => {
+    const [search, setSearch] = useState("")
+
+    const logs = sampleLogs
+    const filteredLogs = Array.isArray(logs)
+        ? logs.filter((log) =>
+            Object.values(log).some((value) =>
+                value.toString().toLowerCase().includes(search.toLowerCase())
+            )
+        )
+        : []
+
     return (
-        <div className="p-4 md:p-6">
-            <h1 className="text-2xl font-bold mb-4">Network Reports</h1>
-            <Separator className="mb-6" />
+        <div className="p-4 sm:p-6 space-y-6">
+            <div className="flex justify-end">
+                <Input
+                    type="text"
+                    placeholder="Search logs..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full max-w-md"
+                />
+            </div>
 
-            <Tabs defaultValue="daily" className="w-full">
-                <TabsList className="mb-4">
-                    <TabsTrigger value="daily">Daily</TabsTrigger>
-                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                </TabsList>
+            {filteredLogs.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredLogs.map((log) => (
+                        <Card
+                            key={log.id}
+                            className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition duration-150"
+                        >
+                            <CardContent className="p-4 space-y-3 text-sm">
+                                <div className="flex justify-between text-gray-500 text-xs">
+                                    <div className="flex items-center gap-1">
+                                        <Clock className="w-4 h-4" />
+                                        <span>{log.timestamp}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <User className="w-4 h-4" />
+                                        <span>{log.user}</span>
+                                    </div>
+                                </div>
 
-                {/* Daily Reports */}
-                <TabsContent value="daily">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">Total Devices</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">58</p>
+                                <div className={`font-semibold flex items-center gap-2 ${getColor(log.action)}`}>
+                                    <ShieldAlert className="w-5 h-5" />
+                                    <span>{log.action}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-gray-700">
+                                    <Target className="w-4 h-4 text-gray-500" />
+                                    <span>{log.target}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-gray-600">
+                                    <Info className="w-4 h-4 text-gray-500" />
+                                    <span className="line-clamp-2">{log.details}</span>
+                                </div>
                             </CardContent>
                         </Card>
-
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">Blocked Devices</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">12</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">Alerts Triggered</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">6</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-                        <h2 className="text-xl font-semibold mb-2 sm:mb-0">Today's Report</h2>
-                        <Button className="flex items-center gap-2">
-                            <Download className="w-4 h-4" />
-                            Export PDF
-                        </Button>
-                    </div>
-
-                    <Card className="w-full">
-                        <CardContent className="overflow-x-auto p-4">
-                            <table className="min-w-full text-sm">
-                                <thead className="text-left border-b">
-                                    <tr>
-                                        <th className="py-2 pr-4">Time</th>
-                                        <th className="py-2 pr-4">Device</th>
-                                        <th className="py-2 pr-4">Activity</th>
-                                        <th className="py-2">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {[
-                                        { time: "08:00 AM", device: "Laptop-CRMC-01", activity: "Connected", status: "Allowed" },
-                                        { time: "08:15 AM", device: "Phone-CRMC-02", activity: "Exceeded Bandwidth", status: "Blocked" },
-                                        { time: "08:45 AM", device: "Tablet-CRMC-04", activity: "Unusual Activity", status: "Alerted" },
-                                    ].map((log, index) => (
-                                        <tr key={index} className="border-b">
-                                            <td className="py-2 pr-4">{log.time}</td>
-                                            <td className="py-2 pr-4">{log.device}</td>
-                                            <td className="py-2 pr-4">{log.activity}</td>
-                                            <td className="py-2">
-                                                <span
-                                                    className={`px-2 py-1 rounded text-xs font-medium ${log.status === "Blocked"
-                                                        ? "bg-red-200 text-red-700"
-                                                        : log.status === "Alerted"
-                                                            ? "bg-yellow-200 text-yellow-800"
-                                                            : "bg-green-200 text-green-700"
-                                                        }`}
-                                                >
-                                                    {log.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* Weekly and Monthly can be implemented similarly */}
-                <TabsContent value="weekly">
-                    <p className="text-muted-foreground text-sm">Weekly report summary will appear here.</p>
-                </TabsContent>
-                <TabsContent value="monthly">
-                    <p className="text-muted-foreground text-sm">Monthly report summary will appear here.</p>
-                </TabsContent>
-            </Tabs>
+                    ))}
+                </div>
+            ) : (
+                <p className="text-center text-gray-500 mt-6">No logs found.</p>
+            )}
         </div>
     )
 }
+
+export default AccessLogsPage

@@ -52,7 +52,7 @@ export function LoginForm({
                                     </a>
                                 </div>
                             </div>
-                            <Button type="submit" className="w-full cursor-pointer" onClick={() => handleNavigate('/dashboard')}>
+                            <Button type="submit" className="w-full cursor-pointer" onClick={() => handleNavigate('dashboard')}>
                                 Login
                             </Button>
                         </div>
