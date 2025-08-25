@@ -4,7 +4,7 @@ import { ScheduledScanner } from "./utils/scheduledScanner.js";
 
 const PORT = config.PORT;
 
-// ScheduledScanner()
+ScheduledScanner()
 
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);

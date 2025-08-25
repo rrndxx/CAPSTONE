@@ -18,3 +18,19 @@ export async function insertDevices(req: Request, res: Response, next: NextFunct
         next(err);
     }
 }
+
+export async function updateDeviceListType(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { mac, type } = req.body;
+
+        if (!mac || !type) {
+            return res.status(400).json({ message: "mac and type are required" });
+        }
+
+        const result = await deviceService.updateDeviceListType(mac, type as "WHITELIST" | "BLACKLIST");
+
+        res.status(200).json({ message: "Device list updated", data: result });
+    } catch (err: any) {
+        next(err)
+    }
+}

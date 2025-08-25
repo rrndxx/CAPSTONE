@@ -20,8 +20,8 @@ model Network {
 }
 
 model Device {
-  deviceId   Int      @id @default(autoincrement())
-  mac        String   @unique
+  deviceId   Int          @id @default(autoincrement())
+  mac        String       @unique
   ip         String[]
   state      String
   name       String
@@ -29,6 +29,23 @@ model Device {
   make       String?
   model      String?
   first_seen String
+  last_seen  String?
   networkId  String?
-  network    Network? @relation(fields: [networkId], references: [networkId])
+  network    Network?     @relation(fields: [networkId], references: [networkId])
+  DeviceList DeviceList[]
+}
+
+model DeviceList {
+  id        Int            @id @default(autoincrement())
+  deviceId  Int
+  device    Device         @relation(fields: [deviceId], references: [deviceId])
+  type      DeviceListType
+  createdAt DateTime       @default(now())
+
+  @@unique([deviceId, type])
+}
+
+enum DeviceListType {
+  WHITELIST
+  BLACKLIST
 }

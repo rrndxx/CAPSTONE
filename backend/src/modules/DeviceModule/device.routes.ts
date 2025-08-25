@@ -5,5 +5,6 @@ const router = Router();
 
 router.get("/", deviceController.getAllDevices)
 router.post("/", deviceController.insertDevices)
+router.post("/wblist", deviceController.updateDeviceListType)
 
 export default router;
