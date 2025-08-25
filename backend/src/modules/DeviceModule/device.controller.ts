@@ -9,3 +9,12 @@ export async function getAllDevices(req: Request, res: Response, next: NextFunct
         next(err)
     }
 }
+
+export async function insertDevices(req: Request, res: Response, next: NextFunction) {
+    try {
+        const newDevice = await deviceService.insertDevices();
+        res.status(201).json({ message: "Device inserted successfully", device: newDevice });
+    } catch (err: any) {
+        next(err);
+    }
+}

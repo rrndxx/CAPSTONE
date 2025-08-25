@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,7 +14,13 @@ datasource db {
 }
 
 model Device {
-  deviceId    String    @id @default(cuid())
-  ipAddress   String   
-  macAddress  String
+  deviceId   Int      @id @default(autoincrement())
+  mac        String   @unique
+  ip         String[]
+  state      String
+  name       String
+  type       String?
+  make       String?
+  model      String?
+  first_seen String
 }
