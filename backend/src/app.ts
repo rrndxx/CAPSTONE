@@ -6,7 +6,6 @@ import compression from "compression";
 import { APILimiter } from "./middlewares/rateLimiter.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import deviceRoutes from "./modules/DeviceModule/device.routes.js";
-import { ScheduledScanner } from "./utils/scheduledScanner.js";
 
 const app = express();
 
@@ -17,7 +16,6 @@ app.use(compression());
 app.use(express.json());
 
 app.use(APILimiter);
-// ScheduledScanner();
 
 app.use("/devices", deviceRoutes);
 

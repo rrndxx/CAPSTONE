@@ -4,72 +4,54 @@ import type { NetworkScan } from "../modules/DeviceModule/device.model.js";
 import { redis } from "../config/redis.js";
 import db from "../config/db.js";
 
+let scheduled = false;
 
 export function ScheduledScanner() {
+    if (scheduled) return;
+    scheduled = true;
+
     cron.schedule("*/1 * * * *", async () => {
         console.log("Scheduled scanner starting...", new Date().toISOString());
 
         try {
-            const response = await axios.get<NetworkScan>(
-                "http://192.168.254.103:49090/1/devices?auth=fing_loc_api123"
-            );
-            const { devices } = response.data;
+            const response = await axios.get<NetworkScan>("http://192.168.254.103:49090/1/devices?auth=fing_loc_api123")
+            const networkscan = response.data
 
-            // isud sa database
-            const values = devices
-                .map(
-                    d =>
-                        `(${[
-                            d.deviceId,
-                            d.mac,
-                            d.ip,
-                            d.state,
-                            d.name,
-                            d.type,
-                            d.make,
-                            d.model,
-                            d.first_seen,
-                        ]
-                            .map(() => "?")
-                            .join(",")})`
-                )
-                .join(",");
+            await db.network.upsert({
+                where: { networkId: networkscan.networkId },
+                update: {},
+                create: { networkId: networkscan.networkId },
+            });
 
-            const params = devices.flatMap(d => [
-                d.deviceId,
-                d.mac,
-                d.ip,
-                d.state,
-                d.name,
-                d.type,
-                d.make,
-                d.model,
-                d.first_seen,
-            ]);
+            const devicesToInsert = networkscan.devices.map((d) => ({
+                mac: d.mac,
+                ip: d.ip,
+                state: d.state,
+                name: d.name,
+                type: d.type ?? null,
+                make: d.make ?? null,
+                model: d.model ?? null,
+                first_seen: d.first_seen,
+                networkId: networkscan.networkId,
+            }));
 
-            await db.$executeRawUnsafe(
-                `
-                INSERT INTO "Device" 
-                    ("deviceId", "mac", "ip", "state", "name", "type", "make", "model", "first_seen")
-                VALUES ${values}
-                ON CONFLICT ("mac") DO UPDATE SET
-                    ip = EXCLUDED.ip,
-                    state = EXCLUDED.state,
-                    name = EXCLUDED.name,
-                    type = EXCLUDED.type,
-                    make = EXCLUDED.make,
-                    model = EXCLUDED.model,
-                    first_seen = EXCLUDED.first_seen;
-                `,
-                ...params
-            );
+            await db.device.createMany({
+                data: devicesToInsert,
+                skipDuplicates: true,
+            });
 
-            // cache
-            await redis.set("devices:all", JSON.stringify(devices), "EX", 60);
+            // const allDevices = await db.device.findMany();
+            await redis.set("devices:all", JSON.stringify(devicesToInsert), "EX", 60);
 
-            console.log(`Upserted ${devices.length} devices and updated cache.`);
+
         } catch (err) {
             console.error("Scanner error:", err);
         }
     });
 }
+
+
+// const network = await db.network.findUnique({
+//     where: { networkId: "eth-C0A8FE00-1898A942E3D2A9" },
+//     include: { devices: true },
+// });

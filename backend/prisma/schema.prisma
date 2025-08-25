@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Network {
+  networkId String   @id
+  name      String?
+  devices   Device[]
+}
+
 model Device {
   deviceId   Int      @id @default(autoincrement())
   mac        String   @unique
@@ -23,4 +29,6 @@ model Device {
   make       String?
   model      String?
   first_seen String
+  networkId  String?
+  network    Network? @relation(fields: [networkId], references: [networkId])
 }
