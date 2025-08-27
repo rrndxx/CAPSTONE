@@ -14,3 +14,8 @@ export interface NetworkScan {
     networkId: string;
     devices: DeviceModel[]
 }
+
+export type DeviceList = {
+    deviceId: number,
+    type: "WHITELIST" | "BLACKLIST"
+}

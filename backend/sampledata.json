@@ -1,0 +1,522 @@
+{
+    "networkId": "eth-C0A80300-18D4BBE684C0C2",
+    "devices":
+    [
+        {
+            "mac": "D4:BB:E6:84:C0:C2",
+            "ip":
+            [
+                "192.168.3.1"
+            ],
+            "state": "UP",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "08:BF:B8:79:2E:EA",
+            "ip":
+            [
+                "192.168.3.3"
+            ],
+            "state": "UP",
+            "name": "CCS-DEAN-PC",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "34:97:F6:89:0D:ED",
+            "ip":
+            [
+                "192.168.3.6"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "70:4D:7B:70:02:B8",
+            "ip":
+            [
+                "192.168.3.9"
+            ],
+            "state": "UP",
+            "name": "DYVLFM: 94.1 DYVL FM:",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "00:1B:FC:01:DD:69",
+            "ip":
+            [
+                "192.168.3.11"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "78:24:AF:BB:BC:ED",
+            "ip":
+            [
+                "192.168.3.15"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "78:24:AF:C1:90:E8",
+            "ip":
+            [
+                "192.168.3.18"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "74:56:3C:50:46:DD",
+            "ip":
+            [
+                "192.168.3.22"
+            ],
+            "state": "UP",
+            "name": "CCS-PC120",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "7C:10:C9:89:32:63",
+            "ip":
+            [
+                "192.168.3.24"
+            ],
+            "state": "UP",
+            "type": "DESKTOP",
+            "make": "Asus",
+            "model": "Desktop",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "48:21:0B:3E:8B:87",
+            "ip":
+            [
+                "192.168.3.32"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "08:BF:B8:79:2A:B6",
+            "ip":
+            [
+                "192.168.3.35"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "40:8D:5C:D4:AF:27",
+            "ip":
+            [
+                "192.168.3.44"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "48:21:0B:3E:88:8E",
+            "ip":
+            [
+                "192.168.3.49"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "4C:CC:6A:91:27:6E",
+            "ip":
+            [
+                "192.168.3.53"
+            ],
+            "state": "UP",
+            "name": "CRMC-SCHOLAR-PC",
+            "type": "DESKTOP",
+            "make": "MSI",
+            "model": "Motherboard",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "0C:9D:92:78:F4:08",
+            "ip":
+            [
+                "192.168.3.62"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "F0:2F:74:1E:05:F7",
+            "ip":
+            [
+                "192.168.3.79"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "74:56:3C:50:37:66",
+            "ip":
+            [
+                "192.168.3.81"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "D8:50:E6:D2:37:53",
+            "ip":
+            [
+                "192.168.3.91"
+            ],
+            "state": "UP",
+            "name": "DESKTOP-OFO36LR",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "14:DA:E9:EC:DD:6D",
+            "ip":
+            [
+                "192.168.3.95"
+            ],
+            "state": "UP",
+            "name": "COLLEGELIB-PC",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "9C:6B:00:68:E1:84",
+            "ip":
+            [
+                "192.168.3.96"
+            ],
+            "state": "UP",
+            "name": "CRMC-Research",
+            "type": "COMPUTER",
+            "make": "ASRock",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "58:11:22:D4:55:80",
+            "ip":
+            [
+                "192.168.3.98"
+            ],
+            "state": "UP",
+            "name": "DESKTOP-L3OINOD",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "F4:4D:30:02:69:5F",
+            "ip":
+            [
+                "192.168.3.124"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Acer",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "48:21:0B:58:4E:37",
+            "ip":
+            [
+                "192.168.3.125"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Intel",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "D0:17:C2:A6:C3:FD",
+            "ip":
+            [
+                "192.168.3.138"
+            ],
+            "state": "UP",
+            "name": "CCS-PC",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "D8:BB:C1:16:40:39",
+            "ip":
+            [
+                "192.168.3.139"
+            ],
+            "state": "UP",
+            "name": "CRMC-SCHOLARSPC",
+            "type": "DESKTOP",
+            "make": "MSI",
+            "model": "MS-7C89",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "74:56:3C:50:46:DA",
+            "ip":
+            [
+                "192.168.3.157"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "54:A0:50:B0:DA:A1",
+            "ip":
+            [
+                "192.168.3.173"
+            ],
+            "state": "UP",
+            "name": "Roxanne",
+            "type": "LAPTOP",
+            "make": "Asus",
+            "model": "X455LD",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "7C:10:C9:8B:B9:E0",
+            "ip":
+            [
+                "192.168.3.174"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "74:56:3C:20:D2:7D",
+            "ip":
+            [
+                "192.168.3.186"
+            ],
+            "state": "UP",
+            "name": "CCS-PC111",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "34:97:F6:8F:65:D6",
+            "ip":
+            [
+                "192.168.3.188"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "38:2C:4A:72:EF:E6",
+            "ip":
+            [
+                "192.168.3.193"
+            ],
+            "state": "UP",
+            "name": "LaB2-PC4",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "74:56:3C:20:E1:16",
+            "ip":
+            [
+                "192.168.3.197"
+            ],
+            "state": "UP",
+            "name": "CCS-PC119",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "7C:10:C9:84:EF:3A",
+            "ip":
+            [
+                "192.168.3.204"
+            ],
+            "state": "UP",
+            "type": "DESKTOP",
+            "make": "Asus",
+            "model": "Desktop",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "9C:6B:00:68:E1:0A",
+            "ip":
+            [
+                "192.168.3.208"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "ASRock",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "48:21:0B:58:5A:A3",
+            "ip":
+            [
+                "192.168.3.214"
+            ],
+            "state": "UP",
+            "name": "CRMC-CCJE-PC02",
+            "type": "COMPUTER",
+            "make": "Intel",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "08:BF:B8:79:2F:70",
+            "ip":
+            [
+                "192.168.3.224"
+            ],
+            "state": "UP",
+            "name": "ICTD-PC",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "F4:B5:20:3F:98:A3",
+            "ip":
+            [
+                "192.168.3.229"
+            ],
+            "state": "UP",
+            "name": "DESKTOP-NDC91IB",
+            "type": "COMPUTER",
+            "make": "Biostar",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "9C:6B:00:68:E1:72",
+            "ip":
+            [
+                "192.168.3.233"
+            ],
+            "state": "UP",
+            "name": "CL4-PC08",
+            "type": "COMPUTER",
+            "make": "ASRock",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "B4:A9:FC:3B:D0:35",
+            "ip":
+            [
+                "192.168.3.234"
+            ],
+            "state": "UP",
+            "name": "LAPTOP-18PIRDAF",
+            "type": "LAPTOP",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "D6:BF:02:71:8C:15",
+            "ip":
+            [
+                "192.168.3.235"
+            ],
+            "state": "UP",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "40:8D:5C:F6:37:CB",
+            "ip":
+            [
+                "192.168.3.239"
+            ],
+            "state": "UP",
+            "type": "COMPUTER",
+            "make": "Gigabyte Technology",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "10:FE:ED:A8:65:8B",
+            "ip":
+            [
+                "192.168.3.241"
+            ],
+            "state": "UP",
+            "type": "WIFI",
+            "make": "TP-Link",
+            "model": "TL-WR741ND",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "7C:10:C9:84:ED:D3",
+            "ip":
+            [
+                "192.168.3.243"
+            ],
+            "state": "UP",
+            "type": "DESKTOP",
+            "make": "Asus",
+            "model": "Desktop",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "4C:ED:FB:65:66:46",
+            "ip":
+            [
+                "192.168.3.247"
+            ],
+            "state": "UP",
+            "name": "LAB3-PC28",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        },
+        {
+            "mac": "50:EB:F6:99:65:62",
+            "ip":
+            [
+                "192.168.3.254"
+            ],
+            "state": "UP",
+            "name": "CCS-PC109",
+            "type": "COMPUTER",
+            "make": "Asus",
+            "first_seen": "2024-11-28T00:12:17.306Z"
+        }
+    ]
+}

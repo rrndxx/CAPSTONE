@@ -1,10 +1,11 @@
 import { Router } from "express";
 import * as deviceController from "./device.controller.js"
-
-const router = Router();
+const router = Router()
 
 router.get("/", deviceController.getAllDevices)
-router.post("/", deviceController.insertDevices)
-router.post("/wblist", deviceController.updateDeviceListType)
+router.get("/:mac", deviceController.getDeviceByMAC)
+router.get("/ip/:ip/ports", deviceController.getDeviceOpenPorts)
+router.post("/", deviceController.insertDevice)
+router.put("/:deviceId/list-type", deviceController.updateDeviceListType)
 
-export default router;
+export default router

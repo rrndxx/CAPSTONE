@@ -1,109 +1,45 @@
-import http from "http";
-import db from "../../config/db.js";
-import { redis } from "../../config/redis.js";
-import type { NetworkScan } from "./device.model.js";
+import type { Device, DeviceList } from "@prisma/client";
+import type { ICacheService } from "../../services/cacheService.js";
+import type { IDeviceRepository } from "./device.interface.js";
 
+export class DeviceService {
+    constructor(
+        private readonly deviceRepo: IDeviceRepository,
+        private readonly cache: ICacheService,
+        // private readonly networkScanner: NetworkScanner,
+        // private readonly portScanner: OpenPortScanner
+    ) { }
 
-export async function getAllDevices() {
-    // kwaon daan ang mga nakacache na devices
-    const cachedDevices = await redis.get("devices:all");
-    if (cachedDevices) {
-        return JSON.parse(cachedDevices)
+    async getAllDevices() {
+        const cachedDevices = await this.cache.get<Device[]>("devices:all")
+        if (cachedDevices) return cachedDevices
+
+        const devices = await this.deviceRepo.findAllDevices()
+        await this.cache.set<Device[]>("devices:all", devices, 60)
+
+        return devices
     }
 
-    // if walay nakacache na device, kuha adto directly sa database
-    const devices = await db.device.findMany({ include: { network: true } });
+    async getDeviceByMAC(mac: Device["mac"]) {
+        const device = await this.deviceRepo.findByMAC(mac)
 
-    return devices;
-}
-
-export async function insertDevices() {
-    const options = {
-        hostname: "192.168.254.103",
-        port: 49090,
-        path: "/1/devices?auth=fing_loc_api123",
-        method: "GET",
-        insecureHTTPParser: true,
-    };
-
-    const networkscan: NetworkScan = await new Promise((resolve, reject) => {
-        const req = http.request(options, (res) => {
-            let data = "";
-            res.on("data", (chunk) => (data += chunk));
-            res.on("end", () => {
-                try {
-                    resolve(JSON.parse(data));
-                } catch (err) {
-                    reject(err);
-                }
-            });
-        });
-        req.on("error", reject);
-        req.end();
-    });
-
-    // iupsert ang network
-    await db.network.upsert({
-        where: { networkId: networkscan.networkId },
-        update: {},
-        create: { networkId: networkscan.networkId },
-    });
-
-    // upsert each device
-    for (const d of networkscan.devices) {
-        await db.device.upsert({
-            where: { mac: d.mac },
-            update: {
-                state: d.state,
-                ip: d.ip,
-                last_seen: new Date().toISOString(),
-            },
-            create: {
-                mac: d.mac,
-                ip: d.ip,
-                state: d.state,
-                name: d.name,
-                type: d.type ?? null,
-                make: d.make ?? null,
-                model: d.model ?? null,
-                first_seen: new Date().toISOString(),
-                last_seen: new Date().toISOString(),
-                networkId: networkscan.networkId,
-            },
-        });
+        return device
     }
 
-    // kuhaon daan ang suds database
-    const allDevices = await db.device.findMany({ include: { network: true } });
+    async insertDevice(device: Device) {
+        const result = await this.deviceRepo.insertDevice(device)
 
-    //isud sa redis
-    await redis.set("devices:all", JSON.stringify(allDevices), "EX", 60);
-
-    return allDevices;
-}
-
-export async function updateDeviceListType(mac: string, type: "WHITELIST" | "BLACKLIST") {
-    // kuhaon sa daan ang device with this mac
-    const device = await db.device.findUnique({
-        where: { mac },
-    });
-
-    if (!device) {
-        throw new Error(`Device with MAC ${mac} not found`);
+        return result
     }
 
-    const updated = await db.deviceList.upsert({
-        where: {
-            deviceId_type: { deviceId: device.deviceId, type },
-        },
-        update: {},
-        create: {
-            deviceId: device.deviceId,
-            type,
-        },
-    });
+    async updateDeviceListType(deviceId: DeviceList["deviceId"], type: DeviceList["type"]) {
+        const result = await this.deviceRepo.upsertDeviceList(deviceId, type)
+        if (!result) throw new Error("Error updating device privilege type")
 
-    return updated;
+        return result
+    }
+
+    async getDeviceOpenPorts(deviceIP: Device["ip"]) {
+        throw new Error("wa pa naimplement na method")
+    }
 }
-
-

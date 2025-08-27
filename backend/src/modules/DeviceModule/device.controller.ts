@@ -1,36 +1,60 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as deviceService from "./device.service.js"
+import { deviceService } from '../../services/singleton.js';
 
 export async function getAllDevices(req: Request, res: Response, next: NextFunction) {
     try {
-        const devices = await deviceService.getAllDevices();
-        res.json({ success: true, data: devices })
-    } catch (err) {
+        const devices = await deviceService.getAllDevices()
+        res.status(200).json({ success: true, data: devices })
+    } catch (err: unknown) {
         next(err)
     }
 }
 
-export async function insertDevices(req: Request, res: Response, next: NextFunction) {
+export async function getDeviceByMAC(req: Request, res: Response, next: NextFunction) {
     try {
-        const newDevice = await deviceService.insertDevices();
-        res.status(201).json({ message: "Device inserted successfully", device: newDevice });
-    } catch (err: any) {
-        next(err);
+        const { mac } = req.params
+        if (!mac) return res.status(400).json({ message: "mac is required" })
+
+        const device = await deviceService.getDeviceByMAC(mac)
+        res.status(200).json({ success: true, data: device })
+    } catch (err: unknown) {
+        next(err)
+    }
+}
+
+export async function insertDevice(req: Request, res: Response, next: NextFunction) {
+    try {
+        const device = req.body
+        if (!device) return res.status(400).json({ message: "Device and its details are required" })
+
+        const result = await deviceService.insertDevice(device)
+        res.status(201).json({ success: true, message: "Device inserted successfully.", data: result })
+    } catch (err: unknown) {
+        next(err)
     }
 }
 
 export async function updateDeviceListType(req: Request, res: Response, next: NextFunction) {
     try {
-        const { mac, type } = req.body;
+        const { deviceId } = req.params
+        const { type } = req.body
+        if (!deviceId || !type) return res.status(400).json({ message: "deviceId and type are required" })
 
-        if (!mac || !type) {
-            return res.status(400).json({ message: "mac and type are required" });
-        }
+        const result = await deviceService.updateDeviceListType(parseInt(deviceId), type)
+        res.status(200).json({ success: true, message: "Device access type updated successfully.", data: result })
+    } catch (err: unknown) {
+        next(err)
+    }
+}
 
-        const result = await deviceService.updateDeviceListType(mac, type as "WHITELIST" | "BLACKLIST");
+export async function getDeviceOpenPorts(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { ip } = req.params
+        if (!ip) return res.status(400).json({ message: "ip is required" })
 
-        res.status(200).json({ message: "Device list updated", data: result });
-    } catch (err: any) {
+        const result = await deviceService.getDeviceOpenPorts(ip)
+        res.status(200).json({ success: true, data: result })
+    } catch (err: unknown) {
         next(err)
     }
 }

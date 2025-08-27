@@ -20,19 +20,20 @@ model Network {
 }
 
 model Device {
-  deviceId   Int          @id @default(autoincrement())
-  mac        String       @unique
-  ip         String[]
-  state      String
-  name       String
-  type       String?
-  make       String?
-  model      String?
-  first_seen String
-  last_seen  String?
-  networkId  String?
-  network    Network?     @relation(fields: [networkId], references: [networkId])
-  DeviceList DeviceList[]
+  deviceId    Int           @id @default(autoincrement())
+  mac         String        @unique
+  ip          String
+  state       String
+  name        String
+  type        String?
+  make        String?
+  model       String?
+  first_seen  String
+  last_seen   String?
+  networkId   String?
+  network     Network?      @relation(fields: [networkId], references: [networkId])
+  DeviceList  DeviceList[]
+  DevicePorts DevicePorts[]
 }
 
 model DeviceList {
@@ -48,4 +49,15 @@ model DeviceList {
 enum DeviceListType {
   WHITELIST
   BLACKLIST
+}
+
+// usbunonon
+model DevicePorts {
+  id       Int    @id @default(autoincrement())
+  deviceId Int
+  device   Device @relation(fields: [deviceId], references: [deviceId])
+}
+
+model Port {
+  portId Int @id @default(autoincrement())
 }
