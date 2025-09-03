@@ -14,50 +14,99 @@ datasource db {
 }
 
 model Network {
-  networkId String   @id
-  name      String?
+  networkId String         @id
   devices   Device[]
+  ispLogs   ISPHealth[]
+  alerts    Alert[]
+  bandwidth BandwidthLog[]
+  createdAt DateTime       @default(now())
 }
 
 model Device {
-  deviceId    Int           @id @default(autoincrement())
-  mac         String        @unique
-  ip          String
-  state       String
-  name        String
-  type        String?
-  make        String?
-  model       String?
-  first_seen  String
-  last_seen   String?
-  networkId   String?
-  network     Network?      @relation(fields: [networkId], references: [networkId])
-  DeviceList  DeviceList[]
-  DevicePorts DevicePorts[]
+  mac        String          @id
+  ip         String
+  hostname   String?
+  state      String // UP, DOWN, BLOCKED, etc.
+  name       String?
+  type       String? // MOBILE, LAPTOP, ROUTER
+  make       String?
+  model      String?
+  firstSeen  DateTime
+  lastSeen   DateTime
+  authorized Boolean         @default(false) // whitelist/blacklist
+  networkId  String
+  network    Network         @relation(fields: [networkId], references: [networkId])
+  openPorts  OpenPort[]
+  visited    VisitedSite[]
+  blocked    BlockedDomain[]
+  bandwidth  BandwidthLog[]
+  logs       DeviceLog[]
 }
 
-model DeviceList {
-  id        Int            @id @default(autoincrement())
-  deviceId  Int
-  device    Device         @relation(fields: [deviceId], references: [deviceId])
-  type      DeviceListType
-  createdAt DateTime       @default(now())
-
-  @@unique([deviceId, type])
+model OpenPort {
+  id        String @id @default(cuid())
+  port      Int
+  protocol  String // e.g., TCP, UDP
+  deviceMac String
+  device    Device @relation(fields: [deviceMac], references: [mac])
 }
 
-enum DeviceListType {
-  WHITELIST
-  BLACKLIST
+model VisitedSite {
+  id        String   @id @default(cuid())
+  domain    String
+  firstSeen DateTime @default(now())
+  lastSeen  DateTime @default(now())
+  deviceMac String
+  device    Device   @relation(fields: [deviceMac], references: [mac])
 }
 
-// usbunonon
-model DevicePorts {
-  id       Int    @id @default(autoincrement())
-  deviceId Int
-  device   Device @relation(fields: [deviceId], references: [deviceId])
+model BlockedDomain {
+  id        String   @id @default(cuid())
+  domain    String
+  reason    String?
+  createdAt DateTime @default(now())
+  deviceMac String?
+  device    Device?  @relation(fields: [deviceMac], references: [mac])
 }
 
-model Port {
-  portId Int @id @default(autoincrement())
+model BandwidthLog {
+  id         String   @id @default(cuid())
+  deviceMac  String?
+  device     Device?  @relation(fields: [deviceMac], references: [mac])
+  networkId  String
+  network    Network  @relation(fields: [networkId], references: [networkId])
+  uploadMB   Float
+  downloadMB Float
+  totalMB    Float
+  timestamp  DateTime @default(now())
+}
+
+model ISPHealth {
+  id        String   @id @default(cuid())
+  networkId String
+  network   Network  @relation(fields: [networkId], references: [networkId])
+  status    String // UP / DOWN
+  latencyMs Int?
+  download  Float? // Mbps
+  upload    Float? // Mbps
+  checkedAt DateTime @default(now())
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  type      String // e.g., UNAUTHORIZED_DEVICE, BANDWIDTH_SPIKE
+  message   String
+  severity  String // INFO, WARNING, CRITICAL
+  createdAt DateTime @default(now())
+  networkId String
+  network   Network  @relation(fields: [networkId], references: [networkId])
+}
+
+model DeviceLog {
+  id        String   @id @default(cuid())
+  deviceMac String
+  device    Device   @relation(fields: [deviceMac], references: [mac])
+  action    String // CONNECTED, DISCONNECTED, BLOCKED, etc.
+  timestamp DateTime @default(now())
+  user      String? // who triggered (for audit trail)
 }

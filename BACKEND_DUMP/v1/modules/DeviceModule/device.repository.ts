@@ -3,22 +3,26 @@ import type { Device, Network, DeviceList } from "@prisma/client";
 import type { IDeviceRepository } from "./device.interface.js";
 
 export class DeviceRepository implements IDeviceRepository {
+
     findAllDevices(): Promise<(Device & { DeviceList: DeviceList[], network: Network | null })[]> {
         return db.device.findMany({
             include: { DeviceList: true, network: true }
-        })
+        });
     }
 
     findByMAC(mac: Device["mac"]): Promise<(Device & { DeviceList: DeviceList[], network: Network | null }) | null> {
         return db.device.findUnique({
             where: { mac },
             include: { DeviceList: true, network: true }
-        })
+        });
     }
 
-    insertDevice(device: Device): Promise<Device & { network: Network | null; DeviceList: DeviceList[] }> {
+    insertDevice(device: Device, networkId: Network["networkId"]): Promise<Device & { network: Network | null; DeviceList: DeviceList[] }> {
         return db.device.create({
-            data: device,
+            data: {
+                ...device,
+                networkId
+            },
             include: { network: true, DeviceList: true },
         });
     }
@@ -28,12 +32,12 @@ export class DeviceRepository implements IDeviceRepository {
             where: { networkId },
             update: {},
             create: { networkId },
-        })
+        });
     }
 
-    async upsertDevice(device: Device, networkId: Network["networkId"]): Promise<Device> {
+    async upsertDevice(device: Device, networkId: Network["networkId"]): Promise<Device & { network: Network | null; DeviceList: DeviceList[] }> {
+        const now = new Date().toISOString();
         try {
-            const now = new Date().toISOString();
             return await db.device.upsert({
                 where: { mac: device.mac },
                 update: {
@@ -53,6 +57,7 @@ export class DeviceRepository implements IDeviceRepository {
                     last_seen: now,
                     networkId,
                 },
+                include: { network: true, DeviceList: true },
             });
         } catch (error) {
             console.error(`Failed to upsert device with MAC ${device.mac}:`, error);
@@ -60,8 +65,8 @@ export class DeviceRepository implements IDeviceRepository {
         }
     }
 
-    upsertDevices(devices: Device[], networkId: Network["networkId"]): Promise<Device[]> {
-        return Promise.all(devices.map(d => this.upsertDevice(d, networkId)))
+    async upsertDevices(devices: Device[], networkId: Network["networkId"]): Promise<(Device & { network: Network | null; DeviceList: DeviceList[] })[]> {
+        return Promise.all(devices.map(d => this.upsertDevice(d, networkId)));
     }
 
     upsertDeviceList(deviceId: DeviceList["deviceId"], type: DeviceList["type"]): Promise<DeviceList> {
@@ -69,6 +74,6 @@ export class DeviceRepository implements IDeviceRepository {
             where: { deviceId_type: { deviceId, type } },
             update: {},
             create: { deviceId, type },
-        })
+        });
     }
 }

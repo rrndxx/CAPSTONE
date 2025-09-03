@@ -1,4 +1,4 @@
-import type { Device, DeviceList } from "@prisma/client";
+import type { Device, DeviceList, Network } from "@prisma/client";
 import type { ICacheService } from "../../services/cacheService.js";
 import type { IDeviceRepository } from "./device.interface.js";
 
@@ -26,8 +26,8 @@ export class DeviceService {
         return device
     }
 
-    async insertDevice(device: Device) {
-        const result = await this.deviceRepo.insertDevice(device)
+    async insertDevice(device: Device, networkId: Network["networkId"]) {
+        const result = await this.deviceRepo.insertDevice(device, networkId)
 
         return result
     }

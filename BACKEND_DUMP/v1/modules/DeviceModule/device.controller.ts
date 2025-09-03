@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { deviceService } from '../../services/singleton.js';
+import { deviceService } from '../../server.js';
 
 export async function getAllDevices(req: Request, res: Response, next: NextFunction) {
     try {
@@ -24,10 +24,10 @@ export async function getDeviceByMAC(req: Request, res: Response, next: NextFunc
 
 export async function insertDevice(req: Request, res: Response, next: NextFunction) {
     try {
-        const device = req.body
+        const { device, networkId } = req.body
         if (!device) return res.status(400).json({ message: "Device and its details are required" })
 
-        const result = await deviceService.insertDevice(device)
+        const result = await deviceService.insertDevice(device, networkId)
         res.status(201).json({ success: true, message: "Device inserted successfully.", data: result })
     } catch (err: unknown) {
         next(err)
