@@ -1,36 +1,20 @@
 import { Router } from "express";
-import * as networkController from "./network.controller.js"
-import { sophos } from "../../server.js";
-import type { Request, Response, NextFunction } from "express";
+import * as networkController from "./network.controller.js";
 
-const router = Router()
+const router = Router();
 
-router.get("/system-health", networkController.getSystemHealth)
+router.get("/system-health", networkController.getSystemHealth);
+router.get("/sophos/ip-hosts", networkController.getIPHosts);
+router.get("/sophos/ip-hosts/statistics", networkController.getIPHostStatistics);
+router.post("/sophos/ip-hosts/add", networkController.addIPHost);
+router.put("/sophos/ip-hosts/:name", networkController.updateIPHost);
+router.delete("/sophos/ip-hosts/:name", networkController.deleteIPHost);
+router.get("/sophos/mac-hosts", networkController.getMACHosts);
+router.get("/sophos/zones", networkController.getZones);
+router.get("/sophos/services", networkController.getServices);
+router.get("/sophos/firewall/rules", networkController.getFirewallRules);
+router.post("/sophos/firewall/rules", networkController.addFirewallRule);
+router.put("/sophos/firewall/rules/:name", networkController.updateFirewallRule);
+router.delete("/sophos/firewall/rules/:name", networkController.deleteFirewallRule);
 
-// Get all IP Hosts
-router.get("/sophos-ip-hosts", async (req, res) => {
-    try {
-        const hosts = await sophos.getIPHosts();
-        res.type("application/xml").send(hosts);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch hosts" });
-    }
-});
-
-// Add a new IP Host
-// router.post("/sophos-ip-hosts", async (req: Request, res: Response) => {
-//     try {
-//         const { name, ip }: { name?: string; ip?: string } = req.body;
-//         if (!name || !ip) {
-//             return res.status(400).json({ error: "Name and IP required" });
-//         }
-
-//         const response = await sophos.addIPHost(name, ip);
-//         res.type("application/xml").send(response);
-//     } catch (err) {
-//         res.status(500).json({ error: "Failed to add host" });
-//     }
-// });
-
-
-export default router
+export default router;

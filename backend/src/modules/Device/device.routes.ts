@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { Router } from "express";
 import * as deviceController from "./device.controller.js"
 
