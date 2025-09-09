@@ -1,31 +1,49 @@
+import type { NetworkInterface } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client/extension";
-import { SophosService } from "../../services/sophosService.js";
-import type { INetworkRepository } from "./network.interface.js";
+
+export interface INetworkRepository {
+    getNetworkInterfaces(): Promise<NetworkInterface[]>;
+    upsertNetworkInterface(networkInterface: Partial<NetworkInterface>): Promise<NetworkInterface>;
+    upsertNetworkInterfaces(networkInterfaces: Partial<NetworkInterface>[]): Promise<NetworkInterface[]>;
+}
 
 export class NetworkRepository implements INetworkRepository {
-    constructor(
-        private readonly db: PrismaClient,
-        private readonly networkService2: SophosService
-    ) { }
-    getWiredDevices(): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
-    getWirelessDevices(): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
-    async getSystemHealthInfo(): Promise<any> {
-        const result = await this.networkService2.SNMP.getSystemHealthInfo()
+    constructor(private readonly db: PrismaClient) { }
 
-        return result
-    }
-    getNetworkInterfaceInfo(): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
-    blockDevice(): void {
-        throw new Error("Method not implemented.");
-    }
-    limitDeviceBandwidth(): void {
-        throw new Error("Method not implemented.");
+    async getNetworkInterfaces(): Promise<NetworkInterface[]> {
+        return this.db.networkInterface.findMany();
     }
 
+    async upsertNetworkInterface(networkInterface: Partial<NetworkInterface>): Promise<NetworkInterface> {
+        if (!networkInterface.identifier) {
+            throw new Error("Network interface must have an identifier to upsert.");
+        }
+
+        return this.db.networkInterface.upsert({
+            where: { identifier: networkInterface.identifier },
+            create: {
+                name: networkInterface.name ?? networkInterface.identifier,
+                identifier: networkInterface.identifier,
+                linkType: networkInterface.linkType ?? "static",
+                ipv4: networkInterface.ipv4 ?? "",
+                subnet: networkInterface.subnet ?? "",
+                gateways: networkInterface.gateways ?? [],
+                routes: networkInterface.routes ?? [],
+                status: networkInterface.status ?? false,
+            },
+            update: {
+                name: networkInterface.name ?? networkInterface.identifier,
+                linkType: networkInterface.linkType ?? "static",
+                ipv4: networkInterface.ipv4 ?? "",
+                subnet: networkInterface.subnet ?? "",
+                gateways: networkInterface.gateways ?? [],
+                routes: networkInterface.routes ?? [],
+                status: networkInterface.status ?? false,
+            },
+        });
+    }
+
+    async upsertNetworkInterfaces(networkInterfaces: Partial<NetworkInterface>[]): Promise<NetworkInterface[]> {
+        return Promise.all(networkInterfaces.map(iface => this.upsertNetworkInterface(iface)));
+    }
 }

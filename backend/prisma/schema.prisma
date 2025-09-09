@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,100 +7,166 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Network {
-  networkId String         @id
-  devices   Device[]
-  ispLogs   ISPHealth[]
-  alerts    Alert[]
-  bandwidth BandwidthLog[]
-  createdAt DateTime       @default(now())
+model NetworkInterface {
+  interfaceId Int      @id @default(autoincrement())
+  name        String
+  identifier  String   @unique
+  linkType    String
+  ipv4        String
+  subnet      String
+  gateways    String[]
+  routes      String[]
+  status      Boolean
+
+  devices            Device[]
+  whitelistedDevices WhitelistedDevice[]
+  blacklistedDevices BlacklistedDevice[]
+  alerts             Alert[]
+  BandwidthHourly    BandwidthHourly[]
+  BandwidthDaily     BandwidthDaily[]
 }
 
 model Device {
-  mac        String          @id
-  ip         String
-  hostname   String?
-  state      String // UP, DOWN, BLOCKED, etc.
-  name       String?
-  type       String? // MOBILE, LAPTOP, ROUTER
-  make       String?
-  model      String?
-  firstSeen  DateTime
-  lastSeen   DateTime
-  authorized Boolean         @default(false) // whitelist/blacklist
-  networkId  String
-  network    Network         @relation(fields: [networkId], references: [networkId])
-  openPorts  OpenPort[]
-  visited    VisitedSite[]
-  blocked    BlockedDomain[]
-  bandwidth  BandwidthLog[]
-  logs       DeviceLog[]
+  deviceId       Int           @id @default(autoincrement())
+  deviceIp       String
+  deviceMac      String
+  macInfo        String?
+  deviceHostname String?
+  deviceOS       String?
+  authorized     Boolean?      @default(false)
+  status         DeviceStatus? @default(UP)
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+
+  bandwidthUsage  BandwidthUsage[]
+  bandwidthHourly BandwidthHourly[]
+  bandwidthDaily  BandwidthDaily[]
+  openPorts       Port[]
+  visitedSites    VisitedSite[]
+
+  firstSeen DateTime @default(now())
+  lastSeen  DateTime @default(now())
+
+  @@unique([deviceMac, interfaceId])
 }
 
-model OpenPort {
-  id        String @id @default(cuid())
-  port      Int
-  protocol  String // e.g., TCP, UDP
-  deviceMac String
-  device    Device @relation(fields: [deviceMac], references: [mac])
+model BandwidthUsage {
+  id        Int      @id @default(autoincrement())
+  upload    BigInt
+  download  BigInt
+  timestamp DateTime @default(now())
+  deviceId  Int
+  device    Device   @relation(fields: [deviceId], references: [deviceId])
+}
+
+model BandwidthHourly {
+  id       Int      @id @default(autoincrement())
+  hour     DateTime
+  upload   BigInt
+  download BigInt
+  deviceId Int
+  device   Device   @relation(fields: [deviceId], references: [deviceId])
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+
+  @@unique([deviceId, hour])
+}
+
+model BandwidthDaily {
+  id       Int      @id @default(autoincrement())
+  day      DateTime
+  upload   BigInt
+  download BigInt
+  deviceId Int
+  device   Device   @relation(fields: [deviceId], references: [deviceId])
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+
+  @@unique([deviceId, day])
+}
+
+model Port {
+  portId     Int        @id @default(autoincrement())
+  portNumber Int
+  protocol   String?
+  status     PortStatus
+  firstSeen  DateTime   @default(now())
+  lastSeen   DateTime   @default(now())
+  deviceId   Int
+  device     Device     @relation(fields: [deviceId], references: [deviceId])
 }
 
 model VisitedSite {
-  id        String   @id @default(cuid())
-  domain    String
-  firstSeen DateTime @default(now())
-  lastSeen  DateTime @default(now())
-  deviceMac String
-  device    Device   @relation(fields: [deviceMac], references: [mac])
+  siteId     Int      @id @default(autoincrement())
+  siteIp     String
+  siteDomain String
+  firstSeen  DateTime @default(now())
+  lastSeen   DateTime @default(now())
+  deviceId   Int
+  device     Device   @relation(fields: [deviceId], references: [deviceId])
 }
 
-model BlockedDomain {
-  id        String   @id @default(cuid())
-  domain    String
-  reason    String?
-  createdAt DateTime @default(now())
-  deviceMac String?
-  device    Device?  @relation(fields: [deviceMac], references: [mac])
+model BlockedSite {
+  blockedSiteId Int      @id @default(autoincrement())
+  siteIp        String
+  siteDomain    String
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-model BandwidthLog {
-  id         String   @id @default(cuid())
-  deviceMac  String?
-  device     Device?  @relation(fields: [deviceMac], references: [mac])
-  networkId  String
-  network    Network  @relation(fields: [networkId], references: [networkId])
-  uploadMB   Float
-  downloadMB Float
-  totalMB    Float
-  timestamp  DateTime @default(now())
+model WhitelistedDevice {
+  whitelistedDeviceId  Int      @id @default(autoincrement())
+  whitelistedDeviceMac String
+  createdAt            DateTime @default(now())
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
 }
 
-model ISPHealth {
-  id        String   @id @default(cuid())
-  networkId String
-  network   Network  @relation(fields: [networkId], references: [networkId])
-  status    String // UP / DOWN
-  latencyMs Int?
-  download  Float? // Mbps
-  upload    Float? // Mbps
-  checkedAt DateTime @default(now())
+model BlacklistedDevice {
+  blacklistedDeviceId  Int      @id @default(autoincrement())
+  blacklistedDeviceMac String
+  createdAt            DateTime @default(now())
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
 }
 
 model Alert {
-  id        String   @id @default(cuid())
-  type      String // e.g., UNAUTHORIZED_DEVICE, BANDWIDTH_SPIKE
+  alertId   Int           @id @default(autoincrement())
+  alertType AlertType
   message   String
-  severity  String // INFO, WARNING, CRITICAL
-  createdAt DateTime @default(now())
-  networkId String
-  network   Network  @relation(fields: [networkId], references: [networkId])
+  severity  AlertSeverity
+  resolved  Boolean       @default(false)
+  timestamp DateTime      @default(now())
+
+  interfaceId Int
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
 }
 
-model DeviceLog {
-  id        String   @id @default(cuid())
-  deviceMac String
-  device    Device   @relation(fields: [deviceMac], references: [mac])
-  action    String // CONNECTED, DISCONNECTED, BLOCKED, etc.
-  timestamp DateTime @default(now())
-  user      String? // who triggered (for audit trail)
+enum DeviceStatus {
+  UP
+  DOWN
+}
+
+enum PortStatus {
+  OPEN
+  CLOSED
+}
+
+enum AlertType {
+  LOGIN
+  CONNECTED_DEVICES_RELATED
+  ACTION
+  BANDWIDTH_RELATED
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
 }

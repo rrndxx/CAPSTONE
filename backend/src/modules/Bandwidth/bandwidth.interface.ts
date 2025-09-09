@@ -1,7 +1,7 @@
 import type { Device } from "@prisma/client"
 
 export interface IBandwidthRepository {
-    getOverallNetworkBandwidthUsage()
-    getDeviceBandwidthUsage(mac: Device["mac"])
-    limitDeviceBandwidth(mac: Device["mac"])
+    getOverallNetworkBandwidthUsage(): Promise<any>
+    getDeviceBandwidthUsage(mac: Device["mac"]): Promise<any>
+    limitDeviceBandwidth(mac: Device["mac"]): Promise<any>
 }

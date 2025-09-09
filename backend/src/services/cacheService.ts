@@ -5,7 +5,7 @@ export interface ICacheService {
     set<T>(key: string, value: T, ttl: number): Promise<void>
 }
 
-export class CacheService implements ICacheService {
+export class RedisCacheService implements ICacheService {
     async get<T>(key: string): Promise<T | null> {
         const data = await redis.get(key)
         if (!data) return null

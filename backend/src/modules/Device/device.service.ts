@@ -1,54 +1,67 @@
-import type { Device, Network } from "@prisma/client";
-import type { IDeviceRepository } from "./device.interface.js";
+import type { Device } from "@prisma/client";
 import type { ICacheService } from "../../services/cacheService.js";
+import type { OPNsenseService } from "../../services/OPNsenseService.js";
+import type { IDeviceRepository } from "./device.repository.js";
 
 export class DeviceService {
     constructor(
         private readonly deviceRepo: IDeviceRepository,
-        private readonly cacheService: ICacheService
+        private readonly cacheService: ICacheService,
+        private readonly opnSenseService: OPNsenseService
     ) { }
 
-    async getDevicesFromCache() {
-        const devices = await this.cacheService.get<Device[]>("devices:all")
-
-        if (!devices) throw new Error("no devices from redis cache fetched.")
-
-        return devices
+    async getDevicesFromCache(interfaceId: Device["interfaceId"]): Promise<Device[] | null> {
+        return this.cacheService.get<Device[]>(`devices:${interfaceId}`);
     }
 
-    async setDevicesToCache(devices: Device[]) {
-        const result = await this.cacheService.set("devices:all", devices, 60)
-
-        return result
+    async setDevicesToCache(devices: Device[], interfaceId: Device["interfaceId"]): Promise<void> {
+        await this.cacheService.set(`devices:${interfaceId}`, devices, 60);
     }
 
-    async getAllDevices() {
-        const devices = await this.getDevicesFromCache()
-
-        if (!devices) throw new Error("no devices from db fetched.")
-
-        await this.setDevicesToCache(devices)
-
-        return devices
+    async getDevicesFromDHCPLease(): Promise<Partial<Device>[]> {
+        return this.opnSenseService.getDevicesFromDHCPLease();
     }
 
-    async getDeviceByMAC(mac: Device["mac"]) {
-        const device = await this.deviceRepo.getDeviceByMAC(mac)
+    async getAllDevices(interfaceId: Device["interfaceId"]): Promise<Device[]> {
+        const cachedDevices = await this.getDevicesFromCache(interfaceId);
+        if (cachedDevices) return cachedDevices;
 
-        if (!device) throw new Error(`no device with mac: ${mac} found.`)
+        const devicesFromDB = await this.deviceRepo.getAllDevices(interfaceId);
+        await this.setDevicesToCache(devicesFromDB, interfaceId);
 
-        return device
+        return devicesFromDB;
     }
 
-    async upsertDevice(device: Device, networkId: Network['networkId']) {
-        if (!device || !device.mac || !device.ip) throw new Error("Device, MAC, and IP are required.")
-
-        const result = await this.deviceRepo.upsertDevice(device, networkId)
-
-        return this.deviceRepo.upsertDevice(device, networkId)
+    async getDeviceByMAC(mac: Device["deviceMac"], interfaceId: Device["interfaceId"]): Promise<Device> {
+        const device = await this.deviceRepo.getDeviceByMAC(mac, interfaceId);
+        if (!device) throw new Error(`No device with MAC: ${mac} found on interface ${interfaceId}.`);
+        return device;
     }
 
-    async upsertDevices(devices: Device[]) {
-        throw new Error('not implemented yet')
+    async upsertDevice(device: Partial<Device>, interfaceId: Device["interfaceId"]): Promise<Device> {
+        if (!device.deviceMac || !device.deviceIp) {
+            throw new Error("deviceMac and deviceIp are required to upsert a device.");
+        }
+
+        const result = await this.deviceRepo.upsertDevice(device, interfaceId);
+
+        const cachedDevices = await this.getDevicesFromCache(interfaceId) ?? [];
+        const updatedDevices = [
+            ...cachedDevices.filter(d => d.deviceMac !== result.deviceMac),
+            result,
+        ];
+        await this.setDevicesToCache(updatedDevices, interfaceId);
+
+        return result;
+    }
+
+    async upsertDevices(devices: Partial<Device>[], interfaceId: Device["interfaceId"]): Promise<Device[]> {
+        if (!devices.length) return [];
+
+        const results = await Promise.all(devices.map(device => this.deviceRepo.upsertDevice(device, interfaceId)));
+
+        await this.setDevicesToCache(results, interfaceId);
+
+        return results;
     }
 }

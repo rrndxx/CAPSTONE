@@ -6,13 +6,16 @@ export class BandwidthRepository implements IBandwidthRepository {
     constructor(
         private db: PrismaClient
     ) { }
-    getOverallNetworkBandwidthUsage() {
+
+    getOverallNetworkBandwidthUsage(): Promise<any> {
         throw new Error("Method not implemented.");
     }
-    getDeviceBandwidthUsage(mac: Device["mac"]) {
+
+    getDeviceBandwidthUsage(mac: Device["mac"]): Promise<any> {
         throw new Error("Method not implemented.");
     }
-    limitDeviceBandwidth(mac: Device["mac"]) {
+
+    limitDeviceBandwidth(mac: Device["mac"]): Promise<any> {
         throw new Error("Method not implemented.");
     }
 }

@@ -3,11 +3,11 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-import { APILimiter } from "./middlewares/rateLimiter.js";
-import { errorHandler } from "./middlewares/errorHandler.js";
 import deviceRoutes from "./modules/Device/device.routes.js";
 import bandwidthRoutes from "./modules/Bandwidth/bandwidth.routes.js"
 import networkRoutes from "./modules/Network/network.routes.js";
+import { APILimiter } from "./middlewares/rateLimiter.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
