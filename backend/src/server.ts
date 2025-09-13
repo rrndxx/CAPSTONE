@@ -15,6 +15,7 @@ const PORT = config.PORT;
 const OPNSENSE_URL = config.OPNSENSE_URL
 const OPNSENSE_KEY = config.OPNSENSE_KEY
 const OPNSENSE_SECRET = config.OPNSENSE_SECRET
+const PYTHON_SCANNER_URL = config.PYTHON_SCANNER_URL
 
 export const deviceRepo = new DeviceRepository(db)
 export const bandwidthRepo = new BandwidthRepository(db)
@@ -25,15 +26,16 @@ export const opnSenseService = new OPNsenseService(OPNSENSE_URL, OPNSENSE_KEY, O
 export const deviceService = new DeviceService(deviceRepo, cache, opnSenseService)
 export const bandwidthService = new BandwidthService(bandwidthRepo)
 export const networkService = new NetworkService(networkRepo, cache, opnSenseService)
-export const networkScanner = new NetworkScanner(deviceService, networkService, cache, opnSenseService)
+export const networkScanner = new NetworkScanner(deviceService, networkService, cache, opnSenseService, PYTHON_SCANNER_URL)
 
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);
+    console.log(`Python scanner is running on ${PYTHON_SCANNER_URL}`);
 })
 
 await networkScanner.scanInterfacesNow()
 await networkScanner.scanDevicesNow()
 
-networkScanner.continuousNetworkInterfaceScan()
-networkScanner.continuousDeviceScan()
+// networkScanner.continuousNetworkInterfaceScan()
+// networkScanner.continuousDeviceScan()
 

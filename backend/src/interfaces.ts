@@ -83,22 +83,17 @@ import type { DeviceStatus } from "@prisma/client"
 // }
 
 export interface OPNsenseLease {
-    if: string;
-    address: string;
+    expire: number;
     hwaddr: string;
-    client_id: string;
-    valid_lifetime: string;
-    expire: string;
-    subnet_id: string;
-    fqdn_fwd: string;
-    fqdn_rev: string;
+    iaid: string;
+    address: string;
     hostname: string;
-    state: string;
-    user_context: string;
-    pool_id: string;
+    client_id: string;
+    if: string;
     if_descr: string;
     if_name: string;
     mac_info: string;
+    is_reserved: string;
 }
 
 export interface OPNsenseLeaseResponse {
@@ -130,4 +125,14 @@ export interface OPNInterface {
     routes?: string[];
     enabled: boolean;
     is_physical: boolean;
+}
+
+export interface SpeedTestResult {
+  isp: string;
+  client_ip: string;
+  server: string;
+  ping_ms: number;
+  download_bps: number;
+  upload_bps: number;
+  timestamp: string;
 }

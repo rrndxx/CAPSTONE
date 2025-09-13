@@ -32,7 +32,6 @@ import {
   Info,
   Globe,
   Settings,
-  Laptop2,
   Monitor,
   Gauge,
   Download,
@@ -46,131 +45,25 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 export type Device = {
-  uid: number
-  hostname: string
-  name: string
-  ip: string
-  mac: string
-  type: string
-  os: string
-  status: string
-  signal: number
-  download: number
-  upload: number
-  ping: number
-  bandwidthLimit: number
+  deviceId: number
+  deviceIp: string
+  deviceMac: string
+  macInfo: string | null
+  deviceHostname: string | null
+  deviceOS: string | null
   authorized: boolean
-  blocked: boolean
+  status: "UP" | "DOWN" | string
+  interfaceId: number
+  firstSeen: string
+  lastSeen: string
+  // extra client-side fields
+  blocked?: boolean
+  ping?: number
+  download?: number
+  upload?: number
+  signal?: number
+  bandwidthLimit?: number
 }
-
-// const columns: ColumnDef<Device>[] = [
-//   { accessorKey: "uid", header: "UID", cell: info => info.getValue() },
-//   { accessorKey: "ip", header: "IP", cell: info => info.getValue() },
-//   { accessorKey: "mac", header: "MAC", cell: info => info.getValue() },
-//   { accessorKey: "hostname", header: "Hostname", cell: info => info.getValue() },
-//   { accessorKey: "type", header: "Type", cell: info => info.getValue() },
-//   { accessorKey: "os", header: "OS", cell: info => info.getValue() },
-//   {
-//     accessorKey: "status",
-//     header: "Status",
-//     cell: (info) => {
-//       const value = info.getValue() as string
-//       const color = value === "Online" ? "text-green-600" : "text-red-500"
-//       return <span className={`font-medium ${color}`}>{value}</span>
-//     },
-//   },
-//   {
-//     id: "actions",
-//     header: "Actions",
-//     cell: ({ row }) => {
-//       const device = row.original
-//       const [bandwidth, setBandwidth] = useState("")
-
-//       const handleLimit = () => {
-//         if (!bandwidth || Number(bandwidth) <= 0) {
-//           alert("Enter a valid bandwidth limit.")
-//           return
-//         }
-//         alert(`Bandwidth limit of ${bandwidth} Mbps applied to ${device.hostname}`)
-//       }
-
-//       const handleToggleBlock = () => {
-//         const action = device.blocked ? "Unblocked" : "Blocked"
-//         alert(`${action} ${device.hostname}`)
-//       }
-
-//       return (
-//         <div className="flex items-center justify-center gap-2">
-//           {/* Block / Unblock Button */}
-//           <Button
-//             size="sm"
-//             variant={device.blocked ? "success" : "destructive"}
-//             onClick={handleToggleBlock}
-//             className="w-24"
-//           >
-//             {device.blocked ? "Unblock" : "Block"}
-//           </Button>
-
-//           {/* Dialog Trigger */}
-//           <Dialog>
-//             <DialogTrigger asChild>
-//               <Button
-//                 size="icon"
-//                 variant="outline"
-//                 className="w-8 h-8"
-//               >
-//                 <MoreHorizontal className="w-4 h-4" />
-//               </Button>
-//             </DialogTrigger>
-
-//             <DialogContent className="max-w-lg sm:max-w-xl">
-//               <DialogHeader>
-//                 <DialogTitle className="flex items-center gap-2 text-lg">
-//                   <Info className="w-5 h-5" />
-//                   Device Details
-//                 </DialogTitle>
-//                 <DialogDescription className="text-sm text-muted-foreground">
-//                   Manage <strong>{device.name}</strong> and view technical details.
-//                 </DialogDescription>
-//               </DialogHeader>
-
-//               {/* Device Info Grid */}
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
-//                 <InfoRow icon={<Server />} label="Hostname" value={device.hostname} />
-//                 <InfoRow icon={<Globe />} label="IP" value={device.ip} />
-//                 <InfoRow icon={<Settings />} label="MAC" value={device.mac} />
-//                 <InfoRow icon={<Laptop2 />} label="Type" value={device.type} />
-//                 <InfoRow icon={<Monitor />} label="OS" value={device.os} />
-//                 <InfoRow icon={<Gauge />} label="Ping" value={`${device.ping} ms`} />
-//                 <InfoRow icon={<Download />} label="Download" value={`${device.download} Mbps`} />
-//                 <InfoRow icon={<Upload />} label="Upload" value={`${device.upload} Mbps`} />
-//                 <InfoRow icon={<Wifi />} label="Signal" value={`${device.signal}%`} />
-//                 <InfoRow icon={<ShieldCheck />} label="Authorized" value={device.authorized ? "Yes" : "No"} />
-//                 <InfoRow icon={<Ban />} label="Blocked" value={device.blocked ? "Yes" : "No"} />
-//               </div>
-
-//               {/* Bandwidth Control */}
-//               <div className="mt-6 space-y-2">
-//                 <p className="text-sm font-medium">Limit Bandwidth</p>
-//                 <div className="flex flex-col sm:flex-row items-center gap-2">
-//                   <Input
-//                     placeholder="Enter Mbps"
-//                     type="number"
-//                     value={bandwidth}
-//                     onChange={(e) => setBandwidth(e.target.value)}
-//                   />
-//                   <Button size="sm" onClick={handleLimit}>
-//                     Apply
-//                   </Button>
-//                 </div>
-//               </div>
-//             </DialogContent>
-//           </Dialog>
-//         </div >
-//       )
-//     }
-//   }
-// ]
 
 export function DevicesTable({
   devices,
@@ -182,12 +75,12 @@ export function DevicesTable({
   const [globalFilter, setGlobalFilter] = useState("")
 
   const commonColumns: ColumnDef<Device>[] = [
-    { accessorKey: "uid", header: "UID", cell: info => info.getValue() },
-    { accessorKey: "ip", header: "IP", cell: info => info.getValue() },
-    { accessorKey: "mac", header: "MAC", cell: info => info.getValue() },
-    { accessorKey: "hostname", header: "Hostname", cell: info => info.getValue() },
-    { accessorKey: "type", header: "Type", cell: info => info.getValue() },
-    { accessorKey: "os", header: "OS", cell: info => info.getValue() },
+    { accessorKey: "deviceId", header: "ID", cell: info => info.getValue() },
+    { accessorKey: "deviceIp", header: "IP", cell: info => info.getValue() },
+    { accessorKey: "deviceMac", header: "MAC", cell: info => info.getValue() },
+    { accessorKey: "deviceHostname", header: "Hostname", cell: info => info.getValue() ?? "—" },
+    { accessorKey: "deviceOS", header: "OS", cell: info => info.getValue() ?? "Unknown" },
+    { accessorKey: "macInfo", header: "Vendor", cell: info => info.getValue() ?? "—" },
   ]
 
   const actionColumn: ColumnDef<Device> = {
@@ -202,18 +95,14 @@ export function DevicesTable({
           alert("Enter a valid bandwidth limit.")
           return
         }
-        alert(`Bandwidth limit of ${bandwidth} Mbps applied to ${device.hostname}`)
+        alert(`Bandwidth limit of ${bandwidth} Mbps applied to ${device.deviceHostname}`)
       }
 
       if (viewType === "bandwidth") {
         return (
           <Dialog>
             <DialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="w-24"
-              >
+              <Button size="sm" variant="destructive" className="w-24">
                 Limit
               </Button>
             </DialogTrigger>
@@ -224,7 +113,7 @@ export function DevicesTable({
                   Limit Bandwidth
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  Set a bandwidth limit for <strong>{device.hostname}</strong>.
+                  Set a bandwidth limit for <strong>{device.deviceHostname ?? "Unknown"}</strong>.
                 </DialogDescription>
               </DialogHeader>
 
@@ -249,12 +138,12 @@ export function DevicesTable({
 
       const handleToggleBlock = () => {
         const action = device.blocked ? "Unblocked" : "Blocked"
-        alert(`${action} ${device.hostname}`)
+        alert(`${action} ${device.deviceHostname}`)
       }
 
       const handleRemove = () => {
         const list = viewType === "whitelist" ? "Whitelist" : "Blacklist"
-        alert(`Removed ${device.hostname} from ${list}`)
+        alert(`Removed ${device.deviceHostname} from ${list}`)
       }
 
       if (viewType === "whitelist" || viewType === "blacklist") {
@@ -295,22 +184,23 @@ export function DevicesTable({
                   Device Details
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  Manage <strong>{device.name}</strong> and view technical details.
+                  Manage <strong>{device.deviceHostname ?? "Unknown"}</strong> and view details.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
-                <InfoRow icon={<Server />} label="Hostname" value={device.hostname} />
-                <InfoRow icon={<Globe />} label="IP" value={device.ip} />
-                <InfoRow icon={<Settings />} label="MAC" value={device.mac} />
-                <InfoRow icon={<Laptop2 />} label="Type" value={device.type} />
-                <InfoRow icon={<Monitor />} label="OS" value={device.os} />
-                <InfoRow icon={<Gauge />} label="Ping" value={`${device.ping} ms`} />
-                <InfoRow icon={<Download />} label="Download" value={`${device.download} Mbps`} />
-                <InfoRow icon={<Upload />} label="Upload" value={`${device.upload} Mbps`} />
-                <InfoRow icon={<Wifi />} label="Signal" value={`${device.signal}%`} />
+                <InfoRow icon={<Server />} label="Hostname" value={device.deviceHostname ?? "—"} />
+                <InfoRow icon={<Globe />} label="IP" value={device.deviceIp} />
+                <InfoRow icon={<Settings />} label="MAC" value={device.deviceMac} />
+                <InfoRow icon={<Monitor />} label="OS" value={device.deviceOS ?? "Unknown"} />
                 <InfoRow icon={<ShieldCheck />} label="Authorized" value={device.authorized ? "Yes" : "No"} />
                 <InfoRow icon={<Ban />} label="Blocked" value={device.blocked ? "Yes" : "No"} />
+                <InfoRow icon={<Gauge />} label="Ping" value={`${device.ping ?? 0} ms`} />
+                <InfoRow icon={<Download />} label="Download" value={`${device.download ?? 0} Mbps`} />
+                <InfoRow icon={<Upload />} label="Upload" value={`${device.upload ?? 0} Mbps`} />
+                <InfoRow icon={<Wifi />} label="Signal" value={`${device.signal ?? 0}%`} />
+                <InfoRow icon={<Info />} label="First Seen" value={new Date(device.firstSeen).toLocaleString()} />
+                <InfoRow icon={<Info />} label="Last Seen" value={new Date(device.lastSeen).toLocaleString()} />
               </div>
 
               <div className="mt-6 space-y-2">
@@ -338,23 +228,23 @@ export function DevicesTable({
 
   if (viewType === "bandwidth") {
     fullColumns = [
-      { accessorKey: "uid", header: "UID", cell: info => info.getValue() },
-      { accessorKey: "hostname", header: "Hostname", cell: info => info.getValue() },
-      { accessorKey: "ip", header: "IP", cell: info => info.getValue() },
+      { accessorKey: "deviceId", header: "ID", cell: info => info.getValue() },
+      { accessorKey: "deviceHostname", header: "Hostname", cell: info => info.getValue() ?? "—" },
+      { accessorKey: "deviceIp", header: "IP", cell: info => info.getValue() },
       {
         accessorKey: "download",
         header: "Download",
-        cell: info => `${info.getValue()} Mbps`,
+        cell: info => `${info.getValue() ?? 0} Mbps`,
       },
       {
         accessorKey: "upload",
         header: "Upload",
-        cell: info => `${info.getValue()} Mbps`,
+        cell: info => `${info.getValue() ?? 0} Mbps`,
       },
       {
         accessorKey: "bandwidthLimit",
         header: "Limit",
-        cell: info => `${info.getValue() ?? "0"} mb`,
+        cell: info => `${info.getValue() ?? "0"} Mbps`,
       },
       actionColumn,
     ]
@@ -366,7 +256,7 @@ export function DevicesTable({
         header: "Status",
         cell: info => {
           const value = info.getValue() as string
-          const color = value === "Online" ? "text-green-600" : "text-red-500"
+          const color = value === "UP" ? "text-green-600" : "text-red-500"
           return <span className={`font-medium ${color}`}>{value}</span>
         }
       })
@@ -377,13 +267,7 @@ export function DevicesTable({
   const table = useReactTable({
     data: devices ?? [],
     columns: fullColumns,
-    state: {
-      globalFilter,
-      // pagination: {
-      //   pageIndex: 0,
-      //   pageSize: 10,
-      // }
-    },
+    state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -399,9 +283,6 @@ export function DevicesTable({
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
-
-
-
       </div>
 
       <Table>
@@ -492,9 +373,6 @@ export function DevicesTable({
             </SelectContent>
           </Select>
         </div>
-
-
-
       </div>
     </div>
   )

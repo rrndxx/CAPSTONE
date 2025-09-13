@@ -9,7 +9,8 @@ const envSchema = z.object({
     REDIS_URL: z.string(),
     OPNSENSE_URL: z.string(),
     OPNSENSE_KEY: z.string(),
-    OPNSENSE_SECRET: z.string()
+    OPNSENSE_SECRET: z.string(),
+    PYTHON_SCANNER_URL: z.string()
 })
 
 const parsed = envSchema.safeParse(process.env)

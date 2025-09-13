@@ -2,6 +2,8 @@ import type { Device, NetworkInterface } from "@prisma/client";
 import type { ICacheService } from "../../services/cacheService.js";
 import type { OPNsenseService } from "../../services/OPNsenseService.js";
 import type { INetworkRepository } from "./network.repository.js";
+import type { SpeedTestResult } from "../../interfaces.js";
+import { networkScanner } from "../../server.js";
 
 export class NetworkService {
     constructor(
@@ -10,11 +12,21 @@ export class NetworkService {
         private readonly opnSenseService: OPNsenseService
     ) { }
 
+    async getNetworkInterfacesFromCache(): Promise<NetworkInterface[] | null> {
+        return this.cacheService.get<NetworkInterface[]>(`networkInterfaces`);
+    }
+
+    async setNetworkInterfacesToCache(interfaces: NetworkInterface[]): Promise<void> {
+        await this.cacheService.set(`networkInterfaces`, interfaces, 60 * 60);
+    }
+
     async getNetworkInterfaces(): Promise<NetworkInterface[]> {
-        const cached = await this.getNetworkInterfacesFromCache();
-        if (cached) return cached;
+        const cachedInterfaces = await this.getNetworkInterfacesFromCache();
+
+        if (cachedInterfaces) return cachedInterfaces;
 
         const networkInterfaces = await this.networkRepository.getNetworkInterfaces();
+
         await this.setNetworkInterfacesToCache(networkInterfaces);
 
         return networkInterfaces;
@@ -26,15 +38,15 @@ export class NetworkService {
         return networkInterfaces;
     }
 
-    async getNetworkInterfacesFromCache(): Promise<NetworkInterface[] | null> {
-        return this.cacheService.get<NetworkInterface[]>(`networkInterfaces`);
+    // async getDevicesFromDHCPLease(): Promise<Partial<Device>[]> {
+    //     return this.opnSenseService.getDevicesFromDHCPLease();
+    // }
+
+    async runSpeedTest(): Promise<SpeedTestResult> {
+        return networkScanner.runSpeedTest()
     }
 
-    async setNetworkInterfacesToCache(interfaces: NetworkInterface[]): Promise<void> {
-        await this.cacheService.set(`networkInterfaces`, interfaces, 60 * 60);
-    }
-
-    async getDevicesFromDHCPLease(): Promise<Partial<Device>[]> {
-        return this.opnSenseService.getDevicesFromDHCPLease();
+    async runISPHealth(): Promise<any> {
+        return networkScanner.runISPHealth()
     }
 }

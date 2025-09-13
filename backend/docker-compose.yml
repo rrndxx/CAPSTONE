@@ -24,3 +24,11 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - D:/docker-data/redis:/data
+
+  scanner:
+    build:
+      context: ./microservice-scanner
+    container_name: python-ext-scanner
+    restart: always
+    ports:
+      - "8000:8000"

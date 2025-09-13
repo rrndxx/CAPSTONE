@@ -1,14 +1,21 @@
-import type { Device, PrismaClient } from "@prisma/client";
+import type { Device, Port, PrismaClient } from "@prisma/client";
 
 export interface IDeviceRepository {
+    removeDeviceFromBlacklist(deviceMac: string, interfaceId: number): unknown;
+    addDeviceToBlacklist(deviceMac: string, interfaceId: number): unknown;
     getAllDevices(interfaceId: Device['interfaceId']): Promise<Device[]>;
     getDeviceByMAC(mac: Device['deviceMac'], interfaceId: Device['interfaceId']): Promise<Device | null>;
     upsertDevice(device: Partial<Device>, interfaceId: Device['interfaceId']): Promise<Device>;
     upsertDevices(devices: Partial<Device>[], interfaceId: Device['interfaceId']): Promise<Device[]>;
+    getPortByNumber(deviceId: number, portNumber: number): Promise<Port | null>;
+    upsertPort(port: Partial<Port>, updateExisting: boolean): Promise<Port>;
+    updateDeviceOS(deviceId: number, osName: string): Promise<Device>;
 }
 
 export class DeviceRepository implements IDeviceRepository {
-    constructor(private db: PrismaClient) { }
+    constructor(
+        private db: PrismaClient
+    ) { }
 
     private normalizeMAC(mac: Device['deviceMac']): string {
         const hex = mac.replace(/[^a-fA-F0-9]/g, "").toUpperCase();
@@ -29,8 +36,9 @@ export class DeviceRepository implements IDeviceRepository {
     }
 
     async upsertDevice(device: Partial<Device>, interfaceId: Device["interfaceId"]): Promise<Device> {
-        if (!device.deviceMac || !device.deviceIp)
+        if (!device.deviceMac || !device.deviceIp) {
             throw new Error("deviceMac and deviceIp are required to upsert a device");
+        }
 
         const normalized = this.normalizeMAC(device.deviceMac);
 
@@ -63,4 +71,63 @@ export class DeviceRepository implements IDeviceRepository {
     async upsertDevices(devices: Partial<Device>[], interfaceId: Device["interfaceId"]): Promise<Device[]> {
         return Promise.all(devices.map(d => this.upsertDevice(d, interfaceId)));
     }
+
+    async getPortByNumber(deviceId: number, portNumber: number): Promise<Port | null> {
+        return this.db.port.findUnique({
+            where: { deviceId_portNumber: { deviceId, portNumber } },
+        });
+    }
+
+    async upsertPort(port: Partial<Port>, updateExisting: boolean): Promise<Port> {
+        if (!port.deviceId || !port.portNumber) throw new Error("deviceId and portNumber are required");
+
+        const createData = {
+            deviceId: port.deviceId,
+            portNumber: port.portNumber,
+            status: port.status ?? "CLOSED",
+            protocol: port.protocol ?? null,
+            firstSeen: port.firstSeen ?? new Date(),
+            lastSeen: port.lastSeen ?? new Date(),
+        };
+
+        const updateData = updateExisting
+            ? {
+                status: port.status ?? "CLOSED",
+                protocol: port.protocol ?? null,
+                lastSeen: port.lastSeen ?? new Date(),
+            }
+            : {};
+
+        return this.db.port.upsert({
+            where: { deviceId_portNumber: { deviceId: port.deviceId, portNumber: port.portNumber } },
+            create: createData,
+            update: updateData,
+        });
+    }
+
+    async updateDeviceOS(deviceId: number, osName: string): Promise<Device> {
+        return this.db.device.update({
+            where: { deviceId },
+            data: { deviceOS: osName, lastSeen: new Date() },
+        });
+    }
+
+    async addDeviceToBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.blacklistedDevice.create({
+            data: {
+                blacklistedDeviceMac: deviceMac,
+                interfaceId
+            }
+        })
+    }
+
+    async removeDeviceFromBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.blacklistedDevice.deleteMany({
+            where: {
+                blacklistedDeviceMac: deviceMac,
+                interfaceId,
+            },
+        })
+    }
+
 }

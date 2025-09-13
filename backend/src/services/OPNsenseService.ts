@@ -1,5 +1,6 @@
 import https from "https";
 import axios, { type AxiosRequestConfig } from "axios";
+import type { Device } from "@prisma/client";
 
 export class OPNsenseService {
     private baseUrl: string;
@@ -37,10 +38,61 @@ export class OPNsenseService {
     // DEVICES
 
     async getDevicesFromDHCPLease(): Promise<any> {
-        return this._request("post", "/api/kea/leases4/search/");
+        return this._request("post", "/api/dnsmasq/leases/search/ ");
+    }
+
+    async blockDevice(device: Device): Promise<any> {
+        const payload = {
+            host: {
+                host: device.deviceHostname ?? "",     // hostname (optional)
+                domain: "",
+                local: "0",
+                ip: device.deviceIp ?? "",             // assign IP or leave empty
+                aliases: "",
+                cnames: "",
+                client_id: "",
+                hwaddr: device.deviceMac,              // MAC address is critical
+                lease_time: "",
+                set_tag: "",
+                ignore: "1",                           // this makes dnsmasq ignore it (block)
+                descr: `Blocked ${device.deviceMac}`,
+                comments: ""
+            }
+        };
+
+        // 1. Add static host
+        await this._request("post", "/api/dnsmasq/settings/add_host/", payload);
+
+        // 2. Save config
+        await this._request("post", "/api/dnsmasq/settings/set", {});
+
+        // 3. Reconfigure service
+        return this._request("post", "/api/dnsmasq/service/reconfigure", {});
+    }
+
+    async unblockDevice(device: Device): Promise<any> {
+        // 1. Get all host overrides
+        const hosts = await this._request("post", "/api/dnsmasq/settings/search_host/");
+        const row = hosts.rows.find((h: any) => h.hwaddr === device.deviceMac);
+
+        if (!row) {
+            throw new Error(`No mapping found for MAC ${device.deviceMac}`);
+        }
+
+        const uuid = row.uuid;
+
+        // 2. Delete that host override
+        await this._request("post", `/api/dnsmasq/settings/del_host/${uuid}`);
+
+        // 3. Save Config
+        await this._request("post", "/api/dnsmasq/settings/set", {});
+
+        // 4. Reconfigure service
+        return this._request("post", "/api/dnsmasq/service/reconfigure", {});
     }
 
     // SYSTEM
+
     async getSystemInformation(): Promise<any> {
         return this._request("get", "/api/diagnostics/system/system_information")
     }

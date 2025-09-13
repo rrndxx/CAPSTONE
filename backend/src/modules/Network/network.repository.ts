@@ -8,7 +8,9 @@ export interface INetworkRepository {
 }
 
 export class NetworkRepository implements INetworkRepository {
-    constructor(private readonly db: PrismaClient) { }
+    constructor(
+        private readonly db: PrismaClient
+    ) { }
 
     async getNetworkInterfaces(): Promise<NetworkInterface[]> {
         return this.db.networkInterface.findMany();

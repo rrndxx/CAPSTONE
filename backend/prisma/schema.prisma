@@ -97,6 +97,8 @@ model Port {
   lastSeen   DateTime   @default(now())
   deviceId   Int
   device     Device     @relation(fields: [deviceId], references: [deviceId])
+
+  @@unique([deviceId, portNumber])
 }
 
 model VisitedSite {
