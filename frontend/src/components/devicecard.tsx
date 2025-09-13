@@ -4,9 +4,7 @@ import {
   CardTitle,
   CardContent
 } from "@/components/ui/card"
-import {
-  Button
-} from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogTrigger,
@@ -14,7 +12,6 @@ import {
   DialogHeader as DialogHead,
   DialogTitle as DialogHeading,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
@@ -30,41 +27,42 @@ import {
   Settings,
   Globe,
   Info,
-  ShieldCheck
+  ShieldCheck,
+  Timer
 } from "lucide-react"
 
 import { type Device } from "./devicestable"
 import { useState } from "react"
 
 export function DeviceCard(device: Device) {
-  const isOnline = device.status === "Online"
+  const isOnline = device.status === "UP"
   const [bandwidth, setBandwidth] = useState("")
 
   return (
     <Card className="bg-muted/50 dark:bg-muted p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-      {/* Header: Name + Status */}
+      {/* Header: Hostname + Status */}
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
             <Monitor className="w-6 h-6 text-chart-1 shrink-0" />
             <CardTitle className="text-base font-semibold truncate">
-              {device.name}
+              {device.deviceHostname || "Unknown Device"}
             </CardTitle>
           </div>
           <span
             className={`text-xs font-medium px-2 py-0.5 rounded-full ${isOnline ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
               }`}
           >
-            {device.status}
+            {isOnline ? "Online" : "Offline"}
           </span>
         </div>
       </CardHeader>
 
       {/* Short Info */}
       <CardContent className="text-sm mt-3 space-y-2">
-        <InfoRow icon={<Server className="w-4 h-4" />} label="Hostname" value={device.hostname} />
-        <InfoRow icon={<Globe className="w-4 h-4" />} label="IP" value={device.ip} />
-        <InfoRow icon={<Settings className="w-4 h-4" />} label="MAC" value={device.mac} />
+        <InfoRow icon={<Server className="w-4 h-4" />} label="Hostname" value={device.deviceHostname ?? "—"} />
+        <InfoRow icon={<Globe className="w-4 h-4" />} label="IP" value={device.deviceIp} />
+        <InfoRow icon={<Settings className="w-4 h-4" />} label="MAC" value={device.deviceMac} />
 
         <Dialog>
           <DialogTrigger asChild>
@@ -79,7 +77,7 @@ export function DeviceCard(device: Device) {
                 <Info className="w-5 h-5" /> Device Details
               </DialogHeading>
               <DialogDescription>
-                Manage <strong>{device.name}</strong> and view technical details.
+                Manage <strong>{device.deviceHostname ?? device.deviceIp}</strong> and view technical details.
               </DialogDescription>
             </DialogHead>
 
@@ -87,15 +85,12 @@ export function DeviceCard(device: Device) {
             <section className="mt-4">
               <h4 className="text-sm font-semibold text-muted-foreground mb-2">Device Info</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <InfoRow icon={<Server className="w-4 h-4" />} label="Hostname" value={device.hostname} />
-                <InfoRow icon={<Globe className="w-4 h-4" />} label="IP" value={device.ip} />
-                <InfoRow icon={<Settings className="w-4 h-4" />} label="MAC" value={device.mac} />
-                <InfoRow icon={<Laptop2 className="w-4 h-4" />} label="Type" value={device.type} />
-                <InfoRow icon={<Monitor className="w-4 h-4" />} label="OS" value={device.os} />
-                <InfoRow icon={<Gauge className="w-4 h-4" />} label="Ping" value={`${device.ping} ms`} />
-                <InfoRow icon={<Download className="w-4 h-4" />} label="Download" value={`${device.download} Mbps`} />
-                <InfoRow icon={<Upload className="w-4 h-4" />} label="Upload" value={`${device.upload} Mbps`} />
-                <InfoRow icon={<Wifi className="w-4 h-4" />} label="Signal" value={`${device.signal}%`} />
+                <InfoRow icon={<Server className="w-4 h-4" />} label="Hostname" value={device.deviceHostname ?? "—"} />
+                <InfoRow icon={<Globe className="w-4 h-4" />} label="IP" value={device.deviceIp} />
+                <InfoRow icon={<Settings className="w-4 h-4" />} label="MAC" value={device.deviceMac} />
+                <InfoRow icon={<Monitor className="w-4 h-4" />} label="OS" value={device.deviceOS ?? "Unknown"} />
+                <InfoRow icon={<Download className="w-4 h-4" />} label="Download" value={device.download ? `${device.download} Mbps` : "—"} />
+                <InfoRow icon={<Upload className="w-4 h-4" />} label="Upload" value={device.upload ? `${device.upload} Mbps` : "—"} />
                 <InfoRow icon={<ShieldCheck className="w-4 h-4" />} label="Authorized" value={device.authorized ? "Yes" : "No"} />
                 <InfoRow icon={<Ban className="w-4 h-4" />} label="Blocked" value={device.blocked ? "Yes" : "No"} />
               </div>
@@ -119,7 +114,7 @@ export function DeviceCard(device: Device) {
                     if (!bandwidth || Number(bandwidth) <= 0) {
                       alert("Please enter a valid bandwidth limit.")
                     } else {
-                      alert(`Applied bandwidth limit of ${bandwidth} Mbps to ${device.hostname}`)
+                      alert(`Applied bandwidth limit of ${bandwidth} Mbps to ${device.deviceHostname ?? device.deviceIp}`)
                     }
                   }}
                 >
@@ -133,7 +128,7 @@ export function DeviceCard(device: Device) {
               <h4 className="text-sm font-semibold text-muted-foreground mb-2">Actions</h4>
               <Button
                 variant="destructive"
-                onClick={() => alert(`Blocked ${device.hostname}`)}
+                onClick={() => alert(`Blocked ${device.deviceHostname ?? device.deviceIp}`)}
                 className="w-full"
               >
                 Block Device

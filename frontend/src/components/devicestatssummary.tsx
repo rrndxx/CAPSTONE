@@ -9,8 +9,8 @@ import { type Device } from "@/components/devicestable"
 
 export function DevicesStatsSummary({ devices }: { devices: Device[] }) {
   const all = devices.length
-  const online = devices.filter(d => d.status === "Online").length
-  const blocked = devices.filter(d => d.blocked).length
+  const online = devices.filter(d => d.status === "UP").length
+  const blocked = devices.filter(d => !d.authorized).length
   const authorized = devices.filter(d => d.authorized).length
 
   const stats = [

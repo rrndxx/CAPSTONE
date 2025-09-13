@@ -3,27 +3,29 @@ import { Gauge } from "@/components/gauge";
 import { DevicesTable } from "@/components/devicestable";
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Wifi, Smartphone, AlertCircle, BrainCircuit } from "lucide-react"
-import { devices } from "@/constants/constants";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { useDevices } from "@/hooks/useDevices";
 
 export default function MainDashboardPage() {
+    const { data: devices = [], isLoading } = useDevices(2)
+
     const uptime = {
         days: 1,
         hours: 3,
     }
     const [filter, setFilter] = useState<"all" | "online" | "offline" | "blocked">("all")
 
-    const filteredDevices = devices.filter((d) => {
-        if (filter === "online") return d.status === "Online"
-        if (filter === "offline") return d.status === "Offline"
-        if (filter === "blocked") return d.blocked
+    const filteredDevices = devices.filter((d: { status: string; authorized: any; }) => {
+        if (filter === "online") return d.status === "UP"
+        if (filter === "offline") return d.status === "DOWN"
+        if (filter === "blocked") return !d.authorized
         return true
     })
 
     const totalDevices = devices.length
-    const onlineDevices = devices.filter(d => d.status === "Online").length
-    const blockedDevices = devices.filter(d => d.blocked).length
+    const onlineDevices = devices.filter((d: { status: string; }) => d.status === "UP").length
+    const blockedDevices = devices.filter((d: { authorized: any; }) => !d.authorized).length
 
     return (
         <SidebarInset>
@@ -35,7 +37,7 @@ export default function MainDashboardPage() {
                                 {
                                     icon: <Smartphone className="w-8 h-8 text-chart-1" />,
                                     label: "Connected Devices",
-                                    value: "128",
+                                    value: devices.length,
                                 },
                                 {
                                     icon: <Wifi className="w-8 h-8 text-chart-1" />,
@@ -106,11 +108,11 @@ export default function MainDashboardPage() {
                             Blocked ({blockedDevices})
                         </Badge>
                     </div>
-                    <div className="bg-white dark:bg-muted/50 rounded-xl shadow min-h-[300px] p-4">
-                        {Array.isArray(devices) && devices.length > 0 ? (
+                    <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
+                        {Array.isArray(devices) && filteredDevices.length > 0 ? (
                             <DevicesTable devices={filteredDevices} viewType="all" />
                         ) : (
-                            <div>No devices found.</div>
+                            <div className="text-muted-foreground text-sm text-center py-8">No devices match the filter.</div>
                         )}
                     </div>
                 </div>

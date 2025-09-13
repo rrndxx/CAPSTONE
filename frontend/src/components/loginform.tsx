@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import axios from "axios"
 import { fetchDevices } from "@/hooks/useDevices"
 
 export function LoginForm({
@@ -19,14 +18,19 @@ export function LoginForm({
     const queryClient = useQueryClient()
 
     const loginUser = async (credentials: { email: string; password: string }) => {
-        const res = await axios.post("http://localhost:4000/auth/login", credentials)
-        return res.data
+        // const res = await axios.post("http://localhost:4000/auth/login", credentials)
+        // return res.data
+
+        return {
+            token: "fake-jwt-token-123",
+            interfaceId: 2, // hardcoded for now
+            user: { email: credentials.email },
+        }
     }
 
     const mutation = useMutation({
         mutationFn: loginUser,
         onSuccess: async (data) => {
-            // Save token
             localStorage.setItem("token", data.token)
 
             // Prefetch devices into React Query cache

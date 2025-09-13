@@ -1,6 +1,4 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import axios from "axios"
 import { DevicesTable } from "@/components/devicestable"
 import { DeviceCard } from "@/components/devicecard"
 import { DevicesStatsSummary } from "@/components/devicestatssummary"
@@ -8,35 +6,27 @@ import { Badge } from "@/components/ui/badge"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Monitor, Table } from "lucide-react"
 import { SidebarInset } from "@/components/ui/sidebar"
-
-const fetchDevices = async (interfaceId: number) => {
-  const res = await axios.get(`http://localhost:4000/devices/all?interfaceId=${interfaceId}`)
-  return res.data.data
-}
+import { useDevices } from "@/hooks/useDevices"
 
 const DevicesPage = () => {
   const [view, setView] = useState<"table" | "card">("table")
   const [filter, setFilter] = useState<"all" | "online" | "offline" | "blocked">("all")
 
-  const { data: devices = [], isLoading } = useQuery({
-    queryKey: ["devices", 2], // replace 1 with dynamic interfaceId
-    queryFn: () => fetchDevices(2),
-    refetchInterval: 60_000, // refresh every 1 min
-  })
+  const { data: devices = [], isLoading } = useDevices(2)
 
   if (isLoading) {
     return <div className="p-6 text-muted-foreground">Loading devices...</div>
   }
 
   const filteredDevices = devices.filter((d: any) => {
-    if (filter === "online") return d.status === "Online"
-    if (filter === "offline") return d.status === "Offline"
-    if (filter === "blocked") return d.blocked
+    if (filter === "online") return d.status === "UP"
+    if (filter === "offline") return d.status === "DOWN"
+    if (filter === "blocked") return !d.authorized
     return true
   })
 
   const totalDevices = devices.length
-  const onlineDevices = devices.filter((d: any) => d.status === "Online").length
+  const onlineDevices = devices.filter((d: any) => d.status === "UP").length
   const blockedDevices = devices.filter((d: any) => d.blocked).length
 
   return (

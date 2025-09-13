@@ -1,27 +1,30 @@
 import { DevicesTable } from "@/components/devicestable"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { devices } from "@/constants/constants"
+import { useDevices } from "@/hooks/useDevices"
 
 const WhitelistBlacklistPage = () => {
-    const whitelistedDevices = devices.filter(device => !device.blocked)
-    const blacklistedDevices = devices.filter(device => device.blocked)
+    const { data: devices = [], isLoading } = useDevices(2)
+
+
+    const whitelistedDevices = devices.filter((d: { authorized: any }) => d.authorized)
+    const blacklistedDevices = devices.filter((d: { authorized: any }) => !d.authorized)
 
     return (
         <SidebarInset>
             <div className="flex flex-col flex-1 gap-6 p-4 pt-0">
                 <Tabs defaultValue="whitelist" className="w-full">
-                        <TabsList className="mb-4">
-                            <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
-                            <TabsTrigger value="blacklist">Blacklist</TabsTrigger>
-                        </TabsList>
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
+                        <TabsTrigger value="blacklist">Blacklist</TabsTrigger>
+                    </TabsList>
 
                     {/* Whitelist Tab */}
                     <TabsContent value="whitelist">
                         {/* <div className="flex justify-end my-4">
                             <Button className="bg-chart-3">Add to Whitelist</Button>
                         </div> */}
-                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
+                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {whitelistedDevices.length > 0 ? (
                                 <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
                             ) : (
@@ -37,7 +40,7 @@ const WhitelistBlacklistPage = () => {
                         {/* <div className="flex justify-end my-4">
                             <Button className="bg-chart-3">Add to Blacklist</Button>
                         </div> */}
-                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
+                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {blacklistedDevices.length > 0 ? (
                                 <DevicesTable devices={blacklistedDevices} viewType="blacklist" />
                             ) : (
