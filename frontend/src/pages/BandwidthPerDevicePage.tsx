@@ -1,20 +1,19 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DevicesTable } from "@/components/devicestable"
-import { devices } from "@/constants/constants"
 import { SidebarInset } from "@/components/ui/sidebar"
 
 const BandwidthPerDevicePage = () => {
   const [search, setSearch] = useState("")
 
-  const filteredDevices = devices.filter((device) =>
-    Object.values(device).some((val) =>
-      val?.toString().toLowerCase().includes(search.toLowerCase())
-    )
-  )
+  // const filteredDevices = devices.filter((device) =>
+  //   Object.values(device).some((val) =>
+  //     val?.toString().toLowerCase().includes(search.toLowerCase())
+  //   )
+  // )
 
-  const limitedDevices = filteredDevices.filter((device) => device.bandwidthLimit > 0)
-  const unlimitedDevices = filteredDevices.filter((device) => device.bandwidthLimit === 0)
+  // const limitedDevices = filteredDevices.filter((device) => device.bandwidthLimit > 0)
+  // const unlimitedDevices = filteredDevices.filter((device) => device.bandwidthLimit === 0)
 
   return (
     <SidebarInset>
@@ -27,7 +26,7 @@ const BandwidthPerDevicePage = () => {
           </TabsList>
 
           <TabsContent value="limited">
-            <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
+            {/* <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
               {limitedDevices.length > 0 ? (
                 <DevicesTable devices={limitedDevices} viewType="bandwidth" />
               ) : (
@@ -35,11 +34,11 @@ const BandwidthPerDevicePage = () => {
                   No limited devices found.
                 </div>
               )}
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="unlimited">
-            <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
+            {/* <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
               {unlimitedDevices.length > 0 ? (
                 <DevicesTable devices={unlimitedDevices} viewType="bandwidth" />
               ) : (
@@ -47,7 +46,7 @@ const BandwidthPerDevicePage = () => {
                   No unlimited devices found.
                 </div>
               )}
-            </div>
+            </div> */}
           </TabsContent>
         </Tabs>
       </div>

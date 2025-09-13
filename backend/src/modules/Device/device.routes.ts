@@ -4,7 +4,8 @@ import axios from "axios";
 
 const router = Router();
 
-router.get("/all", deviceController.getAllDevices); // database/cache mukuha
+router.get("/all", deviceController.getAllDevicesFromDB); // database/cache mukuha
+// router.get("/all", deviceController.getAllDevices); // database/cache mukuha
 router.get("/:mac", deviceController.getDeviceByMAC); // database/cache mukuha
 router.post("/port/scan", deviceController.scanDevicePorts); // external python scanner mukuha
 

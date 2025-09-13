@@ -20,7 +20,17 @@ export class DeviceRepository implements IDeviceRepository {
     ) { }
 
     async getAllDevices(interfaceId: Device['interfaceId']): Promise<Device[]> {
-        return this.db.device.findMany({ where: { interfaceId } });
+        return this.db.device.findMany({
+            where: { interfaceId },
+            include: {
+                interface: true,
+                bandwidthUsage: true,
+                // bandwidthHourly: true,
+                // bandwidthDaily: true,
+                openPorts: true,
+                visitedSites: true,
+            },
+        });
     }
 
     async getDeviceByMAC(mac: Device["deviceMac"], interfaceId: Device["interfaceId"]): Promise<Device | null> {
@@ -130,7 +140,7 @@ export class DeviceRepository implements IDeviceRepository {
         return this.db.device.update({
             where: { deviceId },
             data: {
-                status, 
+                status,
             }
         })
     }

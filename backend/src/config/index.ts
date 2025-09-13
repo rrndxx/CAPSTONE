@@ -10,7 +10,10 @@ const envSchema = z.object({
     OPNSENSE_URL: z.string(),
     OPNSENSE_KEY: z.string(),
     OPNSENSE_SECRET: z.string(),
-    PYTHON_SCANNER_URL: z.string()
+    PYTHON_SCANNER_URL: z.string(),
+    ADGUARD_URL: z.string(),
+    ADGUARD_USERNAME: z.string(),
+    ADGUARD_PASSWORD: z.string(),
 })
 
 const parsed = envSchema.safeParse(process.env)

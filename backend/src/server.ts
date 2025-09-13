@@ -10,12 +10,16 @@ import { NetworkService } from "./modules/Network/network.service.js";
 import { RedisCacheService } from "./services/cacheService.js";
 import { NetworkScanner } from "./services/scannerService.js";
 import { OPNsenseService } from "./services/OPNsenseService.js";
+import { AdGuardService } from "./services/AdGuardService.js";
 
 const PORT = config.PORT;
 const OPNSENSE_URL = config.OPNSENSE_URL
 const OPNSENSE_KEY = config.OPNSENSE_KEY
 const OPNSENSE_SECRET = config.OPNSENSE_SECRET
 const PYTHON_SCANNER_URL = config.PYTHON_SCANNER_URL
+const ADGUARD_URL = config.ADGUARD_URL
+const ADGUARD_USERNAME = config.ADGUARD_USERNAME
+const ADGUARD_PASSWORD = config.ADGUARD_PASSWORD
 
 export const deviceRepo = new DeviceRepository(db)
 export const bandwidthRepo = new BandwidthRepository(db)
@@ -27,6 +31,7 @@ export const deviceService = new DeviceService(deviceRepo, cache, opnSenseServic
 export const bandwidthService = new BandwidthService(bandwidthRepo)
 export const networkService = new NetworkService(networkRepo, cache, opnSenseService)
 export const networkScanner = new NetworkScanner(deviceService, networkService, cache, opnSenseService, PYTHON_SCANNER_URL)
+export const adGuardService = new AdGuardService(ADGUARD_URL, ADGUARD_USERNAME, ADGUARD_PASSWORD)
 
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);

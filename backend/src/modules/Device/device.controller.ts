@@ -56,6 +56,21 @@ export async function getAllDevices(req: Request, res: Response, next: NextFunct
     }
 }
 
+export async function getAllDevicesFromDB(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { interfaceId } = req.query;
+
+        if (!interfaceId || typeof interfaceId !== "string")
+            return res.status(400).json({ message: "interfaceId is required as query param." });
+
+        const devices = await deviceService.getAllDevicesFromDB(Number(interfaceId));
+
+        res.status(200).json({ success: true, data: devices });
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getDeviceByMAC(req: Request, res: Response, next: NextFunction) {
     try {
         const { mac } = req.params;

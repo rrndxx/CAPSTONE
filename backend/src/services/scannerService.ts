@@ -57,7 +57,7 @@ export class NetworkScanner implements INetworkScanner {
                 this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN")
             ));
 
-            await this.cacheService.set("devices", devices, 60);
+            // await this.cacheService.set("devices", devices, 60);
 
             console.log(
                 `Initial device scan updated ${devices.length} devices, marked ${downCandidates.length} as DOWN.`

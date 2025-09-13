@@ -76,9 +76,9 @@ export function DevicesTable({
 
   const commonColumns: ColumnDef<Device>[] = [
     { accessorKey: "deviceId", header: "ID", cell: info => info.getValue() },
+    { accessorKey: "deviceHostname", header: "Hostname", cell: info => info.getValue() ?? "—" },
     { accessorKey: "deviceIp", header: "IP", cell: info => info.getValue() },
     { accessorKey: "deviceMac", header: "MAC", cell: info => info.getValue() },
-    { accessorKey: "deviceHostname", header: "Hostname", cell: info => info.getValue() ?? "—" },
     { accessorKey: "deviceOS", header: "OS", cell: info => info.getValue() ?? "Unknown" },
     { accessorKey: "macInfo", header: "Vendor", cell: info => info.getValue() ?? "—" },
   ]
