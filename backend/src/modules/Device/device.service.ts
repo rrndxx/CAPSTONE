@@ -5,6 +5,7 @@ import type { IDeviceRepository } from "./device.repository.js";
 import { networkScanner } from "../../server.js";
 
 export interface IDeviceService {
+    getAllDevicesFromDB(interfaceId: Device['interfaceId']): Promise<Device[] | null>
     getDevicesFromCache(interfaceId: Device["interfaceId"]): Promise<Device[] | null>
     setDevicesToCache(devices: Device[], interfaceId: Device["interfaceId"]): Promise<void>
     getAllDevices(interfaceId: Device["interfaceId"]): Promise<Device[]>
@@ -12,7 +13,8 @@ export interface IDeviceService {
     upsertDevice(device: Partial<Device>, interfaceId: Device["interfaceId"]): Promise<Device>
     upsertDevices(devices: Partial<Device>[], interfaceId: Device["interfaceId"]): Promise<Device[]>
     scanAndUpsertDeviceOpenPorts(device: Partial<Device>): Promise<Port[]>
-    detectAndUpsertDeviceOS(device: Partial<Device>): Promise<string>
+    detectDeviceOS(device: Partial<Device>): Promise<string>
+    updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<any>
 }
 
 export class DeviceService implements IDeviceService {
@@ -21,6 +23,18 @@ export class DeviceService implements IDeviceService {
         private readonly cacheService: ICacheService,
         private readonly opnSenseService: OPNsenseService,
     ) { }
+
+    async updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']) {
+        const result = await this.deviceRepo.updateDeviceStatus(deviceId, status)
+
+        return result
+    }
+
+    async getAllDevicesFromDB(interfaceId: Device['interfaceId']): Promise<Device[] | null> {
+        const devices = await this.deviceRepo.getAllDevices(interfaceId)
+
+        return devices
+    }
 
     async getDevicesFromCache(interfaceId: Device["interfaceId"]): Promise<Device[] | null> {
         return this.cacheService.get<Device[]>(`devices:${interfaceId}`);
@@ -55,7 +69,30 @@ export class DeviceService implements IDeviceService {
             throw new Error("deviceMac and deviceIp are required to upsert a device.");
         }
 
-        const result = await this.deviceRepo.upsertDevice(device, interfaceId);
+        let originalDevice: Device | null = null;
+
+        try {
+            originalDevice = await this.getDeviceByMAC(device.deviceMac, interfaceId);
+        } catch (err) {
+            originalDevice = null;
+        }
+
+        let detectedOS: string | null = originalDevice?.deviceOS ?? null;
+
+        if (!detectedOS || detectedOS === "Unknown OS") {
+            try {
+                detectedOS = await this.detectDeviceOS(originalDevice ?? device);
+            } catch {
+                detectedOS = "Unknown OS";
+            }
+        }
+
+        const deviceWithOS: Partial<Device> = {
+            ...device,
+            deviceOS: detectedOS
+        };
+
+        const result = await this.deviceRepo.upsertDevice(deviceWithOS, interfaceId);
 
         const cachedDevices = await this.getDevicesFromCache(interfaceId) ?? [];
 
@@ -94,13 +131,11 @@ export class DeviceService implements IDeviceService {
         return results;
     }
 
-    async detectAndUpsertDeviceOS(device: Partial<Device>): Promise<string> {
-        if (!device.deviceId || !device.deviceIp) throw new Error("deviceId and deviceIp are required.");
+    async detectDeviceOS(device: Partial<Device>): Promise<string> {
+        if (!device.deviceIp) throw new Error("deviceId and deviceIp are required.");
 
         try {
             const osName = await networkScanner.identifyDeviceOS(device.deviceIp);
-
-            await this.deviceRepo.updateDeviceOS(device.deviceId, osName);
 
             return osName;
         } catch {

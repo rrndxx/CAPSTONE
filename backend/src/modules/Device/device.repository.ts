@@ -1,4 +1,5 @@
 import type { Device, Port, PrismaClient } from "@prisma/client";
+import { normalizeMAC } from "../../utils/MACnormalizer.js";
 
 export interface IDeviceRepository {
     removeDeviceFromBlacklist(deviceMac: string, interfaceId: number): unknown;
@@ -10,6 +11,7 @@ export interface IDeviceRepository {
     getPortByNumber(deviceId: number, portNumber: number): Promise<Port | null>;
     upsertPort(port: Partial<Port>, updateExisting: boolean): Promise<Port>;
     updateDeviceOS(deviceId: number, osName: string): Promise<Device>;
+    updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<Device>
 }
 
 export class DeviceRepository implements IDeviceRepository {
@@ -17,18 +19,12 @@ export class DeviceRepository implements IDeviceRepository {
         private db: PrismaClient
     ) { }
 
-    private normalizeMAC(mac: Device['deviceMac']): string {
-        const hex = mac.replace(/[^a-fA-F0-9]/g, "").toUpperCase();
-        if (hex.length !== 12) return mac.toUpperCase();
-        return hex.match(/.{1,2}/g)!.join(":");
-    }
-
     async getAllDevices(interfaceId: Device['interfaceId']): Promise<Device[]> {
         return this.db.device.findMany({ where: { interfaceId } });
     }
 
     async getDeviceByMAC(mac: Device["deviceMac"], interfaceId: Device["interfaceId"]): Promise<Device | null> {
-        const normalized = this.normalizeMAC(mac);
+        const normalized = normalizeMAC(mac);
 
         return this.db.device.findUnique({
             where: { deviceMac_interfaceId: { deviceMac: normalized, interfaceId } },
@@ -40,7 +36,7 @@ export class DeviceRepository implements IDeviceRepository {
             throw new Error("deviceMac and deviceIp are required to upsert a device");
         }
 
-        const normalized = this.normalizeMAC(device.deviceMac);
+        const normalized = normalizeMAC(device.deviceMac);
 
         return this.db.device.upsert({
             where: { deviceMac_interfaceId: { deviceMac: normalized, interfaceId } },
@@ -127,6 +123,15 @@ export class DeviceRepository implements IDeviceRepository {
                 blacklistedDeviceMac: deviceMac,
                 interfaceId,
             },
+        })
+    }
+
+    async updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<Device> {
+        return this.db.device.update({
+            where: { deviceId },
+            data: {
+                status, 
+            }
         })
     }
 

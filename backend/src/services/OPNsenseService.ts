@@ -38,23 +38,23 @@ export class OPNsenseService {
     // DEVICES
 
     async getDevicesFromDHCPLease(): Promise<any> {
-        return this._request("post", "/api/dnsmasq/leases/search/ ");
+        return this._request("post", "/api/dnsmasq/leases/search/");
     }
 
     async blockDevice(device: Device): Promise<any> {
         const payload = {
             host: {
-                host: device.deviceHostname ?? "",     // hostname (optional)
+                host: device.deviceHostname ?? "",    
                 domain: "",
                 local: "0",
-                ip: device.deviceIp ?? "",             // assign IP or leave empty
+                ip: device.deviceIp ?? "",             
                 aliases: "",
                 cnames: "",
                 client_id: "",
-                hwaddr: device.deviceMac,              // MAC address is critical
+                hwaddr: device.deviceMac,             
                 lease_time: "",
                 set_tag: "",
-                ignore: "1",                           // this makes dnsmasq ignore it (block)
+                ignore: "1",                           
                 descr: `Blocked ${device.deviceMac}`,
                 comments: ""
             }

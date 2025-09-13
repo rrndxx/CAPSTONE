@@ -7,6 +7,7 @@ import type { IDeviceService } from "../modules/Device/device.service.js";
 import type { NetworkService } from "../modules/Network/network.service.js";
 import { mapOPNsenseInterfaces, mapOPNsenseLeasesToDevices } from "../utils/mappers.js";
 import type { SpeedTestResult } from "../interfaces.js";
+import { normalizeMAC } from "../utils/MACnormalizer.js";
 
 export interface INetworkScanner {
     continuousDeviceScan(): void;
@@ -35,16 +36,37 @@ export class NetworkScanner implements INetworkScanner {
             const leaseResponse = await this.opnSenseService.getDevicesFromDHCPLease();
             const devices = mapOPNsenseLeasesToDevices(leaseResponse, interfaceMap);
 
+            const allDevicesFromDB = await this.deviceService.getAllDevicesFromDB(2);
+
             const devicesToUpsert = devices.filter(d => d.interfaceId);
-            await Promise.all(devicesToUpsert.map(d => this.deviceService.upsertDevice(d, d.interfaceId!)));
+            await Promise.all(devicesToUpsert.map(d =>
+                this.deviceService.upsertDevice(d, d.interfaceId!)
+            ));
+
+            const activeKeys = new Set(
+                devices.map(d => `${normalizeMAC(d.deviceMac ?? '')}-${d.interfaceId}`)
+            );
+
+            const downCandidates = allDevicesFromDB?.filter(
+                dbDev => !activeKeys.has(`${(dbDev.deviceMac)}-${dbDev.interfaceId}`)
+            );
+
+            if (!downCandidates) throw new Error('downCandidates are undefinedf')
+
+            await Promise.all(downCandidates.map(dev =>
+                this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN")
+            ));
 
             await this.cacheService.set("devices", devices, 60);
 
-            console.log(`Initial device scan updated ${devices.length} devices.`);
+            console.log(
+                `Initial device scan updated ${devices.length} devices, marked ${downCandidates.length} as DOWN.`
+            );
         } catch (err) {
             console.error("Device scan error:", err);
         }
     }
+
 
     async scanInterfacesNow() {
         try {
@@ -73,7 +95,7 @@ export class NetworkScanner implements INetworkScanner {
 
     async scanOpenPorts(ip: string, deviceId: number): Promise<Port[]> {
         const res = await axios.get(`${this.pythonScannerURL}/scan_ports/`, { params: { ip } });
-        
+
         return res.data.ports.map((p: any) => ({
             portNumber: p.port,
             protocol: p.name ?? "tcp",

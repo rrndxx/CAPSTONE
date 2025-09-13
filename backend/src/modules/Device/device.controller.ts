@@ -72,7 +72,7 @@ export async function getDeviceByMAC(req: Request, res: Response, next: NextFunc
     }
 }
 
-export async function scanDeviceOSandPorts(req: Request, res: Response, next: NextFunction) {
+export async function scanDevicePorts(req: Request, res: Response, next: NextFunction) {
     try {
         const { deviceMac, interfaceId } = req.body;
         if (!deviceMac || !interfaceId) return res.status(400).json({ message: "deviceMac and interfaceId are required." });
@@ -81,11 +81,10 @@ export async function scanDeviceOSandPorts(req: Request, res: Response, next: Ne
         if (!dbDevice) return res.status(404).json({ message: "Device not found." });
 
         const ports = await deviceService.scanAndUpsertDeviceOpenPorts(dbDevice);
-        const osName = await deviceService.detectAndUpsertDeviceOS(dbDevice);
 
         res.status(200).json({
             success: true,
-            data: { device: { ...dbDevice, deviceOS: osName }, ports }
+            data: { device: dbDevice, ports }
         });
     } catch (err) {
         next(err);
