@@ -57,10 +57,6 @@ createRoot(document.getElementById("root")!).render(
 
             <Route path="/web-filtering" element={<App />}>
               <Route index element={<WebFilteringPage />} />
-              <Route path="overview" element={<WebFilteringPage />} />
-              {/* <Route path="top-domains" element={<TopDomainsPage />} /> */}
-              {/* <Route path="top-clients" element={<TopClientsPage />} /> */}
-              {/* <Route path="query-logs" element={<QueryLogsPage />} /> */}
             </Route>
 
             <Route path="/isp-status" element={<App />}>

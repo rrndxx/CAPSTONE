@@ -36,12 +36,12 @@ export default function MainDashboardPage() {
                             {[
                                 {
                                     icon: <Smartphone className="w-8 h-8 text-chart-1" />,
-                                    label: "Connected Devices",
+                                    label: "Devices",
                                     value: devices.length,
                                 },
                                 {
                                     icon: <Wifi className="w-8 h-8 text-chart-1" />,
-                                    label: "Uptime Monitor",
+                                    label: "Uptime",
                                     value: `${uptime.days}d ${uptime.hours}h`,
                                 },
                                 {

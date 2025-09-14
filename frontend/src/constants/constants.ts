@@ -116,10 +116,6 @@ export const sidebarNavs = {
       title: "Web Filtering",
       icon: ShieldCheck,
       url: "/web-filtering",
-      items: [
-        { title: "Overview", url: "/web-filtering/overview" },
-        { title: "Query Logs", url: "/web-filtering/query-logs" },
-      ],
     },
     {
       title: "AI Insights",

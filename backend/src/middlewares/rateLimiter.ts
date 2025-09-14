@@ -9,6 +9,6 @@ export const APILimiter = rateLimit({
         },
     }),
     windowMs: 60 * 1000,
-    max: 10,
+    max: 10000,
     message: { success: false, message: "Too many requests, please try again later." },
 });

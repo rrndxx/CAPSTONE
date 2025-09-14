@@ -56,7 +56,6 @@ export type Device = {
   interfaceId: number
   firstSeen: string
   lastSeen: string
-  // extra client-side fields
   blocked?: boolean
   ping?: number
   download?: number
@@ -179,13 +178,9 @@ export function DevicesTable({
 
             <DialogContent className="max-w-lg sm:max-w-xl">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-lg">
-                  <Info className="w-5 h-5" />
-                  Device Details
+                <DialogTitle className="flex justify-center items-center text-lg">
+                  {device.deviceHostname} Details
                 </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
-                  Manage <strong>{device.deviceHostname ?? "Unknown"}</strong> and view details.
-                </DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
@@ -378,14 +373,14 @@ export function DevicesTable({
   )
 }
 
-function InfoRow({
+export function InfoRow({
   icon,
   label,
   value,
 }: {
   icon: React.ReactNode
   label: string
-  value: string | number
+  value: any
 }) {
   return (
     <div className="flex items-center gap-2 text-muted-foreground">
