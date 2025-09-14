@@ -12,6 +12,14 @@ export class NetworkService {
         private readonly opnSenseService: OPNsenseService
     ) { }
 
+    async getSystemInfo(): Promise<any> {
+        return this.opnSenseService.getSystemInformation()
+    }
+
+    async getCPUInfo(): Promise<any> {
+        return this.opnSenseService.getCPUType()
+    }
+
     async getSystemTime(): Promise<any> {
         return this.opnSenseService.getSystemTime()
     }

@@ -25,6 +25,9 @@ app.use(compression({
         if (req.path.startsWith("/stream1")) {
             return false;
         }
+        if (req.path.startsWith("/stream/cpu")) {
+            return false;
+        }
         return compression.filter(req, res);
     },
 }));
@@ -45,6 +48,50 @@ app.get("/stream1", async (req, res) => {
 
         const upstream = await axios.get(
             "https://192.168.56.104/api/diagnostics/traffic/stream/1",
+            {
+                auth: {
+                    username: process.env.OPNSENSE_KEY!,
+                    password: process.env.OPNSENSE_SECRET!,
+                },
+                httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+                responseType: "stream",
+            }
+        );
+
+        upstream.data.on("data", (chunk: Buffer) => {
+            res.write(chunk.toString());
+        });
+
+        upstream.data.on("error", (err: Error) => {
+            console.error("Error in OPNsense stream:", err);
+            res.write(`event: error\ndata: ${JSON.stringify({ message: err.message })}\n\n`);
+            res.end();
+        });
+
+        const keepAlive = setInterval(() => {
+            res.write(":\n\n");
+        }, 15_000);
+
+        res.on("close", () => {
+            clearInterval(keepAlive);
+            upstream.data.destroy();
+            res.end();
+        });
+    } catch (err) {
+        console.error("Failed to connect to OPNsense stream:", err);
+        res.status(500).end("Error streaming traffic data");
+    }
+});
+
+app.get("/stream/cpu", async (req, res) => {
+    try {
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.flushHeaders?.();
+
+        const upstream = await axios.get(
+            "https://192.168.56.104/api/diagnostics/cpu_usage/stream",
             {
                 auth: {
                     username: process.env.OPNSENSE_KEY!,

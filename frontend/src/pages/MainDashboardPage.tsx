@@ -93,12 +93,12 @@ export default function MainDashboardPage() {
                             ))}
                         </div>
 
-                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow min-h-[300px]">
+                        <div className="bg-background rounded-xl">
                             <ChartArea />
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-muted/50 rounded-xl shadow min-h-[300px]">
+                    <div className="bg-background rounded-xl">
                         <Gauge />
                     </div>
                 </div>

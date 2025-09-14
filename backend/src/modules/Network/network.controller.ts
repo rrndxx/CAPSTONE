@@ -1,6 +1,26 @@
 import type { NextFunction, Request, Response } from "express";
 import { networkService } from "../../server.js";
 
+export async function getSystemInfo(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await networkService.getSystemInfo();
+
+        res.status(200).json({ success: true, data });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+export async function getCPUInfo(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await networkService.getCPUInfo();
+
+        res.status(200).json({ success: true, data });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
 export async function getSystemTime(req: Request, res: Response, next: NextFunction) {
     try {
         const data = await networkService.getSystemTime();

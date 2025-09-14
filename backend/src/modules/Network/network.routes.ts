@@ -4,6 +4,8 @@ import * as networkController from "./network.controller.js";
 const router = Router();
 
 router.get("/system-time", networkController.getSystemTime) // system uptime, date time, etc. 
+router.get("/system-information", networkController.getSystemInfo) // system uptime, date time, etc. 
+router.get("/cpu-information", networkController.getCPUInfo) // system uptime, date time, etc. 
 
 router.get("/interfaces/all", networkController.getNetworkInterfaces) // get interfaces
 router.get("/speedtest", networkController.runSpeedTest) // external python service
