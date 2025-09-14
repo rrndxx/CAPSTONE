@@ -19,6 +19,7 @@ import BandwidthPerDevicePage from "./pages/BandwidthPerDevicePage"
 import AiInsightsPage from "./pages/AIInsightsPage"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import WebFilteringPage from "./pages/WebFilteringPage"
 
 // import { ClerkProvider } from '@clerk/clerk-react'
 
@@ -52,6 +53,14 @@ createRoot(document.getElementById("root")!).render(
               <Route index element={<BandwidthUsagePage />} />
               <Route path="overview" element={<BandwidthUsagePage />} />
               <Route path="per-device" element={<BandwidthPerDevicePage />} />
+            </Route>
+
+            <Route path="/web-filtering" element={<App />}>
+              <Route index element={<WebFilteringPage />} />
+              <Route path="overview" element={<WebFilteringPage />} />
+              {/* <Route path="top-domains" element={<TopDomainsPage />} /> */}
+              {/* <Route path="top-clients" element={<TopClientsPage />} /> */}
+              {/* <Route path="query-logs" element={<QueryLogsPage />} /> */}
             </Route>
 
             <Route path="/isp-status" element={<App />}>
