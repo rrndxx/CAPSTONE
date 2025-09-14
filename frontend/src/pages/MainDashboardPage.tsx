@@ -4,19 +4,41 @@ import { DevicesTable } from "@/components/devicestable";
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Wifi, Smartphone, AlertCircle, BrainCircuit } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDevices } from "@/hooks/useDevices";
+import { useSystemTime } from "@/hooks/useOPNSense";
+
+function formatUptime(uptimeStr?: string) {
+    if (!uptimeStr) return "—"
+    const [h, m, s] = uptimeStr.split(":").map(Number)
+
+    const totalSeconds = h * 3600 + m * 60 + s
+    const days = Math.floor(totalSeconds / 86400)
+    const hours = Math.floor((totalSeconds % 86400) / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+
+    if (days > 0) {
+        return `${days}d ${hours}h`
+    }
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`
+    }
+    return `${minutes}m`
+}
+
 
 export default function MainDashboardPage() {
-    const { data: devices = [], isLoading } = useDevices(2)
+    const { data: devices = [] } = useDevices(2)
+    const { data: systemTime, isLoading } = useSystemTime()
+    const [uptime, setUptime] = useState("")
 
-    const uptime = {
-        days: 1,
-        hours: 3,
-    }
+    useEffect(() => {
+        setUptime(formatUptime(systemTime?.uptime))
+    }, [systemTime])
+
     const [filter, setFilter] = useState<"all" | "online" | "offline" | "blocked">("all")
 
-    const filteredDevices = devices.filter((d: { status: string; authorized: any; }) => {
+    const filteredDevices = devices.filter((d: { status: string; authorized: any }) => {
         if (filter === "online") return d.status === "UP"
         if (filter === "offline") return d.status === "DOWN"
         if (filter === "blocked") return !d.authorized
@@ -24,8 +46,11 @@ export default function MainDashboardPage() {
     })
 
     const totalDevices = devices.length
-    const onlineDevices = devices.filter((d: { status: string; }) => d.status === "UP").length
-    const blockedDevices = devices.filter((d: { authorized: any; }) => !d.authorized).length
+    const onlineDevices = devices.filter((d: { status: string }) => d.status === "UP").length
+    const blockedDevices = devices.filter((d: { authorized: any }) => !d.authorized).length
+
+    if (isLoading) return <p>Loading system status...</p>
+    if (!systemTime) return <p>No data available</p>
 
     return (
         <SidebarInset>
@@ -42,7 +67,7 @@ export default function MainDashboardPage() {
                                 {
                                     icon: <Wifi className="w-8 h-8 text-chart-1" />,
                                     label: "Uptime",
-                                    value: `${uptime.days}d ${uptime.hours}h`,
+                                    value: uptime,
                                 },
                                 {
                                     icon: <AlertCircle className="w-8 h-8 text-chart-1" />,
@@ -112,7 +137,9 @@ export default function MainDashboardPage() {
                         {Array.isArray(devices) && filteredDevices.length > 0 ? (
                             <DevicesTable devices={filteredDevices} viewType="all" />
                         ) : (
-                            <div className="text-muted-foreground text-sm text-center py-8">No devices match the filter.</div>
+                            <div className="text-muted-foreground text-sm text-center py-8">
+                                No devices match the filter.
+                            </div>
                         )}
                     </div>
                 </div>

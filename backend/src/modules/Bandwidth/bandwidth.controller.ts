@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from "express";
+import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction as ExpressNextFunction } from "express";
 import { bandwidthService } from "../../server.js";
 
-export async function getOverallNetworkBandwidthUsage(req: Request, res: Response, next: NextFunction) {
+export async function getOverallNetworkBandwidthUsage(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
     try {
         const overallNetworkBandwidth = await bandwidthService.getOverallNetworkBandwidthUsage()
         res.status(200).json({ success: true, data: overallNetworkBandwidth })
@@ -10,7 +10,7 @@ export async function getOverallNetworkBandwidthUsage(req: Request, res: Respons
     }
 }
 
-export async function getDeviceBandwidthUsage(req: Request, res: Response, next: NextFunction) {
+export async function getDeviceBandwidthUsage(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
     try {
         const { mac } = req.params
         if (!mac) return res.status(400).json({ message: "MAC is required." })
@@ -22,7 +22,7 @@ export async function getDeviceBandwidthUsage(req: Request, res: Response, next:
     }
 }
 
-export async function limitDeviceBandwidth(req: Request, res: Response, next: NextFunction) {
+export async function limitDeviceBandwidth(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
     try {
         const { mac } = req.params
         if (!mac) return res.status(400).json({ message: "MAC is required." })

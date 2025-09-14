@@ -13,7 +13,7 @@ import { WebFilteringStatsSummary } from "@/components/webfilteringstatssummary"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { blockDomain, blockUser, fetchDeviceQueryLogs, getAccessList, unblockUser, useDNSStats } from "@/hooks/useWebFiltering"
+import { blockDomain, blockUser, fetchDeviceQueryLogs, unblockUser, useDNSStats } from "@/hooks/useWebFiltering"
 import { useDevices } from "@/hooks/useDevices"
 import { InfoRow } from "@/components/devicestable"
 import { Server, Globe, Settings, Monitor } from "lucide-react"
@@ -308,8 +308,7 @@ const WebFilteringPage: React.FC = () => {
                 {/* Client Details Modal */}
                 {selectedClient && (
                     <Dialog open={true} onOpenChange={() => setSelectedClient(null)}>
-                        {/* <DialogContent className="min-w-6xl"> */}
-                        <DialogContent >
+                        <DialogContent className="min-w-4xl">
                             <DialogTitle >Device Details</DialogTitle>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2 text-sm">
@@ -323,7 +322,7 @@ const WebFilteringPage: React.FC = () => {
                                 <Button size="sm" onClick={() => fetchDeviceQueryLogs(selectedClient.ip)}>
                                     Refresh Latest
                                 </Button>
-                                {deviceAccess ? (
+                                <div className="flex gap-2">
                                     <Button
                                         size="sm"
                                         variant="success"
@@ -334,7 +333,6 @@ const WebFilteringPage: React.FC = () => {
                                     >
                                         Unblock "{selectedClient.hostname}"
                                     </Button>
-                                ) : (
                                     <Button
                                         size="sm"
                                         variant="destructive"
@@ -345,7 +343,8 @@ const WebFilteringPage: React.FC = () => {
                                     >
                                         Block "{selectedClient.hostname}"
                                     </Button>
-                                )}
+                                </div>
+
                             </div>
 
                             <div className="w-full h-96 overflow-auto border border-gray-200 rounded-lg">

@@ -44,17 +44,17 @@ export class OPNsenseService {
     async blockDevice(device: Device): Promise<any> {
         const payload = {
             host: {
-                host: device.deviceHostname ?? "",    
+                host: device.deviceHostname ?? "",
                 domain: "",
                 local: "0",
-                ip: device.deviceIp ?? "",             
+                ip: device.deviceIp ?? "",
                 aliases: "",
                 cnames: "",
                 client_id: "",
-                hwaddr: device.deviceMac,             
+                hwaddr: device.deviceMac,
                 lease_time: "",
                 set_tag: "",
-                ignore: "1",                           
+                ignore: "1",
                 descr: `Blocked ${device.deviceMac}`,
                 comments: ""
             }

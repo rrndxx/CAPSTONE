@@ -12,6 +12,10 @@ export class NetworkService {
         private readonly opnSenseService: OPNsenseService
     ) { }
 
+    async getSystemTime(): Promise<any> {
+        return this.opnSenseService.getSystemTime()
+    }
+
     async getAccessList(): Promise<any> {
         return adGuardService.getControlAccessList()
     }
