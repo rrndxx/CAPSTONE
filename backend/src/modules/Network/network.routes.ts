@@ -20,4 +20,7 @@ router.post("/dns/user/unblock/:deviceIp", networkController.unblockUser); //ext
 
 router.get("/dns/access-list", networkController.getAccessList); //external adguard service
 
+router.get("/traffic/interface", networkController.getInterfaceTraffic)
+router.get("/traffic/per-device", networkController.getPerDeviceTraffic)
+
 export default router;

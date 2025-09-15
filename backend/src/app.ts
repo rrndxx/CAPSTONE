@@ -33,7 +33,7 @@ app.use(compression({
 }));
 app.use(express.json());
 
-app.use(APILimiter);
+// app.use(APILimiter);
 
 app.use("/devices", deviceRoutes);
 app.use("/bandwidth", bandwidthRoutes)

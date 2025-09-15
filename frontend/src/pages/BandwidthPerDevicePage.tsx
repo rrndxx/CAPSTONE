@@ -1,57 +1,35 @@
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DevicesTable } from "@/components/devicestable"
-import { SidebarInset } from "@/components/ui/sidebar"
+"use client";
+
+import { useState, useEffect } from "react";
+import { SidebarInset } from "@/components/ui/sidebar";
+import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
+import { PerDeviceTrafficChart } from "@/components/perdevicetraffichart";
+import { PerDeviceTrafficTable } from "@/components/perdevicetraffictable";
 
 const BandwidthPerDevicePage = () => {
-  const [search, setSearch] = useState("")
+  const { data: newSample } = usePerDeviceTraffic();
+  const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
 
-  // const filteredDevices = devices.filter((device) =>
-  //   Object.values(device).some((val) =>
-  //     val?.toString().toLowerCase().includes(search.toLowerCase())
-  //   )
-  // )
+  useEffect(() => {
+    if (newSample) {
+      setTrafficHistory(prev => [...prev.slice(-59), newSample]); // keep last 60 samples
+    }
+  }, [newSample]);
 
-  // const limitedDevices = filteredDevices.filter((device) => device.bandwidthLimit > 0)
-  // const unlimitedDevices = filteredDevices.filter((device) => device.bandwidthLimit === 0)
+  if (!trafficHistory.length) return <div>Loading...</div>;
 
   return (
     <SidebarInset>
-      <div className="flex flex-col flex-1 gap-6 p-4 pt-0">
-
-        <Tabs defaultValue="limited" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="limited">Limited Devices</TabsTrigger>
-            <TabsTrigger value="unlimited">Unlimited Devices</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="limited">
-            {/* <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
-              {limitedDevices.length > 0 ? (
-                <DevicesTable devices={limitedDevices} viewType="bandwidth" />
-              ) : (
-                <div className="text-sm text-muted-foreground text-center py-12">
-                  No limited devices found.
-                </div>
-              )}
-            </div> */}
-          </TabsContent>
-
-          <TabsContent value="unlimited">
-            {/* <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 min-h-[300px]">
-              {unlimitedDevices.length > 0 ? (
-                <DevicesTable devices={unlimitedDevices} viewType="bandwidth" />
-              ) : (
-                <div className="text-sm text-muted-foreground text-center py-12">
-                  No unlimited devices found.
-                </div>
-              )}
-            </div> */}
-          </TabsContent>
-        </Tabs>
+      <div className="flex flex-col gap-6 p-4 pt-0">
+        <section className="space-y-6">
+          <PerDeviceTrafficChart data={trafficHistory} />
+        </section>
+        <section className="space-y-6">
+          <PerDeviceTrafficTable data={trafficHistory} />
+        </section>
       </div>
     </SidebarInset>
-  )
-}
+  );
+};
 
-export default BandwidthPerDevicePage
+export default BandwidthPerDevicePage;

@@ -141,6 +141,10 @@ export class OPNsenseService {
         return this._request("get", "/api/diagnostics/traffic/stream/1")
     } // text/event-stream
 
+    async getPerDeviceTraffic(): Promise<any> {
+        return this._request("get", "/api/diagnostics/traffic/top/lan,opt1,wan")
+    }
+
     // FIREWALL
     async getFirewallStream(): Promise<any> {
         return this._request("get", "/api/diagnostics/firewall/stream_log")

@@ -12,6 +12,14 @@ export class NetworkService {
         private readonly opnSenseService: OPNsenseService
     ) { }
 
+    async getPerDeviceTraffic(): Promise<any> {
+        return this.opnSenseService.getPerDeviceTraffic()
+    }
+
+    async getInterfaceTraffic(): Promise<any> {
+        return this.opnSenseService.getInterfaceTraffic()
+    }
+
     async getSystemInfo(): Promise<any> {
         return this.opnSenseService.getSystemInformation()
     }

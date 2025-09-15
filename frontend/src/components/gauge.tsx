@@ -100,7 +100,9 @@ export function Gauge() {
         {/* Gauge */}
         <CardContent className="flex flex-1 items-center justify-center pb-0 min-h-[180px]">
           {loading ? (
-            <Loader2 className="animate-spin h-12 w-12 text-muted-foreground" />
+            <div className="aspect-square w-full max-w-[280px] flex justify-center items-center">
+              <Loader2 className="animate-spin h-24 w-24 text-muted-foreground" />
+            </div>
           ) : (
             <ChartContainer config={chartConfig} className="mx-auto aspect-square w-full max-w-[280px]">
               <RadialBarChart data={chartData} endAngle={180} innerRadius={120} outerRadius={170}>

@@ -42,7 +42,7 @@ const chartConfigWan = {
 } satisfies ChartConfig
 
 export function ChartArea() {
-    const [lanData, setLanData] = React.useState<
+    const [lanData, setLanData] = React.useState<   
         { date: string; lanIn: number; lanOut: number }[]
     >([])
     const [wanData, setWanData] = React.useState<
