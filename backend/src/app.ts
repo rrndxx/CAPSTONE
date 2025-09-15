@@ -12,6 +12,8 @@ import type { Request as ExpressRequest, Response as ExpressResponse } from "exp
 import axios from 'axios'
 import https from 'https'
 import dotenv from "dotenv";
+import util from 'util';
+import { exec } from 'child_process'
 
 dotenv.config();
 
@@ -126,6 +128,83 @@ app.get("/stream/cpu", async (req, res) => {
         res.status(500).end("Error streaming traffic data");
     }
 });
+
+
+
+
+// Promisify exec to use async/await
+const execAsync = util.promisify(exec);
+
+// Function to validate and run nmap scan
+const runNmapScan = async (ip: string, ports: string = "22-100") => {
+    if (!ip) {
+        throw new Error('IP address must be provided');
+    }
+
+    try {
+        // Execute the Nmap command
+        const { stdout, stderr } = await execAsync(`nmap -sT ${ip}`);
+
+        // If stderr contains an error, throw an exception
+        if (stderr) {
+            throw new Error(`Nmap Error: ${stderr}`);
+        }
+
+        // Parse Nmap output to extract open ports
+        const openPorts = parseOpenPorts(stdout);
+
+        return {
+            target: ip,
+            raw: stdout,
+            open_ports: openPorts,
+        };
+    } catch (error: any) {
+        throw new Error(`Scan failed: ${error.message}`);
+    }
+};
+
+// Parse Nmap output to extract open ports
+const parseOpenPorts = (nmapOutput: string) => {
+    const lines = nmapOutput.split('\n');
+    const openPorts = [];
+
+    // Loop through each line in Nmap's output
+    for (const line of lines) {
+        // Match lines that describe open ports (e.g., "22/tcp open ssh")
+        const match = line.match(/^(\d+)\/tcp\s+open\s+(\S+)/);
+
+        if (match && match[1]) {
+            openPorts.push({
+                port: parseInt(match[1], 10), // Use base 10 for parseInt
+                service: match[2],             // Service name (e.g., ssh)
+            });
+        }
+    }
+
+    return openPorts;
+};
+
+// Scan ports controller
+const scanPorts = async (req: ExpressRequest, res: ExpressResponse) => {
+    const ip = req.query.ip as string | undefined;
+
+    // Check if IP is valid
+    if (typeof ip !== 'string' || ip.trim() === '') {
+        return res.status(400).json({ error: 'Invalid or missing "ip" query parameter' });
+    }
+
+    try {
+        const result = await runNmapScan(ip);  // Run Nmap scan with provided IP
+        return res.json(result);
+    } catch (error: any) {
+        return res.status(500).json({
+            error: 'Scan failed',
+            message: error.message,
+        });
+    }
+};
+
+app.get("/scan/port", scanPorts)
 
 app.use(errorHandler);
 

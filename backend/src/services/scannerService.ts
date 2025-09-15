@@ -123,4 +123,8 @@ export class NetworkScanner implements INetworkScanner {
         return response.data;
     }
 
+    async portScannerFromHostMachine(): Promise<any> {
+        
+    }
+
 }

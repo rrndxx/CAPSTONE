@@ -41,6 +41,7 @@ import {
   Ban,
   Server,
   MoreHorizontal,
+  Loader2,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
@@ -88,6 +89,9 @@ export function DevicesTable({
     cell: ({ row }) => {
       const device = row.original
       const [bandwidth, setBandwidth] = useState("")
+      const [scanResult, setScanResult] = useState<any>(null)
+      const [openScanDialog, setOpenScanDialog] = useState(false)
+      const [isPortLoading, setIsPortLoading] = useState(false)
 
       const handleLimit = () => {
         if (!bandwidth || Number(bandwidth) <= 0) {
@@ -95,6 +99,22 @@ export function DevicesTable({
           return
         }
         alert(`Bandwidth limit of ${bandwidth} Mbps applied to ${device.deviceHostname}`)
+      }
+
+      const handleScanPorts = async () => {
+        try {
+          setIsPortLoading(true)
+          const res = await fetch(`http://localhost:4000/scan/port?ip=${device.deviceIp}`)
+          if (!res.ok) throw new Error("Failed to scan ports")
+          const data = await res.json()
+          setScanResult(data)
+          setOpenScanDialog(true)
+        } catch (err) {
+          console.error(err)
+          alert("Error scanning ports")
+        } finally {
+          setIsPortLoading(false)
+        }
       }
 
       if (viewType === "bandwidth") {
@@ -135,17 +155,12 @@ export function DevicesTable({
         )
       }
 
-      const handleToggleBlock = () => {
-        const action = device.blocked ? "Unblocked" : "Blocked"
-        alert(`${action} ${device.deviceHostname}`)
-      }
-
-      const handleRemove = () => {
-        const list = viewType === "whitelist" ? "Whitelist" : "Blacklist"
-        alert(`Removed ${device.deviceHostname} from ${list}`)
-      }
-
       if (viewType === "whitelist" || viewType === "blacklist") {
+        const handleRemove = () => {
+          const list = viewType === "whitelist" ? "Whitelist" : "Blacklist"
+          alert(`Removed ${device.deviceHostname} from ${list}`)
+        }
+
         return (
           <Button
             size="sm"
@@ -162,13 +177,45 @@ export function DevicesTable({
         <div className="flex items-center justify-center gap-2">
           <Button
             size="sm"
-            variant={device.blocked ? "success" : "destructive"}
-            onClick={handleToggleBlock}
-            className="w-24"
+            variant="outline"
+            onClick={handleScanPorts}
+            className="w-28"
           >
-            {device.blocked ? "Unblock" : "Block"}
+            {isPortLoading ? <Loader2 className="animate-spin h-2 w-2" /> : "Scan Ports"}
           </Button>
 
+          {/* Port Scan Result Dialog */}
+          <Dialog open={openScanDialog} onOpenChange={setOpenScanDialog}>
+            <DialogContent className="max-w-lg sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle className="flex justify-center items-center text-lg">
+                  Port Scan Result for {device.deviceHostname}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="mt-4 space-y-2 text-sm">
+                {scanResult ? (
+                  Array.isArray(scanResult.open_ports) && scanResult.open_ports.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1 text-left">
+                      {scanResult.open_ports.map((entry: { port: number; service: string }) => (
+                        <li key={entry.port}>
+                          Port {entry.port} is open ({entry.service})
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Detected no open ports for this device
+                    </p>
+                  )
+                ) : (
+                  <p className="text-muted-foreground">No data</p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Device details dialog remains */}
           <Dialog>
             <DialogTrigger asChild>
               <Button size="icon" variant="outline" className="w-8 h-8">
@@ -216,7 +263,7 @@ export function DevicesTable({
           </Dialog>
         </div>
       )
-    }
+    },
   }
 
   let fullColumns: ColumnDef<Device>[] = []
@@ -253,7 +300,7 @@ export function DevicesTable({
           const value = info.getValue() as string
           const color = value === "UP" ? "text-green-600" : "text-red-500"
           return <span className={`font-medium ${color}`}>{value}</span>
-        }
+        },
       })
     }
     fullColumns.push(actionColumn)

@@ -12,7 +12,6 @@ router.post("/port/scan", deviceController.scanDevicePorts); // external python 
 router.post("/block", deviceController.blockDevice)
 router.post("/unblock", deviceController.unblockDevice)
 
-
 //tests
 router.post("/opnsense/devices", deviceController.getDevicesFromDHCPLease); // opnsense mukuha
 router.post("/test-os", async (req, res, next) => {
@@ -29,8 +28,10 @@ router.post("/test-os", async (req, res, next) => {
 
         return res.json(result.data);
     } catch (err) {
-        next(err); 
+        next(err);
     }
 });
+
+router.get("/scanport", deviceController.scanPorts)
 
 export default router;

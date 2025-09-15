@@ -1,5 +1,24 @@
 import type { NextFunction, Request, Response } from "express";
 import { deviceService } from "../../server.js";
+import { runNmapScan } from "../../services/nmapScannerService.js";
+
+export async function scanPorts(req: Request, res: Response) {
+    const ip = req.query.ip as string | undefined;
+
+    if (typeof ip !== 'string' || ip.trim() === '') {
+        return res.status(400).json({ error: 'Invalid or missing "ip" query parameter' });
+    }
+
+    try {
+        const result = await runNmapScan(ip);
+        return res.json(result);
+    } catch (error: any) {
+        return res.status(500).json({
+            error: 'Scan failed',
+            message: error.message,
+        });
+    }
+};
 
 export async function blockDevice(req: Request, res: Response, next: NextFunction) {
     try {
