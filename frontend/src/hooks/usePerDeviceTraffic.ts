@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import useSWR from "swr";
+import axios from "axios";
 
 export interface DeviceTrafficSample {
     date: string;
@@ -26,24 +26,37 @@ interface ApiResponse {
 }
 
 export function usePerDeviceTraffic() {
-    const { data, error } = useSWR<ApiResponse>("http://localhost:4000/network/traffic/per-device"); // replace with your API endpoint
     const [sample, setSample] = useState<DeviceTrafficSample | null>(null);
 
     useEffect(() => {
-        if (data?.success) {
-            const flattened: DeviceTrafficSample = { date: new Date().toISOString() };
+        const fetchData = async () => {
+            try {
+                const res = await axios.get<ApiResponse>("http://localhost:4000/network/traffic/per-device");
+                const data = res.data;
 
-            Object.values(data.data).forEach(ifaceData => {
-                if (ifaceData.status !== "ok") return; // skip timeouts
-                ifaceData.records.forEach(record => {
-                    flattened[`${record.address}-IN`] = record.rate_bits_in; // per second
-                    flattened[`${record.address}-OUT`] = record.rate_bits_out; // per second
-                });
-            });
+                if (data.success) {
+                    const flattened: DeviceTrafficSample = { date: new Date().toISOString() };
 
-            setSample(flattened);
-        }
-    }, [data]);
+                    Object.values(data.data).forEach(ifaceData => {
+                        if (ifaceData.status !== "ok") return; // skip timeouts
+                        ifaceData.records.forEach(record => {
+                            flattened[`${record.address}-IN`] = record.rate_bits_in;
+                            flattened[`${record.address}-OUT`] = record.rate_bits_out;
+                        });
+                    });
 
-    return { data: sample, error };
+                    setSample(flattened);
+                }
+            } catch (err) {
+                console.error("Failed to fetch device traffic:", err);
+            }
+        };
+
+        fetchData();
+        const interval = setInterval(fetchData, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    return sample;
 }

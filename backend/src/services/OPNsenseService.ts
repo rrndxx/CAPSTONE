@@ -141,8 +141,8 @@ export class OPNsenseService {
         return this._request("get", "/api/diagnostics/traffic/stream/1")
     } // text/event-stream
 
-    async getPerDeviceTraffic(): Promise<any> {
-        return this._request("get", "/api/diagnostics/traffic/top/lan,opt1,wan")
+    async getPerDeviceTraffic(interfaceToWatch: string = 'opt1'): Promise<any> {
+        return this._request("get", `/api/diagnostics/traffic/top/${interfaceToWatch}`)
     }
 
     // FIREWALL

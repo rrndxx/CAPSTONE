@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
-import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
-import { PerDeviceTrafficChart } from "@/components/perdevicetraffichart";
 import { PerDeviceTrafficTable } from "@/components/perdevicetraffictable";
+import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
+import { PerDeviceTrafficChart } from "@/components/perdevicetrafficchart";
 
 const BandwidthPerDevicePage = () => {
-  const { data: newSample } = usePerDeviceTraffic();
+  const latestSample = usePerDeviceTraffic();
   const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
 
   useEffect(() => {
-    if (newSample) {
-      setTrafficHistory(prev => [...prev.slice(-59), newSample]); // keep last 60 samples
+    if (latestSample) {
+      setTrafficHistory(prev => [...prev.slice(-59), latestSample]); // keep last 60 samples
     }
-  }, [newSample]);
+  }, [latestSample]);
 
   if (!trafficHistory.length) return <div>Loading...</div>;
 
