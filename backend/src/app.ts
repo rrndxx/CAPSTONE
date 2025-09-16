@@ -143,7 +143,9 @@ const runNmapScan = async (ip: string, ports: string = "22-100") => {
 
     try {
         // Execute the Nmap command
-        const { stdout, stderr } = await execAsync(`nmap -sT ${ip}`);
+        // 192.168.10.59
+        // const { stdout, stderr } = await execAsync(`nmap -sT ${ip}`);
+        const { stdout, stderr } = await execAsync(`nmap -sT 192.168.10.59`);
 
         // If stderr contains an error, throw an exception
         if (stderr) {

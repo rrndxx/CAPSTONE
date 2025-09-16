@@ -70,19 +70,16 @@ export class AdGuardService implements IAdGuard {
 
     async blockDomain(domain: string): Promise<any> {
         try {
-            // 1. Get current rules
             const status = await this._request<{ user_rules: string[] }>(
                 "get",
                 "/control/filtering/status"
             );
 
-            // 2. Prepare new rule
             const newRule = `||${domain}^$important`;
             const updatedRules = status.user_rules.includes(newRule)
                 ? status.user_rules
-                : [...status.user_rules.filter(r => r), newRule]; // remove empty strings
+                : [...status.user_rules.filter(r => r), newRule]; 
 
-            // 3. Update rules
             const payload = { rules: updatedRules };
             return await this._request("post", "/control/filtering/set_rules", payload);
         } catch (err) {

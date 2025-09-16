@@ -20,6 +20,7 @@ import AiInsightsPage from "./pages/AIInsightsPage"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import WebFilteringPage from "./pages/WebFilteringPage"
+import BandwidthShaperPage from "./pages/BandwidthShaperPage"
 
 // import { ClerkProvider } from '@clerk/clerk-react'
 
@@ -53,6 +54,7 @@ createRoot(document.getElementById("root")!).render(
               <Route index element={<BandwidthUsagePage />} />
               <Route path="overview" element={<BandwidthUsagePage />} />
               <Route path="per-device" element={<BandwidthPerDevicePage />} />
+              <Route path="shaper" element={<BandwidthShaperPage />} />
             </Route>
 
             <Route path="/web-filtering" element={<App />}>

@@ -145,6 +145,267 @@ export class OPNsenseService {
         return this._request("get", `/api/diagnostics/traffic/top/${interfaceToWatch}`)
     }
 
+    // -------------------------
+    // Pipes
+    // -------------------------
+
+    async getPipes() {
+        const payload = {
+            current: 1,
+            rowCount: -1,
+            sort: {}
+        };
+        return this._request("post", "/api/trafficshaper/settings/search_pipes", payload);
+    }
+
+    async getPipeById(pipeId: string) {
+        return this._request("get", `/api/trafficshaper/settings/get_pipe/${pipeId}`);
+    }
+
+    async createPipe(
+        bandwidth: number,
+        metric: "bit" | "Kbit" | "Mbit" | "Gbit" = "Kbit",
+        mask: "none" | "src-ip" | "dst-ip" | "src-ip6" | "dst-ip6" = "none",
+        description: string = `${bandwidth}${metric} pipe for ${mask}`
+    ): Promise<any> {
+        const payload = {
+            pipe: {
+                enabled: "1",
+                bandwidth: String(bandwidth),
+                bandwidthMetric: metric,
+                queue: "",
+                mask,
+                buckets: "",
+                scheduler: "",
+                codel_enable: "0",
+                codel_target: "",
+                codel_interval: "",
+                codel_ecn_enable: "0",
+                fqcodel_quantum: "",
+                fqcodel_limit: "",
+                fqcodel_flows: "",
+                pie_enable: "0",
+                delay: "",
+                description
+            }
+        };
+
+        const res = await this._request("post", "/api/trafficshaper/settings/add_pipe/", payload);
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async updatePipe(
+        id: string,
+        bandwidth: number,
+        metric: "bit" | "Kbit" | "Mbit" | "Gbit" = "Kbit",
+        mask: "none" | "src-ip" | "dst-ip" | "src-ip6" | "dst-ip6" = "none",
+        description: string = `${bandwidth}${metric} pipe for ${mask}`
+    ): Promise<any> {
+        const payload = {
+            pipe: {
+                id,
+                enabled: "1",
+                bandwidth: String(bandwidth),
+                bandwidthMetric: metric,
+                queue: "",
+                mask,
+                buckets: "",
+                scheduler: "",
+                codel_enable: "0",
+                codel_target: "",
+                codel_interval: "",
+                codel_ecn_enable: "0",
+                fqcodel_quantum: "",
+                fqcodel_limit: "",
+                fqcodel_flows: "",
+                pie_enable: "0",
+                delay: "",
+                description
+            }
+        };
+
+        const res = await this._request("post", `/api/trafficshaper/settings/set_pipe/${id}`, payload);
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async deletePipe(id: string) {
+        return this._request("post", `/api/trafficshaper/settings/del_pipe/${id}`);
+    }
+    // -------------------------
+    // Queues
+    // -------------------------
+
+    async getQueues() {
+        const payload = {
+            current: 1,
+            rowCount: -1,
+            sort: {}
+        };
+        return this._request("post", "/api/trafficshaper/settings/search_queues", payload);
+    }
+
+    async getQueueById(queueId: string) {
+        return this._request("get", `/api/trafficshaper/settings/get_queue/${queueId}`);
+    }
+
+    async createQueue(
+        pipeId: string,
+        weight: number = 100,
+        mask: "none" | "src-ip" | "dst-ip" | "src-ip6" | "dst-ip6" = "none",
+        description: string = `Queue on pipe ${pipeId} with weight ${weight}`
+    ): Promise<any> {
+        const payload = {
+            queue: {
+                enabled: "1",
+                pipe: pipeId,
+                weight: String(weight),
+                mask,
+                buckets: "",
+                codel_enable: "0",
+                codel_target: "",
+                codel_interval: "",
+                pie_enable: "0",
+                description
+            }
+        };
+
+        const res = await this._request("post", "/api/trafficshaper/settings/add_queue/", payload);
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async updateQueue(
+        id: string,
+        pipeId: string,
+        weight: number = 100,
+        mask: "none" | "src-ip" | "dst-ip" | "src-ip6" | "dst-ip6" = "none",
+        description: string = `Queue on pipe ${pipeId} with weight ${weight}`
+    ): Promise<any> {
+        const payload = {
+            queue: {
+                id,
+                enabled: "1",
+                pipe: pipeId,
+                weight: String(weight),
+                mask,
+                buckets: "",
+                codel_enable: "0",
+                codel_target: "",
+                codel_interval: "",
+                pie_enable: "0",
+                description
+            }
+        };
+
+        const res = await this._request("post", `/api/trafficshaper/settings/set_queue/${id}`, payload);
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async deleteQueue(id: string) {
+        return this._request("post", `/api/trafficshaper/settings/del_queue/${id}`);
+    }
+
+    // -------------------------
+    // SpeedCap
+    // -------------------------
+
+    async getSpeedcaps() {
+        const payload = {
+            current: 1,
+            rowCount: -1,
+            sort: {}
+        };
+        return this._request("post", "/api/trafficshaper/settings/search_rules", payload);
+    }
+
+    async getSpeedCapbyId(speedCapId: string) {
+        return this._request("get", `/api/trafficshaper/settings/get_rule/${speedCapId}`);
+    }
+
+    async createSpeedCap(
+        targetId: string,
+        iface: "lan" | "wan" | "opt1" | string = "wan",
+        proto: "ip" | "ip4" | "ip6" | "tcp" | "udp" | "icmp" = "ip",
+        src: string = "any",
+        dst: string = "any",
+        direction: "" | "in" | "out" = "", // "" = both
+        description: string = `Rule for ${iface} -> ${targetId}`,
+        sequence: string = "1"
+    ): Promise<any> {
+        const payload = {
+            rule: {
+                enabled: "1",
+                sequence,
+                interface: iface,
+                interface2: "",
+                proto,
+                iplen: "",
+                source: src,
+                source_not: "0",
+                src_port: "any",
+                destination: dst,
+                destination_not: "0",
+                dst_port: "any",
+                dscp: "",
+                direction,
+                target: targetId,
+                description
+            }
+        };
+
+        const res = await this._request("post", "/api/trafficshaper/settings/add_rule/", payload);
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async updateSpeedCap(
+        ruleId: string,
+        targetId: string,
+        iface: "lan" | "wan" | "opt1" | string = "wan",
+        proto: "ip" | "ip4" | "ip6" | "tcp" | "udp" | "icmp" = "ip",
+        src: string = "any",
+        dst: string = "any",
+        direction: string = "both",
+        description: string = "",
+        sequence: string
+    ): Promise<any> {
+        const payload = {
+            rule: {
+                enabled: "1",
+                sequence,
+                interface: iface,
+                interface2: "",
+                proto,
+                iplen: "",
+                source: src,
+                source_not: "0",
+                src_port: "any",
+                destination: dst,
+                destination_not: "0",
+                dst_port: "any",
+                dscp: "",
+                direction,
+                target: targetId,
+                description
+            }
+        };
+
+        const res = await this._request(
+            "post",
+            `/api/trafficshaper/settings/set_rule/${ruleId}`,
+            payload
+        );
+        await this._request("post", "/api/trafficshaper/service/reconfigure", {});
+        return res;
+    }
+
+    async deleteSpeedCap(id: string) {
+        return this._request("post", `/api/trafficshaper/settings/del_rule/${id}`);
+    }
+
     // FIREWALL
     async getFirewallStream(): Promise<any> {
         return this._request("get", "/api/diagnostics/firewall/stream_log")

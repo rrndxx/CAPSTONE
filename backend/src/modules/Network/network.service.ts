@@ -60,17 +60,7 @@ export class NetworkService {
         await this.cacheService.set(`networkInterfaces`, interfaces, 60 * 60);
     }
 
-    async getNetworkInterfaces(): Promise<NetworkInterface[]> {
-        const cachedInterfaces = await this.getNetworkInterfacesFromCache();
 
-        if (cachedInterfaces) return cachedInterfaces;
-
-        const networkInterfaces = await this.networkRepository.getNetworkInterfaces();
-
-        await this.setNetworkInterfacesToCache(networkInterfaces);
-
-        return networkInterfaces;
-    }
 
     async upsertNetworkInterfaces(interfaces: Partial<NetworkInterface>[]): Promise<NetworkInterface[]> {
         const networkInterfaces = await this.networkRepository.upsertNetworkInterfaces(interfaces);
@@ -88,6 +78,24 @@ export class NetworkService {
 
     async getDNSStats(): Promise<any> {
         return adGuardService.getAllStats()
+    }
+
+    async getNetworkInterfaceNames(): Promise<any> {
+        const networkInterfaces = await this.opnSenseService.getInterfaceNames()
+
+        return networkInterfaces;
+    }
+
+    async getNetworkInterfaces(): Promise<NetworkInterface[]> {
+        const cachedInterfaces = await this.getNetworkInterfacesFromCache();
+
+        if (cachedInterfaces) return cachedInterfaces;
+
+        const networkInterfaces = await this.networkRepository.getNetworkInterfaces();
+
+        await this.setNetworkInterfacesToCache(networkInterfaces);
+
+        return networkInterfaces;
     }
 
 }

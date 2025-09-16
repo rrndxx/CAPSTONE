@@ -105,6 +105,7 @@ export const sidebarNavs = {
       items: [
         { title: "Overview", url: "/bandwidth-usage/overview" },
         { title: "Per Device", url: "/bandwidth-usage/per-device" },
+        { title: "Shaper", url: "/bandwidth-usage/shaper" },
       ],
     },
     {

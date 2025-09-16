@@ -28,15 +28,18 @@ export const networkRepo = new NetworkRepository(db)
 export const cache = new RedisCacheService()
 export const opnSenseService = new OPNsenseService(OPNSENSE_URL, OPNSENSE_KEY, OPNSENSE_SECRET)
 export const deviceService = new DeviceService(deviceRepo, cache, opnSenseService)
-export const bandwidthService = new BandwidthService(bandwidthRepo)
+export const bandwidthService = new BandwidthService(bandwidthRepo, opnSenseService)
 export const networkService = new NetworkService(networkRepo, cache, opnSenseService)
 export const networkScanner = new NetworkScanner(deviceService, networkService, cache, opnSenseService, PYTHON_SCANNER_URL)
 export const adGuardService = new AdGuardService(ADGUARD_URL, ADGUARD_USERNAME, ADGUARD_PASSWORD)
 
 app.listen(PORT, () => {
-    console.log(`Backend is running on http://localhost:${PORT}`);
-    console.log(`Python scanner is running on ${PYTHON_SCANNER_URL}`);
+    console.log(`Backend: http://localhost:${PORT}`);
+    console.log(`Python service: ${PYTHON_SCANNER_URL}`);
 })
+
+const interfacenames = await networkService.getNetworkInterfaceNames()
+export const ALLINTERFACENAMES = Object.values(interfacenames)
 
 await networkScanner.scanInterfacesNow()
 await networkScanner.scanDevicesNow()
