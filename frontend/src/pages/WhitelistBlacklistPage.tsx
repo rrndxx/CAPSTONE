@@ -25,13 +25,7 @@ const WhitelistBlacklistPage = () => {
                             <Button className="bg-chart-3">Add to Whitelist</Button>
                         </div> */}
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
-                            {whitelistedDevices.length > 0 ? (
-                                <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
-                            ) : (
-                                <div className="text-sm text-muted-foreground text-center py-12">
-                                    No whitelisted devices found.
-                                </div>
-                            )}
+                            <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
                         </div>
                     </TabsContent>
 

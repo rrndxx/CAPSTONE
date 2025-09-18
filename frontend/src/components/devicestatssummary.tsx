@@ -41,7 +41,7 @@ export function DevicesStatsSummary({ devices }: { devices: Device[] }) {
       {stats.map((stat, index) => (
         <div
           key={index}
-          className="bg-card rounded-xl shadow-sm border p-5 flex items-center gap-4 min-h-[100px]"
+          className="bg-card rounded-xl shadow border p-5 flex items-center gap-4 min-h-[100px]"
         >
           <div className="flex items-center justify-center w-12 h-12 bg-muted rounded-md">
             {stat.icon}

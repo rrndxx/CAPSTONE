@@ -43,6 +43,23 @@ export type Queue = {
     description: string;
 };
 
+const normalizeProto = (proto: string) => {
+    switch (proto.toLowerCase()) {
+        case "ipv4":
+        case "ip4":
+            return "ip4";
+        case "ipv6":
+        case "ip6":
+            return "ip6";
+        case "tcp":
+        case "udp":
+        case "icmp":
+            return proto.toLowerCase();
+        default:
+            return "ip";
+    }
+};
+
 const SpeedCapsTab: React.FC = () => {
     const [speedCaps, setSpeedCaps] = useState<SpeedCap[]>([]);
     const [pipes, setPipes] = useState<Pipe[]>([]);
@@ -75,7 +92,7 @@ const SpeedCapsTab: React.FC = () => {
                     enabled: r.enabled,
                     sequence: r.sequence,
                     interface: r.interface,
-                    proto: r["%proto"] || r.proto,
+                    proto: normalizeProto(r["%proto"] || r.proto),
                     source: (Array.isArray(r.source) ? r.source : [r.source || "any"]).map((s: string) =>
                         s === "any" ? { type: "any", value: "" } : s.includes("/") ? { type: "subnet", value: s } : { type: "ip", value: s }
                     ),
@@ -281,25 +298,29 @@ const SpeedCapsTab: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-                {loading ? (
-                    <p>Loading...</p>
-                ) : (
-                    <table className="w-full border">
-                        <thead className="bg-primary text-white">
+                <table className="w-full border">
+                    <thead className="bg-primary text-white">
+                        <tr>
+                            <th className="border p-2">Seq</th>
+                            <th className="border p-2">Interface</th>
+                            <th className="border p-2">Protocol</th>
+                            <th className="border p-2">Source</th>
+                            <th className="border p-2">Destination</th>
+                            <th className="border p-2">Direction</th>
+                            <th className="border p-2">Target</th>
+                            <th className="border p-2">Description</th>
+                            <th className="border p-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center min-h-[150px]">
+                        {loading ? (
                             <tr>
-                                <th className="border p-2">Seq</th>
-                                <th className="border p-2">Interface</th>
-                                <th className="border p-2">Protocol</th>
-                                <th className="border p-2">Source</th>
-                                <th className="border p-2">Destination</th>
-                                <th className="border p-2">Direction</th>
-                                <th className="border p-2">Target</th>
-                                <th className="border p-2">Description</th>
-                                <th className="border p-2">Actions</th>
+                                <td colSpan={9} className="border p-4 text-muted-foreground">
+                                    Loading speed caps...
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="text-center">
-                            {speedCaps.map((cap) => (
+                        ) : speedCaps.length > 0 ? (
+                            speedCaps.map((cap) => (
                                 <tr key={cap.ruleId || cap.sequence}>
                                     <td className="border p-2">{cap.sequence}</td>
                                     <td className="border p-2">{cap.displayInterface || cap.interface}</td>
@@ -311,15 +332,21 @@ const SpeedCapsTab: React.FC = () => {
                                     <td className="border p-2">{cap.description || "None"}</td>
                                     <td className="border p-2 flex gap-2 justify-center">
                                         <Button onClick={() => handleOpenEdit(cap)}>Edit</Button>
-                                        <Button onClick={() => handleDelete(cap.ruleId)} className="bg-red-600">
+                                        <Button onClick={() => handleDelete(cap.ruleId)} className="bg-red-600 text-white">
                                             Delete
                                         </Button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={9} className="border p-4 text-muted-foreground">
+                                    No speed caps found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             {/* Add/Edit Modal */}
@@ -472,45 +499,60 @@ const SpeedCapsTab: React.FC = () => {
                             </label>
                         </div>
 
-                        {/* Target Type */}
-                        <label className="col-span-1">
-                            Target Type
-                            <Select
-                                value={form.targetType}
-                                onValueChange={(val) => setForm({ ...form, targetType: val as "pipe" | "queue", targetId: "" })}
-                            >
-                                <SelectTrigger className="w-full mt-1">
-                                    <SelectValue placeholder="Select target type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="pipe">Pipe</SelectItem>
-                                    <SelectItem value="queue">Queue</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </label>
+                        <div className="grid col-span-2 grid-cols-3 gap-4">
+                            {/* Target Type */}
+                            <label className="col-span-1">
+                                Target Type
+                                <Select
+                                    value={form.targetType}
+                                    onValueChange={(val) => setForm({ ...form, targetType: val as "pipe" | "queue", targetId: "" })}
+                                >
+                                    <SelectTrigger className="w-full mt-1">
+                                        <SelectValue placeholder="Select target type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pipe">Pipe</SelectItem>
+                                        <SelectItem value="queue">Queue</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </label>
 
-                        {/* Target (Pipe or Queue) */}
-                        <label className="col-span-1">
-                            {form.targetType === "pipe" ? "Pipe" : "Queue"}
-                            <Select value={form.targetId} onValueChange={(val) => setForm({ ...form, targetId: val })}>
-                                <SelectTrigger className="w-full mt-1">
-                                    <SelectValue placeholder={`Select ${form.targetType}`} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {form.targetType === "pipe"
-                                        ? pipes.map((p) => (
-                                            <SelectItem key={p.id} value={p.id}>
-                                                {p.description} ({p.bandwidth} {p.displaymetric})
-                                            </SelectItem>
-                                        ))
-                                        : queues.map((q) => (
-                                            <SelectItem key={q.id} value={q.id}>
-                                                {q.description} ({q.bandwidth} {q.displaymetric})
-                                            </SelectItem>
-                                        ))}
-                                </SelectContent>
-                            </Select>
-                        </label>
+                            {/* Target (Pipe or Queue) */}
+                            <label className="col-span-1">
+                                {form.targetType === "pipe" ? "Pipe" : "Queue"}
+                                <Select value={form.targetId} onValueChange={(val) => setForm({ ...form, targetId: val })}>
+                                    <SelectTrigger className="w-full mt-1">
+                                        <SelectValue placeholder={`Select ${form.targetType}`} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {form.targetType === "pipe"
+                                            ? pipes.map((p) => (
+                                                <SelectItem key={p.id} value={p.id}>
+                                                    {p.description} ({p.bandwidth} {p.displaymetric})
+                                                </SelectItem>
+                                            ))
+                                            : queues.map((q) => (
+                                                <SelectItem key={q.id} value={q.id}>
+                                                    {q.description} ({q.bandwidth} {q.displaymetric})
+                                                </SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                            </label>
+
+                            {/* Sequence */}
+                            <label className="col-span-1">
+                                Sequence
+                                <Input
+                                    type="number"
+                                    className="w-full mt-1"
+                                    value={form.sequence}
+                                    onChange={(e) => setForm({ ...form, sequence: e.target.value })}
+                                    placeholder="Enter sequence number"
+                                    min={1}
+                                />
+                            </label>
+                        </div>
 
                         {/* Description */}
                         <label className="col-span-2">

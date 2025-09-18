@@ -143,21 +143,25 @@ const QueuesTab: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-                {loading ? (
-                    <p>Loading...</p>
-                ) : (
-                    <table className="w-full border">
-                        <thead className="bg-primary text-white">
+                <table className="w-full border">
+                    <thead className="bg-primary text-white">
+                        <tr>
+                            <th className="border p-2">Pipe</th>
+                            <th className="border p-2">Weight</th>
+                            <th className="border p-2">Mask</th>
+                            <th className="border p-2">Description</th>
+                            <th className="border p-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center min-h-[150px]">
+                        {loading ? (
                             <tr>
-                                <th className="border p-2">Pipe</th>
-                                <th className="border p-2">Weight</th>
-                                <th className="border p-2">Mask</th>
-                                <th className="border p-2">Description</th>
-                                <th className="border p-2">Actions</th>
+                                <td colSpan={5} className="border p-4 text-muted-foreground">
+                                    Loading queues...
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="text-center">
-                            {queues.map((q) => (
+                        ) : queues.length > 0 ? (
+                            queues.map((q) => (
                                 <tr key={q.id}>
                                     <td className="border p-2">{q.displayPipe || q.pipe}</td>
                                     <td className="border p-2">{formatWeight(q.weight)}</td>
@@ -165,15 +169,21 @@ const QueuesTab: React.FC = () => {
                                     <td className="border p-2">{q.description || "None"}</td>
                                     <td className="border p-2 flex gap-2 justify-center">
                                         <Button onClick={() => handleOpenEdit(q)}>Edit</Button>
-                                        <Button onClick={() => handleDelete(q.id)} className="bg-red-600">
+                                        <Button onClick={() => handleDelete(q.id)} className="bg-red-600 text-white">
                                             Delete
                                         </Button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={5} className="border p-4 text-muted-foreground">
+                                    No queues found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             <Dialog open={open} onOpenChange={setOpen}>
@@ -181,12 +191,12 @@ const QueuesTab: React.FC = () => {
                     <DialogTitle>{editing ? "Edit Queue" : "Add Queue"}</DialogTitle>
                     <div className="grid grid-cols-1 gap-3 mt-4">
                         <div className="flex flex-row gap-2">
-                            <label >
+                            <label>
                                 Pipe
                                 <Select
                                     value={form.pipe}
                                     onValueChange={(val) => setForm({ ...form, pipe: val })}
-                                    disabled={editing ? true: false}
+                                    disabled={!!editing}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select Pipe" />
@@ -230,6 +240,7 @@ const QueuesTab: React.FC = () => {
                                 </Select>
                             </label>
                         </div>
+
                         <label>
                             Description
                             <Input

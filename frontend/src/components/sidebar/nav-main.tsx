@@ -47,7 +47,7 @@ export function NavMain({ items }: { items: navProps[] }) {
                 className={isActive(item.url) ? "bg-sidebar-accent text-sidebar-primary font-medium" : ""}
                 onClick={() => navigate(item.url)}
               >
-                {item.icon && <item.icon className="mr-2 h-4 w-4" onClick={() => navigate(item.url)}/>}
+                {item.icon && <item.icon className="mr-2 h-4 w-4" onClick={() => navigate(item.url)} />}
                 <span className="cursor-pointer">{item.title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -56,7 +56,7 @@ export function NavMain({ items }: { items: navProps[] }) {
               key={item.title}
               asChild
               className="group/collapsible"
-              defaultOpen={isParentActive(item.url, item.items)} // auto-expand if active
+              defaultOpen={isParentActive(item.url, item.items)}
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
@@ -68,22 +68,30 @@ export function NavMain({ items }: { items: navProps[] }) {
                         : ""
                     }
                   >
-                    {item.icon && <item.icon className="mr-2 h-4 w-4" onClick={() => navigate(item.url)}/>}
+                    {item.icon && <item.icon className="mr-2 h-4 w-4" onClick={() => navigate(item.url)} />}
                     <span className="cursor-pointer">{item.title}</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton
-                          className=" cursor-pointer" onClick={() => navigate(subItem.url)}
-                        >
-                          {subItem.title}
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
+                    {item.items?.map((subItem) => {
+                      const isSubActive = location.pathname === subItem.url
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton
+                            className={
+                              isSubActive
+                                ? "bg-sidebar-accent/70 text-sidebar-primary font-medium cursor-pointer" // lighter highlight
+                                : "cursor-pointer"
+                            }
+                            onClick={() => navigate(subItem.url)}
+                          >
+                            {subItem.title}
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )
+                    })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>

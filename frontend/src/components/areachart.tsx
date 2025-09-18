@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
@@ -19,39 +17,17 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 
-const chartConfigLan = {
-    lanIn: {
-        label: "In",
-        color: "var(--chart-1)",
-    },
-    lanOut: {
-        label: "Out",
-        color: "var(--chart-2)",
-    },
-} satisfies ChartConfig
-
-const chartConfigWan = {
-    wanIn: {
-        label: "In",
-        color: "var(--bytein)",
-    },
-    wanOut: {
-        label: "Out",
-        color: "var(--byteout)",
-    },
+const chartConfig = {
+    inBytes: { label: "Bytes In", color: "var(--color-primary)" },
+    outBytes: { label: "Bytes Out", color: "var(--color-chart-4)" },
 } satisfies ChartConfig
 
 export function ChartArea() {
-    const [lanData, setLanData] = React.useState<   
-        { date: string; lanIn: number; lanOut: number }[]
-    >([])
-    const [wanData, setWanData] = React.useState<
-        { date: string; wanIn: number; wanOut: number }[]
-    >([])
+    const [lanData, setLanData] = React.useState<{ date: string; inBytes: number; outBytes: number }[]>([])
+    const [wifiData, setWifiData] = React.useState<{ date: string; inBytes: number; outBytes: number }[]>([])
 
-    // Buffers for raw samples
-    const lanBuffer = React.useRef<{ inbytes: number; outbytes: number }[]>([])
-    const wanBuffer = React.useRef<{ inbytes: number; outbytes: number }[]>([])
+    const lanBuffer = React.useRef<{ inBytes: number; outBytes: number }[]>([])
+    const wifiBuffer = React.useRef<{ inBytes: number; outBytes: number }[]>([])
 
     React.useEffect(() => {
         const source = new EventSource("http://localhost:4000/stream1")
@@ -59,11 +35,11 @@ export function ChartArea() {
         source.onmessage = (event) => {
             try {
                 const parsed = JSON.parse(event.data)
-                const { lan, wan } = parsed.interfaces
+                const lan = parsed.interfaces.lan
+                const wifi = parsed.interfaces.opt2
 
-                // Store raw values into buffers
-                lanBuffer.current.push({ inbytes: lan.inbytes, outbytes: lan.outbytes })
-                wanBuffer.current.push({ inbytes: wan.inbytes, outbytes: wan.outbytes })
+                lanBuffer.current.push({ inBytes: lan.inbytes, outBytes: lan.outbytes })
+                wifiBuffer.current.push({ inBytes: wifi.inbytes, outBytes: wifi.outbytes })
             } catch (err) {
                 console.error("Invalid SSE payload:", event.data)
             }
@@ -74,38 +50,21 @@ export function ChartArea() {
             source.close()
         }
 
-        // Every 4 seconds, flush buffers into chart data
         const interval = setInterval(() => {
-            if (lanBuffer.current.length > 0 || wanBuffer.current.length > 0) {
-                const timestamp = new Date().toISOString()
+            const timestamp = new Date().toISOString()
 
-                // Aggregate LAN
-                if (lanBuffer.current.length > 0) {
-                    const sumIn = lanBuffer.current.reduce((a, b) => a + b.inbytes, 0)
-                    const sumOut = lanBuffer.current.reduce((a, b) => a + b.outbytes, 0)
+            if (lanBuffer.current.length > 0) {
+                const totalIn = lanBuffer.current.reduce((sum, b) => sum + b.inBytes, 0)
+                const totalOut = lanBuffer.current.reduce((sum, b) => sum + b.outBytes, 0)
+                setLanData((prev) => [...prev, { date: timestamp, inBytes: totalIn, outBytes: totalOut }].slice(-8))
+                lanBuffer.current = []
+            }
 
-                    setLanData((prev) =>
-                        [
-                            ...prev,
-                            { date: timestamp, lanIn: sumIn, lanOut: sumOut },
-                        ].slice(-8) // keep ~last 30s (8 points = 32s)
-                    )
-                    lanBuffer.current = []
-                }
-
-                // Aggregate WAN
-                if (wanBuffer.current.length > 0) {
-                    const sumIn = wanBuffer.current.reduce((a, b) => a + b.inbytes, 0)
-                    const sumOut = wanBuffer.current.reduce((a, b) => a + b.outbytes, 0)
-
-                    setWanData((prev) =>
-                        [
-                            ...prev,
-                            { date: timestamp, wanIn: sumIn, wanOut: sumOut },
-                        ].slice(-8)
-                    )
-                    wanBuffer.current = []
-                }
+            if (wifiBuffer.current.length > 0) {
+                const totalIn = wifiBuffer.current.reduce((sum, b) => sum + b.inBytes, 0)
+                const totalOut = wifiBuffer.current.reduce((sum, b) => sum + b.outBytes, 0)
+                setWifiData((prev) => [...prev, { date: timestamp, inBytes: totalIn, outBytes: totalOut }].slice(-8))
+                wifiBuffer.current = []
             }
         }, 4000)
 
@@ -115,40 +74,25 @@ export function ChartArea() {
         }
     }, [])
 
-    const renderChart = (
-        data: any[],
-        config: ChartConfig,
-        title: string,
-        description: string
-    ) => (
-        <Card className="pt-4">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2 border-b py-4 px-4 sm:px-6">
+    const renderChart = (data: typeof lanData, title: string, description: string) => (
+        <Card className="flex-1 pt-4 border  border-[color:var(--color-border)] shadow-[var(--shadow)]">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4 bg-primary sm:gap-2 border-b border-[color:var(--color-border)] py-4 px-4 sm:px-6">
                 <div className="flex-1 space-y-1">
                     <CardTitle className="text-lg">{title}</CardTitle>
-                    <CardDescription>{description}</CardDescription>
+                    <CardDescription className="text-black">{description}</CardDescription>
                 </div>
-                {data.length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                        Latest: In{" "}
-                        {formatBytes(
-                            data[data.length - 1][Object.keys(config)[0]] as number
-                        )}{" "}
-                        · Out{" "}
-                        {formatBytes(
-                            data[data.length - 1][Object.keys(config)[1]] as number
-                        )}
+                {/* {data.length > 0 && (
+                    <div className="text-sm">
+                        Latest: In {formatBytes(data[data.length - 1].inBytes)} · Out {formatBytes(data[data.length - 1].outBytes)}
                     </div>
-                )}
+                )} */}
             </CardHeader>
 
             <CardContent className="px-4 sm:px-6 pb-6 pt-4">
                 <div className="w-full overflow-x-auto">
-                    <ChartContainer
-                        config={config}
-                        className="min-w-[300px] sm:min-w-0 w-full h-[300px]"
-                    >
+                    <ChartContainer config={chartConfig} className="min-w-[300px] sm:min-w-0 w-full h-[300px]">
                         <AreaChart data={data}>
-                            <CartesianGrid vertical={false} />
+                            <CartesianGrid vertical={false} stroke="var(--border)" />
                             <XAxis
                                 dataKey="date"
                                 tickLine={false}
@@ -178,16 +122,14 @@ export function ChartArea() {
                                     />
                                 }
                             />
-
-
-                            {Object.keys(config).map((key) => (
+                            {(Object.keys(chartConfig) as (keyof typeof chartConfig)[]).map((key) => (
                                 <Area
                                     key={key}
                                     dataKey={key}
                                     type="monotone"
-                                    stroke={config[key].color}
+                                    stroke={chartConfig[key].color}
                                     fillOpacity={0.15}
-                                    fill={config[key].color}
+                                    fill={chartConfig[key].color}
                                     strokeWidth={2}
                                     animationDuration={300}
                                 />
@@ -201,27 +143,17 @@ export function ChartArea() {
     )
 
     return (
-        <div className="space-y-6 bg-background">
-            {renderChart(
-                lanData,
-                chartConfigLan,
-                "LAN Traffic",
-                "Showing in/out per bytes LAN interface traffic."
-            )}
-            {renderChart(
-                wanData,
-                chartConfigWan,
-                "WAN Traffic",
-                "Showing WAN interface in/out per bytes."
-            )}
+        <div className="flex flex-col md:flex-row gap-4 text-[color:var(--color-foreground)]">
+            {renderChart(lanData, "Wired Traffic", "Showing LAN interface in/out bytes over time.")}
+            {renderChart(wifiData, "Wireless Traffic", "Showing Wireless interface in/out bytes over time.")}
         </div>
     )
 }
 
-function formatBytes(bytes: number) {
-    if (bytes < 1024) return `${bytes} B`
-    const kb = bytes / 1024
-    if (kb < 1024) return `${kb.toFixed(1)} KB`
-    const mb = kb / 1024
-    return `${mb.toFixed(1)} MB`
-}
+// function formatBytes(bytes: number) {
+//     if (bytes < 1024) return `${bytes} B`
+//     const kb = bytes / 1024
+//     if (kb < 1024) return `${kb.toFixed(1)} KB`
+//     const mb = kb / 1024
+//     return `${mb.toFixed(1)} MB`
+// }

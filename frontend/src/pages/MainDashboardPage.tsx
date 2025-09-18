@@ -1,31 +1,25 @@
 import { ChartArea } from "@/components/areachart"
-import { Gauge } from "@/components/gauge";
-import { DevicesTable } from "@/components/devicestable";
+import { Gauge } from "@/components/gauge"
+import { DevicesTable } from "@/components/devicestable"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { Wifi, Smartphone, AlertCircle, BrainCircuit } from "lucide-react"
-import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
-import { useDevices } from "@/hooks/useDevices";
-import { useSystemTime } from "@/hooks/useOPNSense";
+import { Wifi, Smartphone, AlertCircle, BrainCircuit, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
+import { useDevices } from "@/hooks/useDevices"
+import { useSystemTime } from "@/hooks/useOPNSense"
 
 function formatUptime(uptimeStr?: string) {
     if (!uptimeStr) return "—"
     const [h, m, s] = uptimeStr.split(":").map(Number)
-
     const totalSeconds = h * 3600 + m * 60 + s
     const days = Math.floor(totalSeconds / 86400)
     const hours = Math.floor((totalSeconds % 86400) / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
 
-    if (days > 0) {
-        return `${days}d ${hours}h`
-    }
-    if (hours > 0) {
-        return `${hours}h ${minutes}m`
-    }
+    if (days > 0) return `${days}d ${hours}h`
+    if (hours > 0) return `${hours}h ${minutes}m`
     return `${minutes}m`
 }
-
 
 export default function MainDashboardPage() {
     const { data: devices = [] } = useDevices(2)
@@ -49,101 +43,84 @@ export default function MainDashboardPage() {
     const onlineDevices = devices.filter((d: { status: string }) => d.status === "UP").length
     const blockedDevices = devices.filter((d: { authorized: any }) => !d.authorized).length
 
-    if (isLoading) return <p>Loading system status...</p>
-    if (!systemTime) return <p>No data available</p>
+    if (isLoading) {
+        return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING SYSTEM</p></div>
+    }
+
+    if (!systemTime) return <p className="p-4">No data available</p>
 
     return (
         <SidebarInset>
-            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                <div className="grid gap-4 md:grid-cols-3">
-                    <div className="grid gap-4 md:col-span-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {[
-                                {
-                                    icon: <Smartphone className="w-8 h-8 text-chart-1" />,
-                                    label: "Devices",
-                                    value: devices.length,
-                                },
-                                {
-                                    icon: <Wifi className="w-8 h-8 text-chart-1" />,
-                                    label: "Uptime",
-                                    value: uptime,
-                                },
-                                {
-                                    icon: <AlertCircle className="w-8 h-8 text-chart-1" />,
-                                    label: "Critical Alerts",
-                                    value: "3",
-                                },
-                                {
-                                    icon: <BrainCircuit className="w-8 h-8 text-chart-1" />,
-                                    label: "AI Insights",
-                                    value: "6",
-                                },
-                            ].map((card, i) => (
-                                <div
-                                    key={i}
-                                    className="bg-card rounded-2xl shadow p-6 px-6 flex items-center gap-4 min-h-[115px]"
-                                >
-                                    <div className="flex-shrink-0">{card.icon}</div>
-                                    <div className="flex flex-col">
-                                        <p className="text-xl font-semibold">{card.value}</p>
-                                        <p className="text-sm text-muted-foreground">{card.label}</p>
-                                    </div>
+            <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-x-hidden">
+                {/* Left Column */}
+                <div className="flex-1 flex flex-col gap-4">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                            { icon: <Smartphone className="w-8 h-8 text-chart-1" />, label: "Devices", value: devices.length },
+                            { icon: <Wifi className="w-8 h-8 text-chart-1" />, label: "Uptime", value: uptime },
+                            { icon: <AlertCircle className="w-8 h-8 text-chart-1" />, label: "Critical Alerts", value: "3" },
+                            { icon: <BrainCircuit className="w-8 h-8 text-chart-1" />, label: "AI Insights", value: "6" },
+                        ].map((card, i) => (
+                            <div key={i} className="w-full bg-card rounded-2xl shadow p-6 flex items-center gap-4 min-h-[120px]">
+                                <div className="flex-shrink-0">{card.icon}</div>
+                                <div className="flex flex-col">
+                                    <p className="text-xl font-semibold">{card.value}</p>
+                                    <p className="text-sm text-muted-foreground">{card.label}</p>
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="bg-background rounded-xl">
-                            <ChartArea />
-                        </div>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="bg-background rounded-xl">
-                        <Gauge />
+                    {/* Chart */}
+                    <div className="rounded-xl mt-4">
+                        <ChartArea />
                     </div>
                 </div>
-                <div className="mt-2">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <Badge
-                            className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
-                            variant={filter === "all" ? "default" : "outline"}
-                            onClick={() => setFilter("all")}
-                        >
-                            All Devices ({totalDevices})
-                        </Badge>
-                        <Badge
-                            className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
-                            variant={filter === "online" ? "default" : "outline"}
-                            onClick={() => setFilter("online")}
-                        >
-                            Online ({onlineDevices})
-                        </Badge>
-                        <Badge
-                            className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
-                            variant={filter === "offline" ? "default" : "outline"}
-                            onClick={() => setFilter("offline")}
-                        >
-                            Offline ({totalDevices - onlineDevices})
-                        </Badge>
-                        <Badge
-                            className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
-                            variant={filter === "blocked" ? "default" : "outline"}
-                            onClick={() => setFilter("blocked")}
-                        >
-                            Blocked ({blockedDevices})
-                        </Badge>
-                    </div>
-                    <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
-                        {Array.isArray(devices) && filteredDevices.length > 0 ? (
-                            <DevicesTable devices={filteredDevices} viewType="all" />
-                        ) : (
-                            <div className="text-muted-foreground text-sm text-center py-8">
-                                No devices match the filter.
-                            </div>
-                        )}
-                    </div>
+
+                {/* Right Column: Gauge */}
+                <div className="w-full lg:w-fit bg-background rounded-xl shadow flex justify-center">
+                    <Gauge className="max-w-full" />
+                </div>
+            </div>
+
+            {/* Devices Filter & Table */}
+            <div className="p-4 md:p-6">
+                <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge
+                        className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
+                        variant={filter === "all" ? "default" : "outline"}
+                        onClick={() => setFilter("all")}
+                    >
+                        All Devices ({totalDevices})
+                    </Badge>
+                    <Badge
+                        className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
+                        variant={filter === "online" ? "default" : "outline"}
+                        onClick={() => setFilter("online")}
+                    >
+                        Online ({onlineDevices})
+                    </Badge>
+                    <Badge
+                        className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
+                        variant={filter === "offline" ? "default" : "outline"}
+                        onClick={() => setFilter("offline")}
+                    >
+                        Offline ({totalDevices - onlineDevices})
+                    </Badge>
+                    <Badge
+                        className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
+                        variant={filter === "blocked" ? "default" : "outline"}
+                        onClick={() => setFilter("blocked")}
+                    >
+                        Blocked ({blockedDevices})
+                    </Badge>
+                </div>
+
+                <div className="bg-card dark:bg-muted/20 rounded-xl shadow p-4 overflow-x-auto">
+                    <DevicesTable devices={filteredDevices} viewType="all" />
                 </div>
             </div>
         </SidebarInset>
-    );
+    )
 }

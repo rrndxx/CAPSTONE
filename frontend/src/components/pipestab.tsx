@@ -27,7 +27,6 @@ const PipesTab: React.FC = () => {
         description: "",
     });
 
-    // Fetch all pipes
     const fetchPipes = async () => {
         setLoading(true);
         try {
@@ -101,6 +100,7 @@ const PipesTab: React.FC = () => {
         }
     };
 
+
     return (
         <div className="space-y-4">
             <div className="flex justify-end mb-2">
@@ -108,20 +108,24 @@ const PipesTab: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-                {loading ? (
-                    <p>Loading...</p>
-                ) : (
-                    <table className="w-full border">
-                        <thead className="bg-primary text-white">
+                <table className="w-full border">
+                    <thead className="bg-primary text-white">
+                        <tr>
+                            <th className="border p-2">Bandwidth</th>
+                            <th className="border p-2">Mask</th>
+                            <th className="border p-2">Description</th>
+                            <th className="border p-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center min-h-[150px]">
+                        {loading ? (
                             <tr>
-                                <th className="border p-2">Bandwidth</th>
-                                <th className="border p-2">Mask</th>
-                                <th className="border p-2">Description</th>
-                                <th className="border p-2">Actions</th>
+                                <td colSpan={4} className="border p-4 text-muted-foreground">
+                                    Loading pipes...
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="text-center">
-                            {pipes.map((p) => (
+                        ) : pipes.length > 0 ? (
+                            pipes.map((p) => (
                                 <tr key={p.id}>
                                     <td className="border p-2">
                                         {p.bandwidth} {p.displayMetric || p.metric}
@@ -138,10 +142,16 @@ const PipesTab: React.FC = () => {
                                         </Button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={4} className="border p-4 text-muted-foreground">
+                                    No pipes found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             {/* Dialog for Add/Edit */}

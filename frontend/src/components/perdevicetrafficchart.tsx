@@ -1,10 +1,15 @@
-"use client";
-
-import * as React from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import type { DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
+import {
+    ChartContainer,
+    ChartLegend,
+    ChartLegendContent,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
+import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
 
 export const formatBytes = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -14,30 +19,45 @@ export const formatBytes = (bytes: number) => {
     return `${mb.toFixed(1)} MB`;
 };
 
-interface Props {
-    data: DeviceTrafficSample[];
-}
+export const PerDeviceTrafficChart = () => {
+    const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
+    const latestSample = usePerDeviceTraffic();
 
-export const PerDeviceTrafficChart = ({ data }: Props) => {
-    const deviceKeys = React.useMemo(() => {
-        const lastSample = data[data.length - 1] || {};
+    // Always update history when latest sample changes
+    useEffect(() => {
+        if (latestSample) {
+            setTrafficHistory((prev) => [...prev.slice(-59), latestSample]); // keep last 60
+        }
+    }, [latestSample]);
+
+    // Compute unique device keys
+    const deviceKeys = useMemo(() => {
+        const lastSample = trafficHistory[trafficHistory.length - 1] || {};
         return Object.keys(lastSample)
-            .filter(k => k !== "date")
-            .map(k => k.replace(/-IN|-OUT/, ""))
+            .filter((k) => k !== "date")
+            .map((k) => k.replace(/-IN|-OUT/, ""))
             .filter((v, i, a) => a.indexOf(v) === i); // unique devices
-    }, [data]);
+    }, [trafficHistory]);
 
-    // Generate chart config for inbound and outbound
-    const chartConfigIn: ChartConfig = deviceKeys.reduce((acc, key, i) => {
-        acc[`${key}-IN`] = { label: key, color: `hsl(${(i * 70) % 360}, 70%, 50%)` };
-        return acc;
-    }, {} as ChartConfig);
+    // Chart configs
+    const chartConfigIn: ChartConfig = useMemo(() => {
+        return deviceKeys.reduce((acc, key, i) => {
+            acc[`${key}-IN`] = { label: key, color: `hsl(${(i * 70) % 360}, 70%, 50%)` };
+            return acc;
+        }, {} as ChartConfig);
+    }, [deviceKeys]);
 
-    const chartConfigOut: ChartConfig = deviceKeys.reduce((acc, key, i) => {
-        acc[`${key}-OUT`] = { label: key, color: `hsl(${(i * 70) % 360}, 70%, 50%)` };
-        return acc;
-    }, {} as ChartConfig);
+    const chartConfigOut: ChartConfig = useMemo(() => {
+        return deviceKeys.reduce((acc, key, i) => {
+            acc[`${key}-OUT`] = { label: key, color: `hsl(${(i * 70) % 360}, 70%, 50%)` };
+            return acc;
+        }, {} as ChartConfig);
+    }, [deviceKeys]);
 
+    // Early return for empty data
+    // if (!trafficHistory.length) return <div>Loading...</div>;
+
+    // Function to render a chart
     const renderChart = (data: DeviceTrafficSample[], config: ChartConfig, title: string, description: string) => (
         <Card className="pt-4 flex-1">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2 border-b py-4 px-4 sm:px-6 bg-primary">
@@ -98,8 +118,8 @@ export const PerDeviceTrafficChart = ({ data }: Props) => {
 
     return (
         <div className="flex flex-row gap-6 bg-background">
-            {renderChart(data, chartConfigIn, "Inbound Traffic", "Inbound bits per device.")}
-            {renderChart(data, chartConfigOut, "Outbound Traffic", "Outbound bits per device.")}
+            {renderChart(trafficHistory, chartConfigIn, "Inbound Traffic", "Inbound bits per device.")}
+            {renderChart(trafficHistory, chartConfigOut, "Outbound Traffic", "Outbound bits per device.")}
         </div>
     );
 };

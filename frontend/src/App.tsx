@@ -8,8 +8,15 @@ export function LayoutWrapper() {
   const { state } = useSidebar()
 
   return (
-    <div className="flex w-full transition-all data-[collapsible=collapsed]/pl-16 data-[collapsible=expanded]/pl-64" data-collapsible={state}>
-      <AppSidebar />
+    <div
+      className="
+    flex w-full transition-all
+    md:data-[collapsible=collapsed]/pl-16
+    md:data-[collapsible=expanded]/pl-64
+  "
+      data-collapsible={state}
+    >
+      <AppSidebar className="hidden" />
       <main className="flex-1">
         <Navbar />
         <Outlet />

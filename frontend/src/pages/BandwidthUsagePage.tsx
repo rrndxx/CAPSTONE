@@ -3,6 +3,7 @@ import { InterfaceTrafficChart } from "@/components/perinterfacetrafficchart";
 import { PerInterfaceTrafficTable } from "@/components/perinterfacetraffictable";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { useInterfaceTraffic, type DeltaTraffic } from "@/hooks/useInterfaceTraffic.ts";
+import { Loader2 } from "lucide-react";
 
 const BandwidthUsagePage = () => {
     const { data: newSample } = useInterfaceTraffic();
@@ -14,7 +15,7 @@ const BandwidthUsagePage = () => {
         }
     }, [newSample]);
 
-    if (!trafficHistory.length) return <div>Loading...</div>;
+    if (!trafficHistory.length) return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING BANDWIDTH USAGE</p></div>
 
     return (
         <SidebarInset>

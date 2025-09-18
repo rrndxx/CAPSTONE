@@ -1,31 +1,23 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { PerDeviceTrafficTable } from "@/components/perdevicetraffictable";
-import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
 import { PerDeviceTrafficChart } from "@/components/perdevicetrafficchart";
+import { usePerDeviceTraffic } from "@/hooks/usePerDeviceTraffic";
+import { Loader2 } from "lucide-react";
 
 const BandwidthPerDevicePage = () => {
   const latestSample = usePerDeviceTraffic();
-  const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
 
-  useEffect(() => {
-    if (latestSample) {
-      setTrafficHistory(prev => [...prev.slice(-59), latestSample]); // keep last 60 samples
-    }
-  }, [latestSample]);
-
-  if (!trafficHistory.length) return <div>Loading...</div>;
+  if (!latestSample) return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING BANDWIDTH USAGE</p></div>
 
   return (
     <SidebarInset>
       <div className="flex flex-col gap-6 p-4 pt-0">
         <section className="space-y-6">
-          <PerDeviceTrafficChart data={trafficHistory} />
+          <PerDeviceTrafficChart />
         </section>
         <section className="space-y-6">
-          <PerDeviceTrafficTable data={trafficHistory} />
+          <h2 className="text-lg font-semibold mb-2">Per-Device Traffic</h2>
+          <PerDeviceTrafficTable />
         </section>
       </div>
     </SidebarInset>
