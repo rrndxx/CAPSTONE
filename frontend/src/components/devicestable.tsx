@@ -85,23 +85,25 @@ export function DevicesTable({
   const [globalFilter, setGlobalFilter] = useState("")
 
   const commonColumns: ColumnDef<Device, any>[] = [
-    { accessorKey: "deviceId", header: "ID", cell: info => info.getValue() },
+    { accessorKey: "deviceId", header: "ID", cell: info => info.getValue(), meta: { className: 'hidden lg:table-cell' } },
     {
       accessorKey: "deviceHostname",
       header: "Hostname",
       cell: info => info.getValue() ?? "—",
     },
     { accessorKey: "deviceIp", header: "IP", cell: info => info.getValue() },
-    { accessorKey: "deviceMac", header: "MAC", cell: info => info.getValue() },
+    { accessorKey: "deviceMac", header: "MAC", cell: info => info.getValue(), meta: { className: 'hidden lg:table-cell' } },
     {
       accessorKey: "deviceOS",
       header: "OS",
       cell: info => info.getValue() ?? "Unknown",
+      meta: { className: 'hidden lg:table-cell' }
     },
     {
       accessorKey: "macInfo",
       header: "Vendor",
       cell: info => info.getValue() ?? "—",
+      meta: { className: 'hidden lg:table-cell' }
     },
   ]
 
@@ -150,15 +152,14 @@ export function DevicesTable({
       }
 
       return (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 min-w-0">
           <Button
             size="sm"
-            // variant="outline"
             onClick={handleScanPorts}
-            className="w-28 bg-primary"
+            className="w-28 bg-primary hidden lg:flex"
           >
             {isPortLoading ? (
-              <Loader2 className="animate-spin h-2 w-2" />
+              <Loader2 className="animate-spin h-4 w-4" />
             ) : (
               "Scan Ports"
             )}
@@ -166,7 +167,7 @@ export function DevicesTable({
 
           {/* Port Scan Result Dialog */}
           <Dialog open={openScanDialog} onOpenChange={setOpenScanDialog}>
-            <DialogContent className="max-w-lg sm:max-w-xl">
+            <DialogContent className="max-w-lg sm:max-w-xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex justify-center items-center text-lg">
                   Port Scan Result for {device.deviceHostname}
@@ -205,7 +206,7 @@ export function DevicesTable({
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="min-w-[85vw] max-w-6xl h-[95vh] sm:h-[90vh] flex flex-col overflow-hidden">
+            <DialogContent className="min-w-[85vw] min-h-[95vh] sm:h-[90vh] flex flex-col overflow-hidden">
               {/* Sticky header */}
               <DialogHeader className="flex-shrink-0 border-b pb-3 z-10">
                 <DialogTitle className="flex justify-center items-center text-xl font-semibold">
@@ -214,43 +215,18 @@ export function DevicesTable({
               </DialogHeader>
 
               {/* Dashboard body */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-w-0">
+                {/* grid with min-w-0 so child cards don’t overflow */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch min-w-0">
                   {/* Device Overview */}
-                  <div className="col-span-1 bg-card border rounded-lg p-5 shadow-sm h-full flex flex-col">
-                    {/* Header with dropdown */}
+                  <div className="col-span-1 bg-card border rounded-lg p-5 shadow-sm h-full flex flex-col min-w-0">
                     <div className="flex justify-between items-center border-b pb-2 mb-4">
                       <h3 className="text-lg font-semibold">Device Overview</h3>
-
-                      {/* Dropdown block button */}
-                      <div className="relative">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full"
-                        >
-                          <MoreVertical className="w-5 h-5" />
-                        </Button>
-                        {/* Example dropdown (replace with your DropdownMenu component if available) */}
-                        {/* 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>Block Device</DropdownMenuItem>
-          <DropdownMenuItem>Whitelist</DropdownMenuItem>
-          <DropdownMenuItem>Scan Ports</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      */}
-                      </div>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <MoreVertical className="w-5 h-5" />
+                      </Button>
                     </div>
-
-                    {/* Body */}
-                    <div className="space-y-4 flex-1">
+                    <div className="space-y-4 flex-1 min-w-0">
                       <InfoRow icon={<Server className="w-5 h-5" />} label="Hostname" value={device.deviceHostname ?? "—"} />
                       <InfoRow icon={<Globe className="w-5 h-5" />} label="IPv4" value={<code>{device.deviceIp}</code>} />
                       <InfoRow icon={<Settings className="w-5 h-5" />} label="MAC" value={<code>{device.deviceMac}</code>} />
@@ -260,56 +236,62 @@ export function DevicesTable({
                     </div>
                   </div>
 
-
                   {/* Ports & Security */}
-                  <div className="col-span-1 lg:col-span-2 bg-card border rounded-lg p-5 shadow-sm h-full flex flex-col">
+                  <div className="col-span-1 lg:col-span-2 bg-card border rounded-lg p-5 shadow-sm h-full flex flex-col min-w-0">
                     <div className="flex justify-between items-center border-b">
                       <h3 className="text-lg font-semibold pb-2">Ports & Security</h3>
                       <Button size="sm" onClick={handleScanPorts}>
                         {isPortLoading ? <Loader2 className="animate-spin h-4 w-4" /> : "Scan Ports"}
                       </Button>
                     </div>
-
-                    <div className="flex-1 flex flex-col gap-2">
-                      <div className="rounded bg-muted/20 p-3 flex-1 flex flex-col">
+                    <div className="flex-1 flex flex-col gap-2 min-w-0">
+                      <div className="rounded bg-muted/20 p-3 flex-1 flex flex-col min-w-0">
                         {scanResult ? (
                           scanResult.open_ports?.length > 0 ? (
-                            <div className="flex-1 overflow-y-auto">
-                              <Table className="text-sm w-full">
+                            <div className="w-full overflow-x-auto min-w-0 rounded-md border">
+                              <Table className="w-full min-h-[150px] table-fixed">
                                 <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="w-20 text-center">Port</TableHead>
-                                    <TableHead className="text-center">Service</TableHead>
-                                    <TableHead className="text-center">Severity</TableHead>
-                                  </TableRow>
+                                  {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                      {headerGroup.headers.map((header) => (
+                                        <TableHead
+                                          key={header.id}
+                                          className="text-center px-2 whitespace-nowrap"
+                                        >
+                                          {flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                          )}
+                                        </TableHead>
+                                      ))}
+                                    </TableRow>
+                                  ))}
                                 </TableHeader>
-                                <TableBody>
-                                  {scanResult.open_ports.map((entry: { port: number; service: string }) => {
-                                    let severity = "Unknown";
-                                    let severityClass = "text-gray-500";
 
-                                    if ([22, 3389].includes(entry.port)) {
-                                      severity = "High";
-                                      severityClass = "text-red-600 font-semibold";
-                                    } else if ([80, 443].includes(entry.port)) {
-                                      severity = "Low";
-                                      severityClass = "text-green-600 font-medium";
-                                    } else if (entry.port < 1024) {
-                                      severity = "Medium";
-                                      severityClass = "text-yellow-600 font-medium";
-                                    } else {
-                                      severity = "Low";
-                                      severityClass = "text-blue-600";
-                                    }
-
-                                    return (
-                                      <TableRow key={entry.port}>
-                                        <TableCell className="text-center">{entry.port}</TableCell>
-                                        <TableCell className="text-center">{entry.service || "—"}</TableCell>
-                                        <TableCell className={`text-center ${severityClass}`}>{severity}</TableCell>
+                                <TableBody className="min-h-[200px]">
+                                  {table.getRowModel().rows.length > 0 ? (
+                                    table.getRowModel().rows.map((row) => (
+                                      <TableRow key={row.id} className="text-center">
+                                        {row.getVisibleCells().map((cell) => (
+                                          <TableCell
+                                            key={cell.id}
+                                            className="text-center break-all max-w-0 truncate px-2"
+                                          >
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                          </TableCell>
+                                        ))}
                                       </TableRow>
-                                    );
-                                  })}
+                                    ))
+                                  ) : (
+                                    <TableRow>
+                                      <TableCell
+                                        colSpan={fullColumns.filter(col => !(col.meta?.className?.includes("hidden") ?? false)).length}
+                                        className="h-24 text-center text-muted-foreground break-all"
+                                      >
+                                        No devices match the filter.
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
                                 </TableBody>
                               </Table>
                             </div>
@@ -324,35 +306,31 @@ export function DevicesTable({
                           </div>
                         )}
                       </div>
-
                       <p className="text-sm text-end font-medium">Last scan: </p>
-
                     </div>
                   </div>
                 </div>
 
                 {/* Network Activity */}
-                <div className="col-span-1 lg:col-span-3 bg-card border rounded-lg p-5 shadow-sm mt-6">
+                <div className="col-span-1 lg:col-span-3 bg-card border rounded-lg p-5 shadow-sm mt-6 min-w-0">
                   <h3 className="text-lg font-semibold mb-4 border-b pb-2">Network Activity</h3>
                   <div className="space-y-6">
-                    {/* Bandwidth Table */}
-                    <div className="flex flex-col gap-2 w-full">
+                    <div className="flex flex-col gap-2 w-full min-w-0">
                       <div className="flex justify-between items-center">
                         <h2 className="text-md font-medium">Bandwidth Usage</h2>
                         <Button
                           size="sm"
                           onClick={handleScanPorts}
-                          className="w-28 bg-primary justify-center items-center self-end"
+                          className="w-28 bg-primary"
                         >
                           Apply Rules
                         </Button>
                       </div>
-                      <div className="flex justify-center items-center min-h-[130px] bg-muted/20">
+                      <div className="flex justify-center items-center min-h-[130px] bg-muted/20 overflow-x-auto min-w-0">
                         <PerDeviceTrafficTable viewType="This Device" ipAddress={device.deviceIp} />
                       </div>
                     </div>
 
-                    {/* Recently Visited */}
                     <div>
                       <h2 className="text-md font-medium">Visited Sites</h2>
                       <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 max-h-[120px] overflow-y-auto">
@@ -366,8 +344,9 @@ export function DevicesTable({
                 </div>
               </div>
             </DialogContent>
+
           </Dialog>
-        </div >
+        </div>
       )
     },
   }
@@ -376,7 +355,7 @@ export function DevicesTable({
 
   if (viewType === "bandwidth") {
     fullColumns = [
-      { accessorKey: "deviceId", header: "ID", cell: info => info.getValue() },
+      { accessorKey: "deviceId", header: "ID", cell: info => info.getValue(), meta: { className: "hidden lg:table-cell" }, },
       {
         accessorKey: "deviceHostname",
         header: "Hostname",
@@ -425,6 +404,7 @@ export function DevicesTable({
         accessorKey: "interfaceName",
         header: "Interface",
         cell: ({ row }) => row.original.interface?.name ?? "—",
+        meta: { className: "hidden lg:table-cell" },
       })
     }
 
@@ -447,57 +427,63 @@ export function DevicesTable({
   })
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+    <div className="flex flex-col gap-4 min-w-0 bg-card">
+      {/* <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 min-w-0">
         <Input
           placeholder="Search devices..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
-      </div>
+      </div> */}
 
-      <Table className="w-full min-h-[150px]">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="text-center">
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody className="min-h-[200px]">
-          {table.getRowModel().rows.length > 0 ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="text-center">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="text-center">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+      <div className="w-full rounded-md border overflow-x-auto">
+        <Table className="w-full min-h-[150px] table-fixed">
+          <TableHeader className="bg-primary">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={`text-center whitespace-nowrap px-2 ${header.column.columnDef.meta?.className ?? ""}`}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={fullColumns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No devices match the filter.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
 
-      <div className="flex justify-between items-center gap-4">
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="text-center">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={`text-center px-2 truncate max-w-[200px] ${cell.column.columnDef.meta?.className ?? ""}`}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={fullColumns.filter(col => !(col.meta?.className?.includes("hidden") ?? false)).length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No devices match the filter.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+
+      <div className="flex justify-between items-center gap-4 flex-wrap">
         <div></div>
         <div className="flex items-center gap-2">
           <Button
@@ -574,7 +560,7 @@ export function InfoRow({
   value: any
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       <span className="w-5 h-5 flex items-center justify-center">{icon}</span>
       <span className="text-md">{label}:</span>
       <span className="truncate text-sm">{value}</span>

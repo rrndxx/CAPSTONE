@@ -11,12 +11,12 @@ export function LayoutWrapper() {
     <div
       className="
     flex w-full transition-all
-    md:data-[collapsible=collapsed]/pl-16
+    md:data-[collapsible=collapsed]/pl-0
     md:data-[collapsible=expanded]/pl-64
   "
       data-collapsible={state}
     >
-      <AppSidebar className="hidden" />
+      <AppSidebar />
       <main className="flex-1">
         <Navbar />
         <Outlet />

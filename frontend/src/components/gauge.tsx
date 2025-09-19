@@ -37,11 +37,8 @@ import { cn } from "@/lib/utils"
 
 export const description = "A radial chart with upload and download speed"
 
-const defaultChartData = [{ month: "now", upload: 0, download: 0 }]
-
 const chartConfig: ChartConfig = {
-  upload: { label: "Upload", color: "var(--chart-1)" },
-  download: { label: "Download", color: "var(--chart-2)" },
+  ratio: { label: "Upload Ratio", color: "var(--primary)" },
 }
 
 type SpeedInfo = {
@@ -102,17 +99,13 @@ export function Gauge({ className }: GaugeProps) {
     },
   })
 
-  // chart data
-  const chartData =
-    speedInfo != null
-      ? [
-        {
-          month: "now",
-          upload: Number(speedInfo.upload),
-          download: Number(speedInfo.download),
-        },
-      ]
-      : defaultChartData
+  // calculate upload ratio
+  const upload = Number(speedInfo?.upload ?? 0)
+  const download = Number(speedInfo?.download ?? 0)
+  const total = upload + download
+  const ratio = total > 0 ? (upload / total) * 100 : 0
+
+  const chartData = [{ name: "now", ratio }]
 
   const details = speedInfo
     ? [
@@ -120,8 +113,8 @@ export function Gauge({ className }: GaugeProps) {
       { icon: <Wifi className="h-4 w-4" />, label: "Client IP", value: speedInfo.client_ip },
       { icon: <Server className="h-4 w-4" />, label: "Server", value: speedInfo.server_name },
       { icon: <Cpu className="h-4 w-4" />, label: "Latency", value: `${speedInfo.latency} ms` },
-      { icon: <Upload className="h-4 w-4 text-green-500" />, label: "Upload", value: `${speedInfo.upload} Mbps` },
-      { icon: <Download className="h-4 w-4 text-blue-500" />, label: "Download", value: `${speedInfo.download} Mbps` },
+      { icon: <Upload className="h-4 w-4" />, label: "Upload", value: `${speedInfo.upload} Mbps` },
+      { icon: <Download className="h-4 w-4 " />, label: "Download", value: `${speedInfo.download} Mbps` },
       { icon: <Clock className="h-4 w-4" />, label: "Ping", value: `${speedInfo.ping_ms} ms` },
       { icon: <Clock className="h-4 w-4" />, label: "Last Scan", value: speedInfo.timestamp },
     ]
@@ -133,7 +126,7 @@ export function Gauge({ className }: GaugeProps) {
         {/* Header */}
         <CardHeader className="items-center justify-center pb-0 mt-2 text-center">
           <CardTitle className="text-lg">Network Speed</CardTitle>
-          <CardDescription>Upload & Download Speed</CardDescription>
+          <CardDescription>Upload vs Download Ratio</CardDescription>
         </CardHeader>
 
         {/* Gauge */}
@@ -143,35 +136,69 @@ export function Gauge({ className }: GaugeProps) {
               <Loader2 className="animate-spin h-24 w-24 text-muted-foreground" />
             </div>
           ) : (
-            <ChartContainer config={chartConfig} className="aspect-square w-48">
-              <RadialBarChart data={chartData} endAngle={180} innerRadius={80} outerRadius={110}>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                  <Label
-                    content={({ viewBox }) =>
-                      viewBox && "cx" in viewBox && "cy" in viewBox ? (
-                        <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                          <tspan
-                            x={viewBox.cx}
-                            dy={-10}
-                            className="fill-foreground text-3xl font-semibold leading-tight"
-                          >
-                            {speedInfo
-                              ? ((+speedInfo.upload + +speedInfo.download) / 2).toFixed(2)
-                              : "0"}
-                          </tspan>
-                          <tspan x={viewBox.cx} dy={24} className="fill-muted-foreground text-lg">
-                            Mbps
-                          </tspan>
-                        </text>
-                      ) : null
-                    }
+            <>
+              <ChartContainer config={chartConfig} className="aspect-square w-48">
+                <RadialBarChart
+                  data={chartData}
+                  startAngle={180}
+                  endAngle={0}
+                  innerRadius={80}
+                  outerRadius={110}
+                >
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                  <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                    <Label
+                      content={({ viewBox }) =>
+                        viewBox && "cx" in viewBox && "cy" in viewBox ? (
+                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                            <tspan
+                              x={viewBox.cx}
+                              dy={-10}
+                              className="fill-foreground text-lg font-semibold leading-tight"
+                            >
+                              {speedInfo
+                                ? `${speedInfo.upload} / ${speedInfo.download}`
+                                : "0 / 0"}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              dy={24}
+                              className="fill-muted-foreground text-sm"
+                            >
+                              Mbps
+                            </tspan>
+                          </text>
+                        ) : null
+                      }
+                    />
+                  </PolarRadiusAxis>
+                  <RadialBar
+                    dataKey="ratio"
+                    cornerRadius={5}
+                    fill="var(--primary)"
                   />
-                </PolarRadiusAxis>
-                <RadialBar dataKey="upload" stackId="a" cornerRadius={5} fill="var(--chart-1)" />
-                <RadialBar dataKey="download" stackId="a" cornerRadius={5} fill="var(--chart-2)" />
-              </RadialBarChart>
-            </ChartContainer>
+                </RadialBarChart>
+              </ChartContainer>
+
+              {/* Latency & Last Scan under the gauge */}
+              <div className="text-center mt-2 flex flex-col gap-1">
+                {speedInfo ? (
+                  <>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Latency: <span className="text-foreground">{speedInfo.latency} ms</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Last Scan: {speedInfo.timestamp}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground text-sm">Latency: 0 ms</span>
+                    <span className="text-muted-foreground text-xs">Last Scan: --</span>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </CardContent>
 
@@ -191,7 +218,7 @@ export function Gauge({ className }: GaugeProps) {
       {/* Result Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         {isError ? (
-          <DialogContent className="max-w-sm">
+          <DialogContent className="w-[70vw] h-[60vh] max-w-none max-h-none">
             <DialogHeader>
               <DialogTitle>Internal Server Error</DialogTitle>
             </DialogHeader>
@@ -205,11 +232,11 @@ export function Gauge({ className }: GaugeProps) {
             </DialogFooter>
           </DialogContent>
         ) : (
-          <DialogContent className="max-w-sm">
+          <DialogContent className="w-[70vw] h-[60vh] max-w-none max-h-none">
             <DialogHeader>
               <DialogTitle>Speed Test Results</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-4 mt-2">
+            <div className="flex flex-col gap-4 mt-2 overflow-auto">
               {details.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   {item.icon}
@@ -227,4 +254,3 @@ export function Gauge({ className }: GaugeProps) {
     </>
   )
 }
-

@@ -51,7 +51,7 @@ export default function MainDashboardPage() {
 
     return (
         <SidebarInset>
-            <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-x-hidden">
+            <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-x-hidden h-full w-full">
                 {/* Left Column */}
                 <div className="flex-1 flex flex-col gap-4">
                     {/* Stats Cards */}
@@ -73,19 +73,19 @@ export default function MainDashboardPage() {
                     </div>
 
                     {/* Chart */}
-                    <div className="rounded-xl mt-4">
+                    <div className="rounded-xl mt-4 min-w-0">
                         <ChartArea />
                     </div>
                 </div>
 
                 {/* Right Column: Gauge */}
-                <div className="w-full lg:w-fit bg-background rounded-xl shadow flex justify-center">
+                <div className="w-full lg:w-auto bg-background rounded-xl shadow flex justify-center min-w-0">
                     <Gauge className="max-w-full" />
                 </div>
             </div>
 
             {/* Devices Filter & Table */}
-            <div className="p-4 md:p-6">
+            <div className="p-4 md:p-6 min-w-0">
                 <div className="flex flex-wrap gap-2 mb-4">
                     <Badge
                         className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
@@ -117,7 +117,7 @@ export default function MainDashboardPage() {
                     </Badge>
                 </div>
 
-                <div className="bg-card dark:bg-muted/20 rounded-xl shadow p-4 overflow-x-auto">
+                <div className="overflow-x-auto bg-background rounded-xl shadow">
                     <DevicesTable devices={filteredDevices} viewType="all" />
                 </div>
             </div>

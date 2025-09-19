@@ -1,6 +1,8 @@
-import type { DeltaTraffic, InterfaceName } from "@/hooks/useInterfaceTraffic"
+import type { DeltaTraffic } from "@/hooks/useInterfaceTraffic"
 
-const interfaces: InterfaceName[] = ["LAN", "WAN", "OPT1"]
+type OptInterfaces = "OPT1" | "OPT2"
+
+const interfaces: OptInterfaces[] = ["OPT1", "OPT2"]
 
 interface Props {
     data: DeltaTraffic[]
@@ -10,15 +12,19 @@ export function PerInterfaceTraffic({ data }: Props) {
     return <PerInterfaceTrafficTable data={data} />
 }
 
+const interfaceLabels: Record<"OPT1" | "OPT2", string> = {
+  OPT1: "Wired",
+  OPT2: "Wireless",
+};
+
 interface TableProps {
     data: DeltaTraffic[]
 }
 
 export function PerInterfaceTrafficTable({ data }: TableProps) {
-    const totals: Record<InterfaceName, { inBytes: number; outBytes: number }> = {
-        LAN: { inBytes: 0, outBytes: 0 },
-        WAN: { inBytes: 0, outBytes: 0 },
+    const totals: Record<OptInterfaces, { inBytes: number; outBytes: number }> = {
         OPT1: { inBytes: 0, outBytes: 0 },
+        OPT2: { inBytes: 0, outBytes: 0 },
     }
 
     data.forEach((sample) => {
@@ -43,7 +49,7 @@ export function PerInterfaceTrafficTable({ data }: TableProps) {
                     <tbody>
                         {interfaces.map((intf) => (
                             <tr key={intf} className="text-center">
-                                <td className="px-4 py-2 border">{intf}</td>
+                                <td className="px-4 py-2 border">{interfaceLabels[intf]}</td>
                                 <td className="px-4 py-2 border">{formatBytes(totals[intf].inBytes)}</td>
                                 <td className="px-4 py-2 border">{formatBytes(totals[intf].outBytes)}</td>
                                 <td className="px-4 py-2 border">{formatBytes(totals[intf].inBytes + totals[intf].outBytes)}</td>

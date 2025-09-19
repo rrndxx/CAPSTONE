@@ -153,6 +153,10 @@
 }
 
 @layer base {
+  /* * {
+  outline: 1px solid red;
+  } */
+
   * {
     @apply border-border outline-ring/50;
   }

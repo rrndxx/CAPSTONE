@@ -40,7 +40,7 @@ const WebFilteringPage: React.FC = () => {
         "f.2.0.2.2.1.8.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.3.1.c.8.9.6.0.a.2.ip6.arpa",
         "1.d.b.9.0.4.c.a.0.0.0.0.0.0.0.0.0.0.0.0.b.0.1.3.1.c.8.9.6.0.a.2.ip6.arpa"
     ])
-    const [deviceAccess, setDeviceAccess] = useState<boolean>(false)
+    const [, setDeviceAccess] = useState<boolean>(false)
 
     const topDomains: DomainStat[] = useMemo(
         () =>

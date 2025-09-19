@@ -90,7 +90,7 @@ export function ChartArea() {
 
             <CardContent className="px-4 sm:px-6 pb-6 pt-4">
                 <div className="w-full overflow-x-auto">
-                    <ChartContainer config={chartConfig} className="min-w-[300px] sm:min-w-0 w-full h-[300px]">
+                    <ChartContainer config={chartConfig} className="w-full h-[300px]">
                         <AreaChart data={data}>
                             <CartesianGrid vertical={false} stroke="var(--border)" />
                             <XAxis
@@ -144,8 +144,12 @@ export function ChartArea() {
 
     return (
         <div className="flex flex-col md:flex-row gap-4 text-[color:var(--color-foreground)]">
-            {renderChart(lanData, "Wired Traffic", "Showing LAN interface in/out bytes over time.")}
-            {renderChart(wifiData, "Wireless Traffic", "Showing Wireless interface in/out bytes over time.")}
+            <div className="flex-1 min-w-0">
+                {renderChart(lanData, "Wired Traffic", "Showing LAN interface in/out bytes over time.")}
+            </div>
+            <div className="flex-1 min-w-0">
+                {renderChart(wifiData, "Wireless Traffic", "Showing Wireless interface in/out bytes over time.")}
+            </div>
         </div>
     )
 }
