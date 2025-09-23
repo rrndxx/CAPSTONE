@@ -7,42 +7,45 @@ import { useNavigate } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { fetchDevices } from "@/hooks/useDevices"
+import axios from "axios"
+
+interface LoginFormProps extends React.ComponentProps<"div"> {
+    onLoginSuccess?: () => Promise<void> | void
+}
 
 export function LoginForm({
     className,
+    onLoginSuccess,
     ...props
-}: React.ComponentProps<"div">) {
+}: LoginFormProps) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const navigate = useNavigate()
     const queryClient = useQueryClient()
 
     const loginUser = async (credentials: { email: string; password: string }) => {
-        // const res = await axios.post("http://localhost:4000/auth/login", credentials)
-        // return res.data
-
-        return {
-            token: "fake-jwt-token-123",
-            interfaceId: 2, // hardcoded for now
-            user: { email: credentials.email },
-        }
+        const res = await axios.post("http://localhost:4000/login", credentials)
+        return res.data
     }
 
     const mutation = useMutation({
         mutationFn: loginUser,
         onSuccess: async (data) => {
-            localStorage.setItem("token", data.token)
+            localStorage.setItem("token", data.result.token)
 
-            // Prefetch devices into React Query cache
             await queryClient.prefetchQuery({
-                queryKey: ["devices", data.interfaceId], // assuming backend provides this
-                queryFn: () => fetchDevices(data.interfaceId),
+                queryKey: ["devices", 2],
+                queryFn: () => fetchDevices(2),
             })
 
-            // Redirect to dashboard
+            if (onLoginSuccess) {
+                await onLoginSuccess()
+            }
+
             navigate("/dashboard")
         },
     })
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()

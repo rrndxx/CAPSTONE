@@ -37,7 +37,7 @@ model Device {
   status         DeviceStatus? @default(UP)
 
   interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId],  onDelete: Cascade)
 
   bandwidthUsage  BandwidthUsage[]
   bandwidthHourly BandwidthHourly[]
@@ -57,7 +57,7 @@ model BandwidthUsage {
   download  BigInt
   timestamp DateTime @default(now())
   deviceId  Int
-  device    Device   @relation(fields: [deviceId], references: [deviceId])
+  device    Device   @relation(fields: [deviceId], references: [deviceId],  onDelete: Cascade)
 }
 
 model BandwidthHourly {
@@ -69,7 +69,7 @@ model BandwidthHourly {
   device   Device   @relation(fields: [deviceId], references: [deviceId])
 
   interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId], onDelete: Cascade)
 
   @@unique([deviceId, hour])
 }
@@ -83,7 +83,7 @@ model BandwidthDaily {
   device   Device   @relation(fields: [deviceId], references: [deviceId])
 
   interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId],  onDelete: Cascade)
 
   @@unique([deviceId, day])
 }
@@ -96,7 +96,7 @@ model Port {
   firstSeen  DateTime   @default(now())
   lastSeen   DateTime   @default(now())
   deviceId   Int
-  device     Device     @relation(fields: [deviceId], references: [deviceId])
+  device     Device     @relation(fields: [deviceId], references: [deviceId],  onDelete: Cascade)
 
   @@unique([deviceId, portNumber])
 }
@@ -108,7 +108,7 @@ model VisitedSite {
   firstSeen  DateTime @default(now())
   lastSeen   DateTime @default(now())
   deviceId   Int
-  device     Device   @relation(fields: [deviceId], references: [deviceId])
+  device     Device   @relation(fields: [deviceId], references: [deviceId],  onDelete: Cascade)
 }
 
 model BlockedSite {
@@ -126,7 +126,7 @@ model WhitelistedDevice {
   createdAt            DateTime @default(now())
 
   interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId],  onDelete: Cascade)
 }
 
 model BlacklistedDevice {
@@ -135,7 +135,7 @@ model BlacklistedDevice {
   createdAt            DateTime @default(now())
 
   interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId],  onDelete: Cascade)
 }
 
 model Alert {
@@ -146,8 +146,8 @@ model Alert {
   resolved  Boolean       @default(false)
   timestamp DateTime      @default(now())
 
-  interfaceId Int
-  interface   NetworkInterface @relation(fields: [interfaceId], references: [interfaceId])
+  interfaceId Int?
+  interface   NetworkInterface? @relation(fields: [interfaceId], references: [interfaceId], onDelete: SetNull)
 }
 
 enum DeviceStatus {
@@ -171,4 +171,24 @@ enum AlertSeverity {
   INFO
   WARNING
   CRITICAL
+}
+
+model User {
+  userId    Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  PushSubscription PushSubscription[]
+}
+
+model PushSubscription {
+  id         Int      @id @default(autoincrement())
+  endpoint   String   @unique
+  keysAuth   String
+  keysP256dh String
+  userId     Int? 
+  user       User?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 }

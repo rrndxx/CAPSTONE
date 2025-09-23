@@ -3,17 +3,20 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-import deviceRoutes from "./modules/Device/device.routes.js";
-import bandwidthRoutes from "./modules/Bandwidth/bandwidth.routes.js"
-import networkRoutes from "./modules/Network/network.routes.js";
-import { APILimiter } from "./middlewares/rateLimiter.js";
-import { errorHandler } from "./middlewares/errorHandler.js";
-import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import axios from 'axios'
 import https from 'https'
 import dotenv from "dotenv";
 import util from 'util';
+import deviceRoutes from "./modules/Device/device.routes.js";
+import bandwidthRoutes from "./modules/Bandwidth/bandwidth.routes.js"
+import networkRoutes from "./modules/Network/network.routes.js";
 import { exec } from 'child_process'
+import { APILimiter } from "./middlewares/rateLimiter.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { authMiddleware } from "./middlewares/routesProtector.js";
+import { exporter, pushChannel } from "./server.js";
+import { getUserFromToken, login } from "./services/authservice.js";
+import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 
 dotenv.config();
 
@@ -37,10 +40,73 @@ app.use(express.json());
 
 // app.use(APILimiter);
 
+// app.use("/devices", authMiddleware, deviceRoutes);
+// app.use("/bandwidth", authMiddleware, bandwidthRoutes)
+// app.use("/network", authMiddleware, networkRoutes)
+
 app.use("/devices", deviceRoutes);
 app.use("/bandwidth", bandwidthRoutes)
 app.use("/network", networkRoutes)
 
+// EXPORTS
+app.get("/reports/:model/csv", async (req, res) => {
+    try {
+        await exporter.exportToCSV(req.params.model, res);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get("/reports/:model/pdf", async (req, res) => {
+    try {
+        await exporter.exportToPDF(req.params.model, res);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// LOGIN
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body
+        const result = await login(email, password)
+        res.json({ success: true, result })
+    } catch (err: any) {
+        res.status(401).json({ success: false, error: err.message })
+    }
+})
+// app.post('/create', async (req, res) => {
+//     try {
+//         const { email, password } = req.body
+//         const user = await createAdmin(email, password)
+//         res.json({ id: user.userId, email: user.email })
+//     } catch (err: any) {
+//         return res.json({ error: err.message })
+//     }
+// })
+
+
+app.get("/vapid-public-key", (_req, res) => {
+    res.send(process.env.VAPID_PUBLIC_KEY?.trim());
+});
+app.post("/alerts/subscribe", authMiddleware, async (req, res) => {
+    try {
+        const subscription = req.body;
+
+        const userId = (req as any).user?.userId ?? null;
+
+        await pushChannel.addSubscription(subscription, userId);
+
+        res.status(201).json({ success: true });
+    } catch (err: any) {
+        console.error("Subscription failed:", err);
+        res.status(500).json({ error: "Failed to save subscription" });
+    }
+});
+
+
+// STREAMS
 app.get("/stream1", async (req, res) => {
     try {
         res.setHeader("Content-Type", "text/event-stream");
@@ -84,7 +150,6 @@ app.get("/stream1", async (req, res) => {
         res.status(500).end("Error streaming traffic data");
     }
 });
-
 app.get("/stream/cpu", async (req, res) => {
     try {
         res.setHeader("Content-Type", "text/event-stream");
@@ -130,12 +195,8 @@ app.get("/stream/cpu", async (req, res) => {
 });
 
 
-
-
-// Promisify exec to use async/await
+// PORT SCANNER
 const execAsync = util.promisify(exec);
-
-// Function to validate and run nmap scan
 const runNmapScan = async (ip: string, ports: string = "22-100") => {
     if (!ip) {
         throw new Error('IP address must be provided');
@@ -144,8 +205,7 @@ const runNmapScan = async (ip: string, ports: string = "22-100") => {
     try {
         // Execute the Nmap command
         // 192.168.10.59
-        // const { stdout, stderr } = await execAsync(`nmap -sT ${ip}`);
-        const { stdout, stderr } = await execAsync(`nmap -sT 192.168.10.59`);
+        const { stdout, stderr } = await execAsync(`nmap -sT ${ip}`);
 
         // If stderr contains an error, throw an exception
         if (stderr) {
@@ -164,8 +224,6 @@ const runNmapScan = async (ip: string, ports: string = "22-100") => {
         throw new Error(`Scan failed: ${error.message}`);
     }
 };
-
-// Parse Nmap output to extract open ports
 const parseOpenPorts = (nmapOutput: string) => {
     const lines = nmapOutput.split('\n');
     const openPorts = [];
@@ -185,8 +243,6 @@ const parseOpenPorts = (nmapOutput: string) => {
 
     return openPorts;
 };
-
-// Scan ports controller
 const scanPorts = async (req: ExpressRequest, res: ExpressResponse) => {
     const ip = req.query.ip as string | undefined;
 
@@ -205,7 +261,6 @@ const scanPorts = async (req: ExpressRequest, res: ExpressResponse) => {
         });
     }
 };
-
 app.get("/scan/port", scanPorts)
 
 app.use(errorHandler);

@@ -21,14 +21,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import WebFilteringPage from "./pages/WebFilteringPage"
 import BandwidthShaperPage from "./pages/BandwidthShaperPage"
-
-// import { ClerkProvider } from '@clerk/clerk-react'
-
-// const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
-// if (!PUBLISHABLE_KEY) {
-//   throw new Error('Missing Publishable Key')
-// }
+import { ProtectedRoute } from "./provider/ProtectedRoutes"
 
 const queryClient = new QueryClient()
 
@@ -40,48 +33,48 @@ createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route path="/" element={<LoginPage />} />
 
-            <Route path="/dashboard" element={<App />}>
+            <Route path="/dashboard" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<MainDashboardPage />} />
             </Route>
 
-            <Route path="/devices" element={<App />}>
+            <Route path="/devices" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<DevicesPage />} />
               <Route path="all" element={<DevicesPage />} />
               <Route path="whitelist-blacklist" element={<WhitelistBlacklistPage />} />
             </Route>
 
-            <Route path="/bandwidth-usage" element={<App />}>
+            <Route path="/bandwidth-usage" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<BandwidthUsagePage />} />
               <Route path="overview" element={<BandwidthUsagePage />} />
               <Route path="per-device" element={<BandwidthPerDevicePage />} />
               <Route path="shaper" element={<BandwidthShaperPage />} />
             </Route>
 
-            <Route path="/web-filtering" element={<App />}>
+            <Route path="/web-filtering" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<WebFilteringPage />} />
             </Route>
 
-            <Route path="/isp-status" element={<App />}>
+            <Route path="/isp-status" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<ISPStatusPage />} />
             </Route>
 
-            <Route path="/settings" element={<App />}>
+            <Route path="/settings" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<SettingsPage />} />
             </Route>
 
-            <Route path="/logs" element={<App />}>
+            <Route path="/logs" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<AccessLogs />} />
             </Route>
 
-            <Route path="/reports" element={<App />}>
+            <Route path="/reports" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<Reports />} />
             </Route>
 
-            <Route path="/alerts" element={<App />}>
+            <Route path="/alerts" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<Alerts />} />
             </Route>
 
-            <Route path="/ai-insights" element={<App />}>
+            <Route path="/ai-insights" element={<ProtectedRoute><App /></ProtectedRoute>}>
               <Route index element={<AiInsightsPage />} />
             </Route>
 

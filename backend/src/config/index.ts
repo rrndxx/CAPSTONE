@@ -14,6 +14,11 @@ const envSchema = z.object({
     ADGUARD_URL: z.string(),
     ADGUARD_USERNAME: z.string(),
     ADGUARD_PASSWORD: z.string(),
+    VAPID_PUBLIC_KEY: z.string(),
+    VAPID_PRIVATE_KEY: z.string(),
+    EMAIL_USER: z.string(),
+    JWT_SECRET: z.string(),
+    TOKEN_EXPIRY: z.string()
 })
 
 const parsed = envSchema.safeParse(process.env)
