@@ -105,6 +105,14 @@ export default function LoginPage() {
                 >
                     Download Device Report (CSV)
                 </a> */}
+                {/* <a
+                    href={`http://localhost:4000/reports/${}/pdf`}
+                    download="Device.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Download Device Report (CSV)
+                </a> */}
             </div>
         </div>
     )

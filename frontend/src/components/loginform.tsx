@@ -31,6 +31,11 @@ export function LoginForm({
     const mutation = useMutation({
         mutationFn: loginUser,
         onSuccess: async (data) => {
+            if (!data.success) {
+                window.alert(data.error || "Login failed!")
+                return
+            }
+
             localStorage.setItem("token", data.result.token)
 
             await queryClient.prefetchQuery({
@@ -44,7 +49,15 @@ export function LoginForm({
 
             navigate("/dashboard")
         },
+        onError: (error: any) => {
+            if (axios.isAxiosError(error) && error.response?.data?.error) {
+                window.alert(error.response.data.error)
+            } else {
+                window.alert("Something went wrong. Please try again.")
+            }
+        },
     })
+
 
 
     const handleSubmit = (e: React.FormEvent) => {

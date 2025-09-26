@@ -5,6 +5,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/provider/ThemeProvider"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 
 type navUserProps = {
   name: string
@@ -20,10 +21,16 @@ export function NavUser({ user }: { user: navUserProps }) {
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark")
   }
+  const queryClient = useQueryClient()
 
-  const handleNavigate = (url: string) => {
+  const handleSignout = (url: string) => {
+    localStorage.removeItem("token")
+
+    queryClient.clear()
+
     navigate(url)
   }
+
 
   const menuItems = [
     {
@@ -104,7 +111,7 @@ export function NavUser({ user }: { user: navUserProps }) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={() => handleNavigate('/')}>
+            <DropdownMenuItem onClick={() => handleSignout('/')}>
               <LogOut className="w-4 h-4 text-red-400" />
               <span className="ml-2 text-red-400">Log out</span>
             </DropdownMenuItem>

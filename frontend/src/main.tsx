@@ -18,7 +18,7 @@ import Alerts from "./pages/AlertsPage"
 import BandwidthPerDevicePage from "./pages/BandwidthPerDevicePage"
 import AiInsightsPage from "./pages/AIInsightsPage"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import WebFilteringPage from "./pages/WebFilteringPage"
 import BandwidthShaperPage from "./pages/BandwidthShaperPage"
 import { ProtectedRoute } from "./provider/ProtectedRoutes"
@@ -31,53 +31,37 @@ createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
+            {/* Public route */}
             <Route path="/" element={<LoginPage />} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<MainDashboardPage />} />
-            </Route>
+            {/* <Route element={<ProtectedRoute />}> */}
+              <Route element={<App />}>
+                <Route path="/dashboard" element={<MainDashboardPage />} />
 
-            <Route path="/devices" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<DevicesPage />} />
-              <Route path="all" element={<DevicesPage />} />
-              <Route path="whitelist-blacklist" element={<WhitelistBlacklistPage />} />
-            </Route>
+                <Route path="/devices">
+                  <Route index element={<DevicesPage />} />
+                  <Route path="all" element={<DevicesPage />} />
+                  <Route path="whitelist-blacklist" element={<WhitelistBlacklistPage />} />
+                </Route>
 
-            <Route path="/bandwidth-usage" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<BandwidthUsagePage />} />
-              <Route path="overview" element={<BandwidthUsagePage />} />
-              <Route path="per-device" element={<BandwidthPerDevicePage />} />
-              <Route path="shaper" element={<BandwidthShaperPage />} />
-            </Route>
+                <Route path="/bandwidth-usage">
+                  <Route index element={<BandwidthUsagePage />} />
+                  <Route path="overview" element={<BandwidthUsagePage />} />
+                  <Route path="per-device" element={<BandwidthPerDevicePage />} />
+                  <Route path="shaper" element={<BandwidthShaperPage />} />
+                </Route>
 
-            <Route path="/web-filtering" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<WebFilteringPage />} />
-            </Route>
+                <Route path="/web-filtering" element={<WebFilteringPage />} />
+                <Route path="/isp-status" element={<ISPStatusPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/logs" element={<AccessLogs />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/ai-insights" element={<AiInsightsPage />} />
+              </Route>
+            {/* </Route> */}
 
-            <Route path="/isp-status" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<ISPStatusPage />} />
-            </Route>
-
-            <Route path="/settings" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<SettingsPage />} />
-            </Route>
-
-            <Route path="/logs" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<AccessLogs />} />
-            </Route>
-
-            <Route path="/reports" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<Reports />} />
-            </Route>
-
-            <Route path="/alerts" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<Alerts />} />
-            </Route>
-
-            <Route path="/ai-insights" element={<ProtectedRoute><App /></ProtectedRoute>}>
-              <Route index element={<AiInsightsPage />} />
-            </Route>
-
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
@@ -85,4 +69,4 @@ createRoot(document.getElementById("root")!).render(
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>
-) 
+)
