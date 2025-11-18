@@ -15,6 +15,7 @@ export interface IDeviceService {
     scanAndUpsertDeviceOpenPorts(device: Partial<Device>): Promise<Port[]>
     detectDeviceOS(device: Partial<Device>): Promise<string>
     updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<any>
+    getAllWhitelistedDevices(): Promise<any>
 }
 
 export class DeviceService implements IDeviceService {
@@ -23,6 +24,14 @@ export class DeviceService implements IDeviceService {
         private readonly cacheService: ICacheService,
         private readonly opnSenseService: OPNsenseService,
     ) { }
+
+    async getAllWhitelistedDevices() {
+        return this.deviceRepo.getAllWhitelistedDevices()
+    }
+
+    async addDeviceToWhitelist(deviceMac: Device['deviceMac'], interfaceid: Device['interfaceId']) {
+        return this.deviceRepo.addDeviceToWhitelist(deviceMac, interfaceid)
+    }
 
     async updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']) {
         const result = await this.deviceRepo.updateDeviceStatus(deviceId, status)

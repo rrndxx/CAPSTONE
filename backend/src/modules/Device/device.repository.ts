@@ -2,8 +2,6 @@ import type { Device, Port, PrismaClient } from "@prisma/client";
 import { normalizeMAC } from "../../utils/MACnormalizer.js";
 
 export interface IDeviceRepository {
-    removeDeviceFromBlacklist(deviceMac: string, interfaceId: number): unknown;
-    addDeviceToBlacklist(deviceMac: string, interfaceId: number): unknown;
     getAllDevices(interfaceId: Device['interfaceId']): Promise<Device[]>;
     getDeviceByMAC(mac: Device['deviceMac'], interfaceId: Device['interfaceId']): Promise<Device | null>;
     upsertDevice(device: Partial<Device>, interfaceId: Device['interfaceId']): Promise<Device>;
@@ -12,12 +10,42 @@ export interface IDeviceRepository {
     upsertPort(port: Partial<Port>, updateExisting: boolean): Promise<Port>;
     updateDeviceOS(deviceId: number, osName: string): Promise<Device>;
     updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<Device>
+    getAllWhitelistedDevices(): Promise<any>
+    addDeviceToWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device['interfaceId']): Promise<any>
+    removeDeviceFromBlacklist(deviceMac: string, interfaceId: number): unknown;
+    addDeviceToBlacklist(deviceMac: string, interfaceId: number): unknown;
 }
 
 export class DeviceRepository implements IDeviceRepository {
     constructor(
         private db: PrismaClient
     ) { }
+
+    async getAllWhitelistedDevices() {
+        return this.db.whitelistedDevice.findMany({
+            include: {
+                interface: true,
+            }
+        })
+    }
+
+    async addDeviceToWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device['interfaceId']) {
+        return this.db.whitelistedDevice.create({
+            data: {
+                whitelistedDeviceMac: deviceMac,
+                interfaceId
+            }
+        })
+    }
+
+    async addDeviceToBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.blacklistedDevice.create({
+            data: {
+                blacklistedDeviceMac: deviceMac,
+                interfaceId
+            }
+        })
+    }
 
     async getAllDevices(interfaceId: Device['interfaceId']): Promise<Device[]> {
         return this.db.device.findMany({
@@ -118,14 +146,7 @@ export class DeviceRepository implements IDeviceRepository {
         });
     }
 
-    async addDeviceToBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
-        return this.db.blacklistedDevice.create({
-            data: {
-                blacklistedDeviceMac: deviceMac,
-                interfaceId
-            }
-        })
-    }
+
 
     async removeDeviceFromBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
         return this.db.blacklistedDevice.deleteMany({

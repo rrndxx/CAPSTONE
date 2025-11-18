@@ -54,18 +54,49 @@ app.listen(PORT, () => {
 const interfacenames = await networkService.getNetworkInterfaceNames()
 export const ALLINTERFACENAMES = Object.values(interfacenames)
 
+console.log(ALLINTERFACENAMES)
+
 await networkScanner.scanInterfacesNow()
 await networkScanner.scanDevicesNow()
+
+networkScanner.continuousNetworkInterfaceScan()
+networkScanner.continuousDeviceScan()
 
 // await notificationService.notify({
 //     type: "CONNECTED_DEVICES_RELATED",
 //     message: "Unauthorized device detected: MAC 00:11:22:33:44:55",
 //     severity: "CRITICAL",
-//     interfaceId: 1,
+//     interfaceId: 2,
 //     meta: { deviceMac: "00:11:22:33:44:55", ip: "192.168.1.105" },
 // });
 
-// networkScanner.continuousNetworkInterfaceScan()
-// networkScanner.continuousDeviceScan()
 
-// exampleUsage()
+// async function checkForUnapprovedDevices(
+//   db: PrismaClient,
+//   scannedDevices: { deviceMac: string; deviceIp: string }[], // shape of your scan results
+// ) {
+//   const deviceRepo = new DeviceRepository(db);
+
+//   // 1. Get all whitelisted devices
+//   const whitelisted = await deviceRepo.getAllWhitelistedDevices();
+
+//   // 2. Normalize MACs for easy comparison
+//   const whitelistedMacs = new Set(
+//     whitelisted.map(w => w.whitelistedDeviceMac.toLowerCase())
+//   );
+
+//   // 3. Find scanned devices that are not in the whitelist
+//   const unknownDevices = scannedDevices.filter(
+//     d => !whitelistedMacs.has(d.deviceMac.toLowerCase())
+//   );
+
+//   // 4. Trigger notification logic if needed
+//   if (unknownDevices.length > 0) {
+//     // Replace with your actual notification system
+//     console.log("⚠️ Unknown devices detected:", unknownDevices);
+//     // notifyAdmin(unknownDevices);
+//   } else {
+//     console.log("✅ All scanned devices are whitelisted");
+//   }
+// }
+

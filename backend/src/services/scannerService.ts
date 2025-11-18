@@ -8,6 +8,7 @@ import type { NetworkService } from "../modules/Network/network.service.js";
 import { mapOPNsenseInterfaces, mapOPNsenseLeasesToDevices } from "../utils/mappers.js";
 import type { SpeedTestResult } from "../interfaces.js";
 import { normalizeMAC } from "../utils/MACnormalizer.js";
+import { deviceRepo, notificationService } from "../server.js";
 
 export interface INetworkScanner {
     continuousDeviceScan(): void;
@@ -27,6 +28,13 @@ export class NetworkScanner implements INetworkScanner {
         private readonly pythonScannerURL: string
     ) { }
 
+    continuousDeviceScan(): void {
+        cron.schedule("*/1 * * * *", async () => {
+            console.log("Scheduled device scanner starting...", new Date().toISOString());
+            await this.scanDevicesNow();
+        });
+    }
+
     async scanDevicesNow() {
         try {
             const interfaces = await this.networkService.getNetworkInterfaces();
@@ -35,6 +43,26 @@ export class NetworkScanner implements INetworkScanner {
 
             const leaseResponse = await this.opnSenseService.getDevicesFromDHCPLease();
             const devices = mapOPNsenseLeasesToDevices(leaseResponse, interfaceMap);
+
+            // const whitelistedDevices = await this.deviceService.getAllWhitelistedDevices();
+            // const whitelistedMACs = new Set(whitelistedDevices.map((w: any) => w.whitelistedDeviceMac.toLowerCase()))
+            // const unknownDevices = devices.filter(d => !whitelistedMACs.has(d.deviceMac?.toLowerCase()))
+
+            // if (unknownDevices.length > 0) {
+            //     unknownDevices.forEach(async (d) => {
+            //         await notificationService.notify({
+            //             type: "CONNECTED_DEVICES_RELATED",
+            //             message: `Unauthorized device detected: ${d.deviceIp}, ${d.deviceHostname}, ${d.deviceMac} at ${Date()}.`,
+            //             severity: "WARNING",
+            //             interfaceId: 2,
+            //             meta: {
+            //                 ip: d.deviceIp,
+            //                 hostname: d.deviceHostname,
+            //                 mac: d.deviceMac
+            //             },
+            //         })
+            //     })
+            // }
 
             const allDevicesFromDB = await this.deviceService.getAllDevicesFromDB(2);
 
@@ -67,7 +95,6 @@ export class NetworkScanner implements INetworkScanner {
         }
     }
 
-
     async scanInterfacesNow() {
         try {
             const response = await this.opnSenseService.getInterfacesInfo();
@@ -77,13 +104,6 @@ export class NetworkScanner implements INetworkScanner {
         } catch (err) {
             console.error("Network scan error:", err);
         }
-    }
-
-    continuousDeviceScan(): void {
-        cron.schedule("*/1 * * * *", async () => {
-            console.log("Scheduled device scanner starting...", new Date().toISOString());
-            await this.scanDevicesNow();
-        });
     }
 
     continuousNetworkInterfaceScan(): void {
@@ -124,7 +144,7 @@ export class NetworkScanner implements INetworkScanner {
     }
 
     async portScannerFromHostMachine(): Promise<any> {
-        
+
     }
 
 }

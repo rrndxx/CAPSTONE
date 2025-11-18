@@ -14,7 +14,7 @@ import { exec } from 'child_process'
 import { APILimiter } from "./middlewares/rateLimiter.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { authMiddleware } from "./middlewares/routesProtector.js";
-import { exporter, pushChannel } from "./server.js";
+import { exporter, notificationService, pushChannel } from "./server.js";
 import { getUserFromToken, login } from "./services/authservice.js";
 import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 
@@ -73,7 +73,7 @@ app.post('/login', async (req, res) => {
         const result = await login(email, password)
         res.json({ success: true, result })
     } catch (err: any) {
-        res.status(401).json({ success: false, error: err.message })
+        res.status(401).json({ success: false, error: err.message });
     }
 })
 // app.post('/create', async (req, res) => {
@@ -105,6 +105,30 @@ app.post("/alerts/subscribe", authMiddleware, async (req, res) => {
     }
 });
 
+
+app.get("/alerts/all", async (req, res) => {
+    try {
+        // If you want truly all alerts, remove or increase the limit
+        const alerts = await notificationService.getRecent(100);
+
+        res.status(200).json({
+            success: true,
+            alerts,
+        });
+    } catch (err) {
+        console.error("Failed to get alerts:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch alerts",
+        });
+    }
+});
+
+
+
+// app.get("/get-alerts", (req, res) => {
+//     const alerts = 
+// })
 
 // STREAMS
 app.get("/stream1", async (req, res) => {

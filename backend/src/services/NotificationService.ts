@@ -140,7 +140,7 @@ export class AlertRepository {
         });
     }
 
-    async getRecent(limit = 50) {
+    async getRecent(limit: number) {
         const alerts = await this.prisma.alert.findMany({
             orderBy: { timestamp: "desc" },
             take: limit,

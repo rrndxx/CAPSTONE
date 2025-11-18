@@ -56,11 +56,11 @@ export default function App() {
   return (
     <SidebarProvider>
       <LayoutWrapper />
-      <div className="fixed bottom-4 right-4">
+      {/* <div className="fixed bottom-4 right-4">
         <button className="btn" onClick={handleEnablePush}>
           Enable Push Notifications
         </button>
-      </div>
+      </div> */}
     </SidebarProvider>
   );
 }

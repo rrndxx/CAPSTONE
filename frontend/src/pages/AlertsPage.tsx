@@ -2,84 +2,109 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { Bell, AlertCircle, ShieldAlert, WifiOff } from "lucide-react"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { Bell, ShieldAlert, WifiOff, LogIn } from "lucide-react"
 
 type AlertEntry = {
-    id: number
+    id: string
     timestamp: string
-    type: "Security" | "Connectivity" | "System"
+    type: "Login-Related" | "Device-Connected" | "Security-Connected"
     message: string
     severity: "Low" | "Medium" | "High"
 }
 
-const alertIcons = {
-    Security: <ShieldAlert className="text-red-500" size={20} />,
-    Connectivity: <WifiOff className="text-yellow-500" size={20} />,
-    System: <AlertCircle className="text-blue-500" size={20} />,
+// Map alert type to icons
+const alertIcons: Record<AlertEntry["type"], any> = {
+    "Login-Related": <LogIn className="text-blue-500" size={20} />,
+    "Device-Connected": <WifiOff className="text-yellow-500" size={20} />,
+    "Security-Connected": <ShieldAlert className="text-red-500" size={20} />,
 }
 
-const severityColors: Record<string, string> = {
+// Severity colors
+const severityColors: Record<AlertEntry["severity"], string> = {
     Low: "bg-green-100 text-green-700",
     Medium: "bg-yellow-100 text-yellow-800",
     High: "bg-red-100 text-red-700",
 }
 
-const alertsSample: AlertEntry[] = [
-    {
-        id: 1,
-        timestamp: "2025-07-23 10:22:00",
-        type: "Security",
-        message: "Unauthorized device attempted to connect.",
-        severity: "High",
-    },
-    {
-        id: 2,
-        timestamp: "2025-07-23 09:58:44",
-        type: "Connectivity",
-        message: "Network latency exceeded threshold.",
-        severity: "Medium",
-    },
-    {
-        id: 3,
-        timestamp: "2025-07-22 16:35:12",
-        type: "System",
-        message: "Scheduled system scan completed.",
-        severity: "Low",
-    },
-    {
-        id: 4,
-        timestamp: "2025-07-22 15:20:05",
-        type: "Security",
-        message: "MAC address blacklisted.",
-        severity: "High",
-    },
+// Filter buttons, including "All"
+const filterButtons: ("All" | AlertEntry["type"])[] = [
+    "All",
+    "Login-Related",
+    "Device-Connected",
+    "Security-Connected",
 ]
 
+// Function to map database alertType to frontend type
+const mapAlertType = (dbType: string): AlertEntry["type"] => {
+    switch (dbType) {
+        case "LOGIN":
+            return "Login-Related"
+        case "CONNECTED_DEVICES_RELATED":
+            return "Device-Connected"
+        case "ACTION":
+        case "BANDWIDTH_RELATED":
+        default:
+            return "Security-Connected"
+    }
+}
+
+// Function to map database severity to frontend severity
+const mapAlertSeverity = (dbSeverity: string): AlertEntry["severity"] => {
+    switch (dbSeverity) {
+        case "CRITICAL":
+            return "High"
+        case "WARNING":
+            return "Medium"
+        case "INFO":
+        default:
+            return "Low"
+    }
+}
+
 const Alerts = () => {
+    const [alerts, setAlerts] = useState<AlertEntry[]>([])
     const [search, setSearch] = useState("")
-    const [filterType, setFilterType] = useState<"All" | "Security" | "Connectivity" | "System">("All")
+    const [filterType, setFilterType] = useState<"All" | AlertEntry["type"]>("All")
 
-    const filteredAlerts = alertsSample.filter(alert =>
-        (filterType === "All" || alert.type === filterType) &&
-        Object.values(alert).some(value =>
-            value.toString().toLowerCase().includes(search.toLowerCase())
+    // Fetch alerts from backend
+    useEffect(() => {
+        const fetchAlerts = async () => {
+            try {
+                const res = await axios.get("http://localhost:4000/alerts/all")
+                const mapped: AlertEntry[] = res.data.alerts.map((a: any) => ({
+                    id: a.alertId?.toString() ?? crypto.randomUUID(),
+                    timestamp: a.timestamp ? new Date(a.timestamp).toLocaleString() : "Unknown",
+                    message: a.message ?? "No message",
+                    type: mapAlertType(a.type),
+                    severity: mapAlertSeverity(a.severity),
+                }))
+                setAlerts(mapped)
+            } catch (err) {
+                console.error("Failed to fetch alerts:", err)
+            }
+        }
+        fetchAlerts()
+    }, [])
+
+    // Filter + search
+    const filteredAlerts = alerts.filter(alert => {
+        if (filterType !== "All" && alert.type !== filterType) return false
+
+        const searchLower = search.toLowerCase()
+        if (!searchLower) return true
+
+        return [alert.message, alert.type, alert.severity].some(field =>
+            field.toLowerCase().includes(searchLower)
         )
-    )
-
-    const filterButtons: ("All" | "Security" | "Connectivity" | "System")[] = [
-        "All", "Security", "Connectivity", "System"
-    ]
+    })
 
     return (
         <div className="p-4 sm:p-6 space-y-4">
-            <div className="flex items-center gap-2">
-                <Bell className="text-primary" />
-                <h1 className="text-2xl font-semibold">Alerts & Notifications</h1>
-            </div>
-
             <Card>
                 <CardContent className="p-4 space-y-4">
+                    {/* Search + Filter */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <Input
                             type="text"
@@ -101,6 +126,7 @@ const Alerts = () => {
                         </div>
                     </div>
 
+                    {/* Alerts List */}
                     <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
                         {filteredAlerts.length > 0 ? (
                             filteredAlerts.map(alert => (
