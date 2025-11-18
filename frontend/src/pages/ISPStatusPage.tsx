@@ -50,7 +50,7 @@ const ISPStatusPage = () => {
         <div className="flex flex-col gap-6 p-4 sm:p-6">
 
             {/* ISP Overview */}
-            <Card className="flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
+            <Card className="flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
                 <CardHeader className="py-4 bg-primary">
                     <CardTitle className="flex items-center gap-2 text-black font-medium uppercase tracking-wide">
                         <Wifi className="w-5 h-5 text-black" />

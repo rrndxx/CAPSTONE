@@ -130,11 +130,11 @@ export const sidebarNavs = {
       url: "/logs",
       icon: History,
     },
-    {
-      title: "Reports",
-      url: "/reports",
-      icon: FileText,
-    },
+    // {
+    //   title: "Reports",
+    //   url: "/reports",
+    //   icon: FileText,
+    // },
     {
       title: "Alerts",
       url: "/alerts",

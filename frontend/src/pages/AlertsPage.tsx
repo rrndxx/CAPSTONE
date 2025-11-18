@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import axios from "axios"
-import { Bell, ShieldAlert, WifiOff, LogIn } from "lucide-react"
+import { ShieldAlert, WifiOff, LogIn } from "lucide-react"
 
 type AlertEntry = {
     id: string

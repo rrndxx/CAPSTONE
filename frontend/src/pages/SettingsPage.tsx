@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { SidebarInset } from "@/components/ui/sidebar"
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
@@ -5,155 +8,124 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-// import { Switch } from "@/components/ui/switch"
-// import { useTheme } from "next-themes"
-import {
-  ShieldCheck, Settings, Wifi, User2, Bell, DatabaseBackup, Wrench
-} from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { User2, DatabaseBackup } from "lucide-react"
+
+const REPORTS = [
+  { label: "Device", value: "Device" },
+  { label: "Bandwidth Usage", value: "BandwidthUsage" },
+  { label: "Hourly Bandwidth", value: "BandwidthHourly" },
+  { label: "Daily Bandwidth", value: "BandwidthDaily" },
+  { label: "Alerts", value: "Alert" },
+  { label: "Users", value: "User" },
+  { label: "Network Interfaces", value: "NetworkInterface" },
+  { label: "Ports", value: "Port" },
+  { label: "Visited Sites", value: "VisitedSite" },
+  { label: "Blocked Sites", value: "BlockedSite" },
+  { label: "Whitelisted Devices", value: "WhitelistedDevice" },
+  { label: "Blacklisted Devices", value: "BlacklistedDevice" },
+]
+
+const FORMATS = [
+  { label: "PDF", value: "pdf" },
+  { label: "CSV", value: "csv" },
+]
 
 export default function SettingsPage() {
-  // const { setTheme } = useTheme()
+  const [selectedReport, setSelectedReport] = useState<string>(REPORTS[0].value)
+  const [selectedFormat, setSelectedFormat] = useState<string>(FORMATS[0].value)
+
+  const getDownloadUrl = (reportType: string, format: string) => {
+    return `http://localhost:4000/reports/${reportType}/${format}`
+  }
 
   return (
     <SidebarInset>
-      <div className="flex flex-col gap-6 p-4 pt-0">
-        <p className="text-muted-foreground">Manage your system and user preferences efficiently</p>
+      <div className="flex flex-col gap-8 p-4 sm:p-6 md:p-8">
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Manage your system and user preferences efficiently
+        </p>
 
         <div className="grid gap-6 md:grid-cols-2">
 
-          {/* User Profile */}
-          <Card>
-            <CardHeader className="flex gap-3 items-center">
+          {/* Profile Settings */}
+          <Card className="w-full">
+            <CardHeader className="flex items-center gap-3">
               <User2 className="text-primary w-5 h-5" />
               <div>
-                <CardTitle>Profile Settings</CardTitle>
-                <CardDescription>Manage your admin account</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Profile Settings</CardTitle>
+                <CardDescription className="text-sm sm:text-base">
+                  Manage your admin account
+                </CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Email</Label>
-                <Input type="email" placeholder="admin@example.com" />
-              </div>
-              <div>
-                <Label>Change Password</Label>
-                <Input type="password" placeholder="••••••••" />
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2 w-full">
+                <Label htmlFor="password">Change Password</Label>
+                <Input id="password" type="password" placeholder="Enter new password" className="w-full" />
               </div>
               <Button className="w-full">Update Profile</Button>
             </CardContent>
           </Card>
 
-          {/* System Preferences */}
-          <Card>
-            <CardHeader className="flex gap-3 items-center">
-              <Settings className="text-primary w-5 h-5" />
-              <div>
-                <CardTitle>System Preferences</CardTitle>
-                <CardDescription>Customize interface and behavior</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Dark Mode</Label>
-                {/* <Switch onCheckedChange={(val) => setTheme(val ? "dark" : "light")} /> */}
-              </div>
-              <div>
-                <Label>Language</Label>
-                <Input placeholder="English" disabled />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Network Settings */}
-          <Card className="md:col-span-2">
-            <CardHeader className="flex gap-3 items-center">
-              <Wifi className="text-primary w-5 h-5" />
-              <div>
-                <CardTitle>Network Settings</CardTitle>
-                <CardDescription>Configure scanning and API access</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="md:flex md:gap-6 md:items-end space-y-4 md:space-y-0">
-              <div className="flex-1">
-                <Label>Polling Interval (sec)</Label>
-                <Input type="number" defaultValue={60} />
-              </div>
-              <div className="flex-1">
-                <Label>Sophos API Key</Label>
-                <Input type="password" placeholder="••••••••••••" />
-              </div>
-              <Button>Save Network Settings</Button>
-            </CardContent>
-          </Card>
-
-          {/* Notifications */}
-          <Card className="md:col-span-2">
-            <CardHeader className="flex gap-3 items-center">
-              <Bell className="text-primary w-5 h-5" />
-              <div>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Set how alerts are delivered</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Email Notifications</Label>
-                <Input type="email" placeholder="alerts@school.edu" />
-              </div>
-              <div>
-                <Label>Threshold Alert (MB/s)</Label>
-                <Input type="number" defaultValue={100} />
-              </div>
-              <Button>Update Notification Settings</Button>
-            </CardContent>
-          </Card>
-
-          {/* Backup & Restore */}
-          <Card>
-            <CardHeader className="flex gap-3 items-center">
+          {/* Download Your Data */}
+          <Card className="w-full">
+            <CardHeader className="flex items-center gap-3">
               <DatabaseBackup className="text-primary w-5 h-5" />
               <div>
-                <CardTitle>Backup & Restore</CardTitle>
-                <CardDescription>Safeguard your data</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Download Your Data</CardTitle>
+                <CardDescription className="text-sm sm:text-base">
+                  Export database tables as PDF or CSV
+                </CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Button className="w-full">Download Backup</Button>
-              <Button className="w-full" variant="secondary">Restore from File</Button>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <div className="flex-1 flex flex-col gap-2">
+                  <Label htmlFor="reportSelect">Select Table</Label>
+                  <Select value={selectedReport} onValueChange={setSelectedReport}>
+                    <SelectTrigger id="reportSelect" className="w-full">
+                      <SelectValue placeholder="Select table" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REPORTS.map(report => (
+                        <SelectItem key={report.value} value={report.value}>
+                          {report.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex-1 flex flex-col gap-2">
+                  <Label htmlFor="formatSelect">Select Format</Label>
+                  <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                    <SelectTrigger id="formatSelect" className="w-full">
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FORMATS.map(format => (
+                        <SelectItem key={format.value} value={format.value}>
+                          {format.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <a
+                href={getDownloadUrl(selectedReport, selectedFormat)}
+                download={`${selectedReport}.${selectedFormat}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full"
+              >
+                <Button className="w-full">Download</Button>
+              </a>
             </CardContent>
           </Card>
 
-          {/* Maintenance */}
-          <Card>
-            <CardHeader className="flex gap-3 items-center">
-              <Wrench className="text-primary w-5 h-5" />
-              <div>
-                <CardTitle>Maintenance</CardTitle>
-                <CardDescription>Admin tools for system health</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button className="w-full" variant="outline">Clear Cache</Button>
-              <Button className="w-full" variant="outline">Restart Backend</Button>
-            </CardContent>
-          </Card>
-
-          {/* Security */}
-          <Card className="md:col-span-2">
-            <CardHeader className="flex gap-3 items-center">
-              <ShieldCheck className="text-primary w-5 h-5" />
-              <div>
-                <CardTitle>Security</CardTitle>
-                <CardDescription>Protect your system and data</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="destructive" className="w-full">Delete Account</Button>
-              <p className="text-xs text-muted-foreground text-center">
-                This action is irreversible. Ensure backups are stored safely.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </SidebarInset>

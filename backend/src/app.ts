@@ -59,11 +59,12 @@ app.get("/reports/:model/csv", async (req, res) => {
 
 app.get("/reports/:model/pdf", async (req, res) => {
     try {
-        await exporter.exportToPDF(req.params.model, res);
+        await exporter.exportToPDF(req.params.model, res)
     } catch (err: any) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message })
     }
-});
+})
+
 
 
 // LOGIN
