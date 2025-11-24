@@ -17,6 +17,7 @@ import { authMiddleware } from "./middlewares/routesProtector.js";
 import { exporter, notificationService, pushChannel } from "./server.js";
 import { getUserFromToken, login } from "./services/authservice.js";
 import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
+import { detectBandwidthAnomalies, runAIAnalysis } from "./services/AIService.js";
 
 dotenv.config();
 
@@ -126,6 +127,28 @@ app.get("/alerts/all", async (req, res) => {
 });
 
 
+// AI Endpoints
+app.get("/predictions", async (req, res) => {
+    try {
+        const predictions = await runAIAnalysis();
+        console.log("Predictions returned:", predictions);
+        res.json(predictions);
+    } catch (err) {
+        console.error("Error in /predictions:", err);
+        res.status(500).json({ error: "Failed to run AI analysis" });
+    }
+});
+
+app.post("/detect-anomalies", async (req, res) => {
+    try {
+        await detectBandwidthAnomalies();
+        res.json({ message: "Anomaly detection completed" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to detect anomalies" });
+    }
+});
+
 
 // app.get("/get-alerts", (req, res) => {
 //     const alerts = 
@@ -218,6 +241,144 @@ app.get("/stream/cpu", async (req, res) => {
         res.status(500).end("Error streaming traffic data");
     }
 });
+
+
+
+// per device bandwidth consumption poller
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+interface DeviceTraffic {
+  ip: string;
+  mac: string;
+  download: number; // bytes/sec
+  upload: number;   // bytes/sec
+}
+
+// 1️⃣ In-memory buffer: stores last ~20 seconds per-second values
+let bandwidthBuffer: Record<
+  string,
+  { download: number[]; upload: number[] }
+> = {};
+
+// 2️⃣ Optional: total consumption for dashboard
+let totalConsumption: Record<string, { download: number; upload: number }> = {};
+
+// Fetch traffic from OPNsense
+async function fetchTraffic(interfaceName = "opt1") {
+  try {
+    const resp = await axios.get(
+      `https://${process.env.OPNSENSE_HOST}/api/diagnostics/traffic/top/${interfaceName}`,
+      {
+        auth: {
+          username: process.env.OPNSENSE_KEY!,
+          password: process.env.OPNSENSE_SECRET!,
+        },
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        timeout: 4000,
+      }
+    );
+    return resp.data;
+  } catch (err) {
+    console.error("Traffic poll error:", (err as any).message);
+    return null;
+  }
+}
+
+// 3️⃣ LIVE POLLING LOOP (1-second)
+export async function startLiveTrafficPoller() {
+  async function loop() {
+    const data = await fetchTraffic("opt1");
+
+    if (data && Array.isArray(data.data)) {
+      for (const row of data.data) {
+        const mac = row?.mac ?? "unknown";
+        const download = row?.bps_in ?? 0;
+        const upload = row?.bps_out ?? 0;
+
+        // Push per-second data into buffer
+        if (!bandwidthBuffer[mac]) bandwidthBuffer[mac] = { download: [], upload: [] };
+        bandwidthBuffer[mac].download.push(download);
+        bandwidthBuffer[mac].upload.push(upload);
+
+        // Keep only last ~20 seconds in memory
+        if (bandwidthBuffer[mac].download.length > 20) bandwidthBuffer[mac].download.shift();
+        if (bandwidthBuffer[mac].upload.length > 20) bandwidthBuffer[mac].upload.shift();
+
+        // Update total consumption (optional)
+        if (!totalConsumption[mac]) totalConsumption[mac] = { download: 0, upload: 0 };
+        totalConsumption[mac].download += download;
+        totalConsumption[mac].upload += upload;
+      }
+    }
+
+    setTimeout(loop, 1000);
+  }
+
+  loop();
+}
+
+// 4️⃣ DATABASE AGGREGATION LOOP (every 20 seconds)
+export async function startDbAggregationPoller() {
+  async function loop() {
+    const timestamp = new Date();
+
+    for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
+      try {
+        // Find device in DB
+        const device = await prisma.device.findFirst({ where: { deviceMac: mac } });
+        if (!device) continue;
+
+        // Sum last 20 seconds
+        const downloadSum = buffer.download.reduce((a, b) => a + b, 0);
+        const uploadSum = buffer.upload.reduce((a, b) => a + b, 0);
+
+        // Insert aggregated sum into BandwidthUsage table
+        await prisma.bandwidthUsage.create({
+          data: {
+            deviceId: device.deviceId,
+            download: BigInt(downloadSum),
+            upload: BigInt(uploadSum),
+            timestamp,
+          },
+        });
+
+        // Clear buffer for next interval
+        buffer.download = [];
+        buffer.upload = [];
+      } catch (err) {
+        console.error(`Failed to insert bandwidth for ${mac}:`, (err as any).message);
+      }
+    }
+
+    setTimeout(loop, 20000);
+  }
+
+  loop();
+}
+
+// 5️⃣ FRONTEND ENDPOINTS
+app.get("/bandwidth/live", (_req, res) => {
+  // Return per-second buffer data (latest snapshot)
+  const latestSnapshot: Record<string, { download: number; upload: number }> = {};
+  for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
+    latestSnapshot[mac] = {
+      download: buffer.download[buffer.download.length - 1] ?? 0,
+      upload: buffer.upload[buffer.upload.length - 1] ?? 0,
+    };
+  }
+
+  res.json({ success: true, devices: latestSnapshot });
+});
+
+app.get("/bandwidth/total", (_req, res) => {
+  res.json({ success: true, devices: totalConsumption });
+});
+
+// 6️⃣ START POLLERS
+
+
 
 
 // PORT SCANNER

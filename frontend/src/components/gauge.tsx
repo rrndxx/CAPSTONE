@@ -84,14 +84,23 @@ export function Gauge({ className }: GaugeProps) {
   const queryClient = useQueryClient()
   const [openDialog, setOpenDialog] = React.useState(false)
 
-  // Get cached speed info (if exists)
+  // Cached speed result
   const speedInfo = queryClient.getQueryData<SpeedInfo>(["speedtest"])
 
-  // Mutation for running speed test
   const { mutate, isPending, isError } = useMutation({
     mutationFn: runSpeedTest,
     onSuccess: (data) => {
-      queryClient.setQueryData(["speedtest"], data) // store in cache
+      queryClient.setQueryData(["speedtest"], data)
+
+      // --- Handle history (up to 10 entries) ---
+      const historyKey = "speedTestHistory"
+      const savedHistory = localStorage.getItem(historyKey)
+      let history: SpeedInfo[] = savedHistory ? JSON.parse(savedHistory) : []
+
+      history.unshift(data) // add newest at start
+      if (history.length > 10) history = history.slice(0, 10)
+
+      localStorage.setItem(historyKey, JSON.stringify(history))
       setOpenDialog(true)
     },
     onError: () => {
@@ -99,12 +108,10 @@ export function Gauge({ className }: GaugeProps) {
     },
   })
 
-  // calculate upload ratio
   const upload = Number(speedInfo?.upload ?? 0)
   const download = Number(speedInfo?.download ?? 0)
   const total = upload + download
   const ratio = total > 0 ? (upload / total) * 100 : 0
-
   const chartData = [{ name: "now", ratio }]
 
   const details = speedInfo
@@ -114,11 +121,14 @@ export function Gauge({ className }: GaugeProps) {
       { icon: <Server className="h-4 w-4" />, label: "Server", value: speedInfo.server_name },
       { icon: <Cpu className="h-4 w-4" />, label: "Latency", value: `${speedInfo.latency} ms` },
       { icon: <Upload className="h-4 w-4" />, label: "Upload", value: `${speedInfo.upload} Mbps` },
-      { icon: <Download className="h-4 w-4 " />, label: "Download", value: `${speedInfo.download} Mbps` },
+      { icon: <Download className="h-4 w-4" />, label: "Download", value: `${speedInfo.download} Mbps` },
       { icon: <Clock className="h-4 w-4" />, label: "Ping", value: `${speedInfo.ping_ms} ms` },
       { icon: <Clock className="h-4 w-4" />, label: "Last Scan", value: speedInfo.timestamp },
     ]
     : []
+
+  // Load history
+  const history: SpeedInfo[] = JSON.parse(localStorage.getItem("speedTestHistory") || "[]")
 
   return (
     <>
@@ -148,39 +158,35 @@ export function Gauge({ className }: GaugeProps) {
                   <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                   <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                     <Label
-                      content={({ viewBox }) =>
-                        viewBox && "cx" in viewBox && "cy" in viewBox ? (
-                          <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                      content={({ viewBox }) => {
+                        const vb = viewBox as { cx: number; cy: number } | undefined
+                        if (!vb) return null
+                        return (
+                          <text x={vb.cx} y={vb.cy} textAnchor="middle">
                             <tspan
-                              x={viewBox.cx}
+                              x={vb.cx}
                               dy={-10}
                               className="fill-foreground text-lg font-semibold leading-tight"
                             >
-                              {speedInfo
-                                ? `${speedInfo.upload} / ${speedInfo.download}`
-                                : "0 / 0"}
+                              {speedInfo ? `${speedInfo.upload} / ${speedInfo.download}` : "0 / 0"}
                             </tspan>
                             <tspan
-                              x={viewBox.cx}
+                              x={vb.cx}
                               dy={24}
                               className="fill-muted-foreground text-sm"
                             >
                               Mbps
                             </tspan>
                           </text>
-                        ) : null
-                      }
+                        )
+                      }}
                     />
                   </PolarRadiusAxis>
-                  <RadialBar
-                    dataKey="ratio"
-                    cornerRadius={5}
-                    fill="var(--primary)"
-                  />
+                  <RadialBar dataKey="ratio" cornerRadius={5} fill="var(--primary)" />
                 </RadialBarChart>
               </ChartContainer>
 
-              {/* Latency & Last Scan under the gauge */}
+              {/* Latency + Last scan */}
               <div className="text-center mt-2 flex flex-col gap-1">
                 {speedInfo ? (
                   <>
@@ -202,7 +208,7 @@ export function Gauge({ className }: GaugeProps) {
           )}
         </CardContent>
 
-        {/* Run Button */}
+        {/* Button */}
         <CardFooter className="flex flex-col gap-4 text-sm">
           <Button
             className="w-full h-18 rounded-2xl flex items-center justify-center gap-2 bg-chart-2"
@@ -215,7 +221,7 @@ export function Gauge({ className }: GaugeProps) {
         </CardFooter>
       </Card>
 
-      {/* Result Dialog */}
+      {/* Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         {isError ? (
           <DialogContent className="w-[70vw] h-[60vh] max-w-none max-h-none">
@@ -224,7 +230,7 @@ export function Gauge({ className }: GaugeProps) {
             </DialogHeader>
             <div className="flex flex-col gap-4 mt-2">
               <span className="font-medium">
-                Error getting best servers. Please try again later
+                Error getting best servers. Please try again later.
               </span>
             </div>
             <DialogFooter>
@@ -236,7 +242,9 @@ export function Gauge({ className }: GaugeProps) {
             <DialogHeader>
               <DialogTitle>Speed Test Results</DialogTitle>
             </DialogHeader>
+
             <div className="flex flex-col gap-4 mt-2 overflow-auto">
+              <h3 className="font-semibold text-lg">Latest Result</h3>
               {details.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   {item.icon}
@@ -244,7 +252,15 @@ export function Gauge({ className }: GaugeProps) {
                   <span className="text-muted-foreground">{item.value}</span>
                 </div>
               ))}
+
+              {/* <h3 className="font-semibold text-lg mt-4">History (Last 10)</h3>
+              {history.map((item, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{item.timestamp}</span> - Upload: {item.upload} Mbps, Download: {item.download} Mbps
+                </div>
+              ))} */}
             </div>
+
             <DialogFooter>
               <Button onClick={() => setOpenDialog(false)}>Close</Button>
             </DialogFooter>

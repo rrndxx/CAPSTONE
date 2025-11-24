@@ -1,4 +1,4 @@
-import app from "./app.js";
+import app, { startDbAggregationPoller, startLiveTrafficPoller } from "./app.js";
 import db from "./config/db.js";
 import { config } from "./config/index.js";
 import { DeviceRepository } from "./modules/Device/device.repository.js";
@@ -61,6 +61,9 @@ await networkScanner.scanDevicesNow()
 
 networkScanner.continuousNetworkInterfaceScan()
 networkScanner.continuousDeviceScan()
+
+startLiveTrafficPoller();
+startDbAggregationPoller();
 
 // await notificationService.notify({
 //     type: "CONNECTED_DEVICES_RELATED",

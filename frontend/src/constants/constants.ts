@@ -125,11 +125,11 @@ export const sidebarNavs = {
     },
   ],
   sidebarNavsSecond: [
-    {
-      title: "Access Logs",
-      url: "/logs",
-      icon: History,
-    },
+    // {
+    //   title: "Access Logs",
+    //   url: "/logs",
+    //   icon: History,
+    // },
     // {
     //   title: "Reports",
     //   url: "/reports",

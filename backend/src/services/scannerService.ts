@@ -9,6 +9,7 @@ import { mapOPNsenseInterfaces, mapOPNsenseLeasesToDevices } from "../utils/mapp
 import type { SpeedTestResult } from "../interfaces.js";
 import { normalizeMAC } from "../utils/MACnormalizer.js";
 import { deviceRepo, notificationService } from "../server.js";
+import { runAIAnalysis } from "./AIService.js";
 
 export interface INetworkScanner {
     continuousDeviceScan(): void;
@@ -32,6 +33,8 @@ export class NetworkScanner implements INetworkScanner {
         cron.schedule("*/1 * * * *", async () => {
             console.log("Scheduled device scanner starting...", new Date().toISOString());
             await this.scanDevicesNow();
+            console.log("AI Analysis starting...");
+            // await runAIAnalysis();
         });
     }
 

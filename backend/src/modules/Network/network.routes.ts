@@ -4,7 +4,7 @@ import * as networkController from "./network.controller.js";
 const router = Router();
 
 router.get("/interfaces/all", networkController.getNetworkInterfaces) // get all interfaces
-router.get("/interface/names", networkController.getNetworkInterfaceNames) // names only
+router.get("/interface/names", networkController.getNetworkInterfaceNames) // names onlyu
 
 router.get("/system-time", networkController.getSystemTime) // system uptime, date time, etc. 
 router.get("/system-information", networkController.getSystemInfo) // system info
