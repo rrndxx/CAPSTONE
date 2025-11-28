@@ -41,18 +41,18 @@ export class OPNsenseService {
         return this._request("post", "/api/dnsmasq/leases/search/");
     }
 
-    async blockDevice(device: Device): Promise<any> {
+    async blockDevice(device: any): Promise<any> {
         const payload = {
             host: {
-                host: device.deviceHostname ?? "",
+                host: device.deviceHostname,
                 domain: "",
                 local: "0",
-                ip: device.deviceIp ?? "",
+                ip: "",
                 aliases: "",
                 cnames: "",
                 client_id: "",
                 hwaddr: device.deviceMac,
-                lease_time: "",
+                lease_time: "1",
                 set_tag: "",
                 ignore: "1",
                 descr: `Blocked ${device.deviceMac}`,
@@ -61,10 +61,12 @@ export class OPNsenseService {
         };
 
         // 1. Add static host
-        await this._request("post", "/api/dnsmasq/settings/add_host/", payload);
+        const one = await this._request("post", "/api/dnsmasq/settings/add_host/", payload);
+        console.log(`opnservice: ${one}`)
 
         // 2. Save config
-        await this._request("post", "/api/dnsmasq/settings/set", {});
+        const two = await this._request("post", "/api/dnsmasq/settings/set", {});
+        console.log(`opnservice: ${two}`)
 
         // 3. Reconfigure service
         return this._request("post", "/api/dnsmasq/service/reconfigure", {});

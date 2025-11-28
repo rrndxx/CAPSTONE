@@ -16,6 +16,7 @@ export interface IDeviceService {
     detectDeviceOS(device: Partial<Device>): Promise<string>
     updateDeviceStatus(deviceId: Device['deviceId'], status: Device['status']): Promise<any>
     getAllWhitelistedDevices(): Promise<any>
+    upsertDevicePort(deviceId: Device["deviceId"], ports: any | any[]): any
 }
 
 export class DeviceService implements IDeviceService {
@@ -140,6 +141,31 @@ export class DeviceService implements IDeviceService {
         return results;
     }
 
+    async upsertDevicePort(deviceId: number, ports: any | any[]): Promise<any> {
+        const portList = Array.isArray(ports) ? ports : [ports];
+        const results = [];
+
+        for (const port of portList) {
+            const existing = await this.deviceRepo.getPortByNumber(
+                deviceId,
+                port.portNumber
+            );
+
+            const portData = {
+                deviceId,
+                portNumber: port.portNumber,
+                status: port.status,
+                protocol: port.protocol ?? "tcp",
+                firstSeen: port.firstSeen ?? new Date(),
+                lastSeen: new Date(),
+            };
+
+            results.push(await this.deviceRepo.upsertPort(portData, !!existing));
+        }
+
+        return results;
+    }
+
     async detectDeviceOS(device: Partial<Device>): Promise<string> {
         if (!device.deviceIp) throw new Error("deviceId and deviceIp are required.");
 
@@ -157,11 +183,11 @@ export class DeviceService implements IDeviceService {
     }
 
     async blockDevice(device: Device, interfaceId: Device['interfaceId']): Promise<any> {
-
-        // implementanan ug logic nga mukuha sa "OPT1" knowing nga int ang interfaceId; ipasa sa sunod na line
-
         const result = await this.opnSenseService.blockDevice(device)
-        // await this.deviceRepo.addDeviceToBlacklist(device.deviceMac, interfaceId)
+        await this.deviceRepo.addDeviceToBlacklist(device.deviceMac, interfaceId)
+
+        console.log(`service: ${device} ${interfaceId}`)
+        console.log(`service: ${result}`)
 
         return result
     }
@@ -172,4 +198,33 @@ export class DeviceService implements IDeviceService {
 
         return result
     }
+
+    async removeDeviceFromWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        if (!deviceMac || !interfaceId) {
+            throw new Error("deviceMac and interfaceId are required");
+        }
+
+        return this.deviceRepo.removeDeviceFromWhitelist(deviceMac, interfaceId);
+    }
+
+    async addDeviceToBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        if (!deviceMac || !interfaceId) {
+            throw new Error("deviceMac and interfaceId are required");
+        }
+
+        const device = await this.deviceRepo.getDeviceByMAC(deviceMac, interfaceId)
+
+        await this.opnSenseService.blockDevice(device)
+
+        return this.deviceRepo.addDeviceToBlacklist(deviceMac, interfaceId);
+    }
+
+    async removeDeviceFromBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        if (!deviceMac || !interfaceId) {
+            throw new Error("deviceMac and interfaceId are required");
+        }
+
+        return this.deviceRepo.removeDeviceFromBlacklist(deviceMac, interfaceId);
+    }
+
 }

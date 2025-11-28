@@ -29,6 +29,80 @@ export class NetworkScanner implements INetworkScanner {
         private readonly pythonScannerURL: string
     ) { }
 
+    continuousPortScan(): void {
+        // Runs every 5 minutes — adjust to your liking
+        cron.schedule("*/5 * * * *", async () => {
+            console.log("Scheduled port scanner starting...", new Date().toISOString());
+            await this.scanPortsForAllDevices();
+        });
+    }
+
+    async scanPortsForAllDevices(): Promise<void> {
+        try {
+            const MALICIOUS_PORTS = [
+                21,   // FTP (often abused)
+                23,   // Telnet
+                135,  // DCOM
+                139,  // NetBIOS
+                445,  // SMB
+                3389, // RDP brute force target
+                5900, // VNC
+                1433, // SQL Server
+                3306, // MySQL (if not expected)
+                5432, // PostgreSQL
+                6379, // Redis open
+                27017 // MongoDB
+            ];
+
+            const devices = await this.deviceService.getAllDevicesFromDB(2);
+
+            if (!devices || devices.length === 0) {
+                console.log("No devices found for port scanning.");
+                return;
+            }
+
+            for (const dev of devices) {
+                if (!dev.deviceIp || dev.status !== "UP") continue;
+
+                try {
+                    const portResults = await this.scanOpenPorts(dev.deviceIp, dev.deviceId);
+
+                    // Save each port to DB
+                    for (const port of portResults) {
+                        await this.deviceService.upsertDevicePort(dev.deviceId, port);
+
+                        // --- MALICIOUS PORT DETECTION ---
+                        if (MALICIOUS_PORTS.includes(port.portNumber)) {
+                            await notificationService.notify({
+                                type: "ACTION",
+                                severity: "CRITICAL",
+                                interfaceId: dev.interfaceId ?? 2,
+                                message: `⚠️ Malicious port detected on ${dev.deviceIp}: Port ${port.portNumber} (${port.protocol}) is OPEN`,
+                                meta: {
+                                    ip: dev.deviceIp,
+                                    hostname: dev.deviceHostname,
+                                    port: port.portNumber
+                                }
+                            });
+
+                            console.log(
+                                `ALERT: Malicious port ${port.portNumber} OPEN on ${dev.deviceIp} — email sent`
+                            );
+                        }
+                    }
+
+                    console.log(`Scanned ports for device ${dev.deviceIp}`);
+                } catch (err) {
+                    console.error(`Failed scanning ports for ${dev.deviceIp}:`, err);
+                }
+            }
+
+        } catch (err) {
+            console.error("Port scan job failed:", err);
+        }
+    }
+
+
     continuousDeviceScan(): void {
         cron.schedule("*/1 * * * *", async () => {
             console.log("Scheduled device scanner starting...", new Date().toISOString());

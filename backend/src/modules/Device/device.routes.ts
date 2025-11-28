@@ -12,6 +12,12 @@ router.post("/port/scan", deviceController.scanDevicePorts); // external python 
 router.post("/block", deviceController.blockDevice)
 router.post("/unblock", deviceController.unblockDevice)
 
+router.post("/whitelist/add", deviceController.whitelistDevice)
+router.post("/whitelist/remove", deviceController.unwhitelistDevice)
+
+router.post("/blacklist/add", deviceController.blacklistDevice)
+router.post("/blacklist/remove", deviceController.unblacklistDevice)
+
 //tests
 router.post("/opnsense/devices", deviceController.getDevicesFromDHCPLease); // opnsense mukuha
 router.post("/test-os", async (req, res, next) => {

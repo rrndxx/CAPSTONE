@@ -126,21 +126,7 @@ const ISPStatusPage = () => {
                         <Metric icon={<Clock className="w-4 h-4 text-gray-500" />} label="Last Scan" value={speedData?.timestamp ?? "--"} className="sm:col-span-2" />
                     </div>
 
-                    {/* History chart */}
-                    {history.length > 0 && (
-                        <div className="mt-6 h-48">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={history}>
-                                    <XAxis dataKey="timestamp" />
-                                    <YAxis unit=" Mbps" />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="upload" stroke="#3b82f6" name="Upload" />
-                                    <Line type="monotone" dataKey="download" stroke="#ef4444" name="Download" />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )}
+                    
                 </CardContent>
             </Card>
 

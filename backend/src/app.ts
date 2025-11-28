@@ -250,136 +250,114 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 interface DeviceTraffic {
-  ip: string;
-  mac: string;
-  download: number; // bytes/sec
-  upload: number;   // bytes/sec
+    ip: string;
+    mac: string;
+    download: number; // bytes/sec
+    upload: number;   // bytes/sec
 }
 
-// 1️⃣ In-memory buffer: stores last ~20 seconds per-second values
-let bandwidthBuffer: Record<
-  string,
-  { download: number[]; upload: number[] }
-> = {};
+// In-memory buffer: stores last ~20 seconds per-second values
+let bandwidthBuffer: Record<string, { download: number[]; upload: number[] }> = {};
 
-// 2️⃣ Optional: total consumption for dashboard
+// Optional: total consumption for dashboard
 let totalConsumption: Record<string, { download: number; upload: number }> = {};
 
-// Fetch traffic from OPNsense
-async function fetchTraffic(interfaceName = "opt1") {
-  try {
-    const resp = await axios.get(
-      `https://${process.env.OPNSENSE_HOST}/api/diagnostics/traffic/top/${interfaceName}`,
-      {
-        auth: {
-          username: process.env.OPNSENSE_KEY!,
-          password: process.env.OPNSENSE_SECRET!,
-        },
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-        timeout: 4000,
-      }
-    );
-    return resp.data;
-  } catch (err) {
-    console.error("Traffic poll error:", (err as any).message);
-    return null;
-  }
+// Fetch traffic from local backend
+async function fetchTraffic() {
+    try {
+        const resp = await axios.get("http://localhost:4000/network/traffic/per-device", { timeout: 4000 });
+        return Array.isArray(resp.data) ? resp.data : [];
+    } catch (err) {
+        console.error("Failed to fetch live device traffic:", (err as any).message);
+        return [];
+    }
 }
 
-// 3️⃣ LIVE POLLING LOOP (1-second)
+// 1️⃣ LIVE POLLING LOOP (every 2 seconds)
 export async function startLiveTrafficPoller() {
-  async function loop() {
-    const data = await fetchTraffic("opt1");
+    async function loop() {
+        const data = await fetchTraffic();
 
-    if (data && Array.isArray(data.data)) {
-      for (const row of data.data) {
-        const mac = row?.mac ?? "unknown";
-        const download = row?.bps_in ?? 0;
-        const upload = row?.bps_out ?? 0;
+        for (const row of data) {
+            const mac = row?.mac ?? "unknown";
+            const download = row?.bps_in ?? 0;
+            const upload = row?.bps_out ?? 0;
 
-        // Push per-second data into buffer
-        if (!bandwidthBuffer[mac]) bandwidthBuffer[mac] = { download: [], upload: [] };
-        bandwidthBuffer[mac].download.push(download);
-        bandwidthBuffer[mac].upload.push(upload);
+            if (!bandwidthBuffer[mac]) bandwidthBuffer[mac] = { download: [], upload: [] };
+            bandwidthBuffer[mac].download.push(download);
+            bandwidthBuffer[mac].upload.push(upload);
 
-        // Keep only last ~20 seconds in memory
-        if (bandwidthBuffer[mac].download.length > 20) bandwidthBuffer[mac].download.shift();
-        if (bandwidthBuffer[mac].upload.length > 20) bandwidthBuffer[mac].upload.shift();
+            // Keep only last ~20 seconds
+            if (bandwidthBuffer[mac].download.length > 20) bandwidthBuffer[mac].download.shift();
+            if (bandwidthBuffer[mac].upload.length > 20) bandwidthBuffer[mac].upload.shift();
 
-        // Update total consumption (optional)
-        if (!totalConsumption[mac]) totalConsumption[mac] = { download: 0, upload: 0 };
-        totalConsumption[mac].download += download;
-        totalConsumption[mac].upload += upload;
-      }
+            // Update total consumption
+            if (!totalConsumption[mac]) totalConsumption[mac] = { download: 0, upload: 0 };
+            totalConsumption[mac].download += download;
+            totalConsumption[mac].upload += upload;
+        }
+
+        setTimeout(loop, 2000); // run every 2 seconds
     }
 
-    setTimeout(loop, 1000);
-  }
-
-  loop();
+    loop();
 }
 
-// 4️⃣ DATABASE AGGREGATION LOOP (every 20 seconds)
+// 2️⃣ DATABASE AGGREGATION LOOP (every 20 seconds)
 export async function startDbAggregationPoller() {
-  async function loop() {
-    const timestamp = new Date();
+    async function loop() {
+        const timestamp = new Date();
 
-    for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
-      try {
-        // Find device in DB
-        const device = await prisma.device.findFirst({ where: { deviceMac: mac } });
-        if (!device) continue;
+        for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
+            try {
+                const device = await prisma.device.findFirst({ where: { deviceMac: mac } });
+                if (!device) continue;
 
-        // Sum last 20 seconds
-        const downloadSum = buffer.download.reduce((a, b) => a + b, 0);
-        const uploadSum = buffer.upload.reduce((a, b) => a + b, 0);
+                const downloadSum = buffer.download.reduce((a, b) => a + b, 0);
+                const uploadSum = buffer.upload.reduce((a, b) => a + b, 0);
 
-        // Insert aggregated sum into BandwidthUsage table
-        await prisma.bandwidthUsage.create({
-          data: {
-            deviceId: device.deviceId,
-            download: BigInt(downloadSum),
-            upload: BigInt(uploadSum),
-            timestamp,
-          },
-        });
+                await prisma.bandwidthUsage.create({
+                    data: {
+                        deviceId: device.deviceId,
+                        download: BigInt(downloadSum),
+                        upload: BigInt(uploadSum),
+                        timestamp,
+                    },
+                });
 
-        // Clear buffer for next interval
-        buffer.download = [];
-        buffer.upload = [];
-      } catch (err) {
-        console.error(`Failed to insert bandwidth for ${mac}:`, (err as any).message);
-      }
+                buffer.download = [];
+                buffer.upload = [];
+            } catch (err) {
+                console.error(`Failed to insert bandwidth for ${mac}:`, (err as any).message);
+            }
+        }
+
+        setTimeout(loop, 20000); // every 20 seconds
     }
 
-    setTimeout(loop, 20000);
-  }
-
-  loop();
+    loop();
 }
 
-// 5️⃣ FRONTEND ENDPOINTS
+// 3️⃣ FRONTEND ENDPOINTS
 app.get("/bandwidth/live", (_req, res) => {
-  // Return per-second buffer data (latest snapshot)
-  const latestSnapshot: Record<string, { download: number; upload: number }> = {};
-  for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
-    latestSnapshot[mac] = {
-      download: buffer.download[buffer.download.length - 1] ?? 0,
-      upload: buffer.upload[buffer.upload.length - 1] ?? 0,
-    };
-  }
+    res.setHeader("Cache-Control", "no-store");
 
-  res.json({ success: true, devices: latestSnapshot });
+    const latestSnapshot: Record<string, { download: number; upload: number }> = {};
+    for (const [mac, buffer] of Object.entries(bandwidthBuffer)) {
+        latestSnapshot[mac] = {
+            download: buffer.download[buffer.download.length - 1] ?? 0,
+            upload: buffer.upload[buffer.upload.length - 1] ?? 0,
+        };
+    }
+
+    res.json({ success: true, devices: latestSnapshot });
 });
 
 app.get("/bandwidth/total", (_req, res) => {
-  res.json({ success: true, devices: totalConsumption });
+    res.setHeader("Cache-Control", "no-store");
+    
+    res.json({ success: true, devices: totalConsumption });
 });
-
-// 6️⃣ START POLLERS
-
-
-
 
 // PORT SCANNER
 const execAsync = util.promisify(exec);

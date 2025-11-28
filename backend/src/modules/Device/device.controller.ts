@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { deviceService } from "../../server.js";
+import { deviceRepo, deviceService } from "../../server.js";
 import { runNmapScan } from "../../services/nmapScannerService.js";
 
 export async function scanPorts(req: Request, res: Response) {
@@ -79,12 +79,48 @@ export async function getAllDevicesFromDB(req: Request, res: Response, next: Nex
     try {
         const { interfaceId } = req.query;
 
-        if (!interfaceId || typeof interfaceId !== "string")
+        if (!interfaceId || typeof interfaceId !== "string") {
             return res.status(400).json({ message: "interfaceId is required as query param." });
+        }
 
-        const devices = await deviceService.getAllDevicesFromDB(Number(interfaceId));
+        const parsedInterfaceId = Number(interfaceId);
 
-        res.status(200).json({ success: true, data: devices });
+        const devices = (await deviceService.getAllDevicesFromDB(parsedInterfaceId)) ?? [];
+
+        const devicesWithTrust = await Promise.all(
+            devices.map(async dev => {
+                let trustStatus: "WHITELISTED" | "BLACKLISTED" | "NEUTRAL" = "NEUTRAL";
+
+                const isWhitelisted = await deviceRepo.isDeviceWhitelist(
+                    dev.deviceMac,
+                    dev.interfaceId
+                );
+
+                if (isWhitelisted) {
+                    trustStatus = "WHITELISTED";
+                } else {
+                    const isBlacklisted = await deviceRepo.isDeviceBlacklist(
+                        dev.deviceMac,
+                        dev.interfaceId
+                    );
+
+                    if (isBlacklisted) {
+                        trustStatus = "BLACKLISTED";
+                    }
+                }
+
+                return {
+                    ...dev,
+                    trustStatus,
+                };
+            })
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: devicesWithTrust
+        });
+
     } catch (err) {
         next(err);
     }
@@ -131,4 +167,85 @@ export async function getDevicesFromDHCPLease(req: Request, res: Response, next:
         res.status(200).json({ success: true, data: devices });
     } catch (err) { next(err); }
 }
+
+export async function whitelistDevice(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { deviceMac, interfaceId } = req.body;
+
+        if (!deviceMac || !interfaceId)
+            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+
+        const result = await deviceService.addDeviceToWhitelist(deviceMac, interfaceId);
+
+        return res.json({
+            success: true,
+            message: `Device ${deviceMac} added to whitelist.`,
+            result
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function unwhitelistDevice(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { deviceMac, interfaceId } = req.body;
+
+        if (!deviceMac || !interfaceId)
+            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+
+        const result = await deviceService.removeDeviceFromWhitelist(deviceMac, interfaceId);
+
+        return res.json({
+            success: true,
+            message: `Device ${deviceMac} removed from whitelist.`,
+            result
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function blacklistDevice(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { deviceMac, interfaceId } = req.body;
+
+        if (!deviceMac || !interfaceId)
+            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+
+        const result = await deviceService.addDeviceToBlacklist(deviceMac, interfaceId);
+
+        return res.json({
+            success: true,
+            message: `Device ${deviceMac} added to blacklist.`,
+            result
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function unblacklistDevice(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { deviceMac, interfaceId } = req.body;
+
+        if (!deviceMac || !interfaceId)
+            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+
+        const result = await deviceService.removeDeviceFromBlacklist(deviceMac, interfaceId);
+
+        return res.json({
+            success: true,
+            message: `Device ${deviceMac} removed from blacklist.`,
+            result
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
 

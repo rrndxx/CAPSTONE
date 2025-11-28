@@ -34,6 +34,9 @@ import {
   MoreHorizontal,
   Loader2,
   MoreVertical,
+  Cross,
+  Check,
+  Ban,
 } from "lucide-react"
 import {
   Select,
@@ -43,6 +46,7 @@ import {
   SelectValue,
 } from "./ui/select"
 import { PerDeviceTrafficTable } from "./perdevicetraffictable"
+import axios from "axios"
 
 export type Device = {
   deviceId: number
@@ -52,6 +56,7 @@ export type Device = {
   deviceHostname: string | null
   deviceOS: string | null
   authorized: boolean
+  trustStatus: "WHITELISTED" | "BLACKLISTED" | "NEUTRAL"
   status: "UP" | "DOWN" | string
   interfaceId: number
   interface: {
@@ -76,13 +81,44 @@ export type Device = {
 }
 
 export function DevicesTable({
-  devices,
+  devices: initialDevices,
   viewType = "all",
 }: {
   devices: Device[]
-  viewType?: "whitelist" | "blacklist" | "bandwidth" | "all"
+  viewType?: "whitelist" | "blacklist" | "bandwidth" | "all" | "neutral"
 }) {
+  const [devices, setDevices] = useState(initialDevices)
   const [globalFilter, setGlobalFilter] = useState("")
+
+  const updateDevice = (deviceMac: string, newProps: Partial<Device>) => {
+    setDevices((prev) =>
+      prev.map((d) =>
+        d.deviceMac === deviceMac
+          ? { ...d, ...newProps }
+          : d
+      )
+    )
+  }
+
+  const removeFromWhitelist = async (deviceMac: string, interfaceId: number) => {
+    try {
+      await axios.post("http://localhost:4000/devices/whitelist/remove", { deviceMac, interfaceId })
+      updateDevice(deviceMac, { trustStatus: "NEUTRAL" }) // update locally
+    } catch (err) {
+      console.error(err)
+      alert("Error removing from whitelist")
+    }
+  }
+
+  const removeFromBlacklist = async (deviceMac: string, interfaceId: number) => {
+    try {
+      await axios.post("http://localhost:4000/devices/blacklist/remove", { deviceMac, interfaceId })
+      updateDevice(deviceMac, { trustStatus: "NEUTRAL" }) // update locally
+    } catch (err) {
+      console.error(err)
+      alert("Error removing from blacklist")
+    }
+  }
 
   const commonColumns: ColumnDef<Device, any>[] = [
     { accessorKey: "deviceId", header: "ID", cell: info => info.getValue(), meta: { className: 'hidden lg:table-cell' } },
@@ -134,16 +170,12 @@ export function DevicesTable({
         }
       }
 
-      if (viewType === "whitelist" || viewType === "blacklist") {
-        const handleRemove = () => {
-          const list = viewType === "whitelist" ? "Whitelist" : "Blacklist"
-          alert(`Removed ${device.deviceHostname} from ${list}`)
-        }
+      if (viewType === "whitelist") {
         return (
           <Button
             size="sm"
             variant="destructive"
-            onClick={handleRemove}
+            onClick={() => removeFromWhitelist(device.deviceMac, device.interfaceId)}
             className="w-32"
           >
             Remove
@@ -151,9 +183,40 @@ export function DevicesTable({
         )
       }
 
+      if (viewType === "blacklist") {
+        return (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => removeFromBlacklist(device.deviceMac, device.interfaceId)}
+            className="w-32"
+          >
+            Remove
+          </Button>
+        )
+      }
+
+      const addToWhitelist = async (deviceMac: string, interfaceId: number) => {
+        try {
+          await axios.post("http://localhost:4000/devices/whitelist/add", { deviceMac, interfaceId })
+          updateDevice(deviceMac, { trustStatus: "WHITELISTED" })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
+      const addToBlacklist = async (deviceMac: string, interfaceId: number) => {
+        try {
+          await axios.post("http://localhost:4000/devices/blacklist/add", { deviceMac, interfaceId })
+          updateDevice(deviceMac, { trustStatus: "BLACKLISTED" })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
       return (
         <div className="flex items-center justify-center gap-2 min-w-0">
-          <Button
+          {/* <Button
             size="sm"
             onClick={handleScanPorts}
             className="w-28 bg-primary hidden lg:flex"
@@ -163,7 +226,51 @@ export function DevicesTable({
             ) : (
               "Scan Ports"
             )}
-          </Button>
+          </Button> */}
+          {device.trustStatus === "WHITELISTED" && (
+            <Button
+              size="sm"
+              variant="success"
+              onClick={() => removeFromWhitelist(device.deviceMac, device.interfaceId)}
+              className="w-24"
+            >
+              Remove White
+            </Button>
+          )}
+
+          {device.trustStatus === "BLACKLISTED" && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => removeFromBlacklist(device.deviceMac, device.interfaceId)}
+              className="w-24"
+            >
+              Remove Black
+            </Button>
+          )}
+
+          {device.trustStatus === "NEUTRAL" && (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => addToBlacklist(device.deviceMac, device.interfaceId)}
+                className="w-12"
+              >
+                <Ban />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="success"
+                onClick={() => addToWhitelist(device.deviceMac, device.interfaceId)}
+                className="w-12"
+              >
+                <Check />
+              </Button>
+            </div>
+          )}
+
 
           {/* Port Scan Result Dialog */}
           <Dialog open={openScanDialog} onOpenChange={setOpenScanDialog}>

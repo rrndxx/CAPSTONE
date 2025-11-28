@@ -61,9 +61,10 @@ await networkScanner.scanDevicesNow()
 
 networkScanner.continuousNetworkInterfaceScan()
 networkScanner.continuousDeviceScan()
+networkScanner.continuousPortScan()
 
-startLiveTrafficPoller();
-startDbAggregationPoller();
+// startLiveTrafficPoller();
+// startDbAggregationPoller();
 
 // await notificationService.notify({
 //     type: "CONNECTED_DEVICES_RELATED",

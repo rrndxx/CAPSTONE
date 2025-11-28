@@ -6,9 +6,10 @@ import { useDevices } from "@/hooks/useDevices"
 const WhitelistBlacklistPage = () => {
     const { data: devices = [], isLoading } = useDevices(2)
 
-
-    const whitelistedDevices = devices.filter((d: { authorized: any }) => d.authorized)
-    const blacklistedDevices = devices.filter((d: { authorized: any }) => !d.authorized)
+    // Trust Status will come from backend: "WHITELISTED" | "BLACKLISTED" | "NEUTRAL"
+    const whitelistedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "WHITELISTED")
+    const blacklistedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "BLACKLISTED")
+    const neutralDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "NEUTRAL")
 
     return (
         <SidebarInset>
@@ -17,29 +18,43 @@ const WhitelistBlacklistPage = () => {
                     <TabsList className="mb-4">
                         <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
                         <TabsTrigger value="blacklist">Blacklist</TabsTrigger>
+                        <TabsTrigger value="neutral">Neutral</TabsTrigger>
                     </TabsList>
 
-                    {/* Whitelist Tab */}
+                    {/* WHITELIST TAB */}
                     <TabsContent value="whitelist">
-                        {/* <div className="flex justify-end my-4">
-                            <Button className="bg-chart-3">Add to Whitelist</Button>
-                        </div> */}
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
-                            <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
+                            {whitelistedDevices.length > 0 ? (
+                                <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
+                            ) : (
+                                <div className="text-sm text-muted-foreground text-center py-12">
+                                    No whitelisted devices found.
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
 
-                    {/* Blacklist Tab */}
+                    {/* BLACKLIST TAB */}
                     <TabsContent value="blacklist">
-                        {/* <div className="flex justify-end my-4">
-                            <Button className="bg-chart-3">Add to Blacklist</Button>
-                        </div> */}
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {blacklistedDevices.length > 0 ? (
                                 <DevicesTable devices={blacklistedDevices} viewType="blacklist" />
                             ) : (
                                 <div className="text-sm text-muted-foreground text-center py-12">
                                     No blacklisted devices found.
+                                </div>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    {/* NEUTRAL DEVICES TAB */}
+                    <TabsContent value="neutral">
+                        <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
+                            {neutralDevices.length > 0 ? (
+                                <DevicesTable devices={neutralDevices} viewType="neutral" />
+                            ) : (
+                                <div className="text-sm text-muted-foreground text-center py-12">
+                                    No neutral devices found.
                                 </div>
                             )}
                         </div>

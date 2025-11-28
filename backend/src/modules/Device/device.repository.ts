@@ -14,6 +14,7 @@ export interface IDeviceRepository {
     addDeviceToWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device['interfaceId']): Promise<any>
     removeDeviceFromBlacklist(deviceMac: string, interfaceId: number): unknown;
     addDeviceToBlacklist(deviceMac: string, interfaceId: number): unknown;
+    removeDeviceFromWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]): unknown
 }
 
 export class DeviceRepository implements IDeviceRepository {
@@ -41,6 +42,24 @@ export class DeviceRepository implements IDeviceRepository {
     async addDeviceToBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
         return this.db.blacklistedDevice.create({
             data: {
+                blacklistedDeviceMac: deviceMac,
+                interfaceId
+            }
+        })
+    }
+
+    async isDeviceWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.whitelistedDevice.findFirst({
+            where: {
+                whitelistedDeviceMac: deviceMac,
+                interfaceId
+            }
+        })
+    }
+
+    async isDeviceBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.blacklistedDevice.findFirst({
+            where: {
                 blacklistedDeviceMac: deviceMac,
                 interfaceId
             }
@@ -146,8 +165,6 @@ export class DeviceRepository implements IDeviceRepository {
         });
     }
 
-
-
     async removeDeviceFromBlacklist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
         return this.db.blacklistedDevice.deleteMany({
             where: {
@@ -165,5 +182,16 @@ export class DeviceRepository implements IDeviceRepository {
             }
         })
     }
+
+
+    async removeDeviceFromWhitelist(deviceMac: Device['deviceMac'], interfaceId: Device["interfaceId"]) {
+        return this.db.whitelistedDevice.deleteMany({
+            where: {
+                whitelistedDeviceMac: deviceMac,
+                interfaceId,
+            },
+        })
+    }
+
 
 }
