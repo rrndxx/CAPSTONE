@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -85,10 +85,14 @@ export function DevicesTable({
   viewType = "all",
 }: {
   devices: Device[]
-  viewType?: "whitelist" | "blacklist" | "bandwidth" | "all" | "neutral"
+  viewType?: "whitelist" | "blacklist" | "bandwidth" | "all" | "neutral" | unknown
 }) {
   const [devices, setDevices] = useState(initialDevices)
   const [globalFilter, setGlobalFilter] = useState("")
+
+  useEffect(() => {
+    setDevices(initialDevices)
+  }, [initialDevices])
 
   const updateDevice = (deviceMac: string, newProps: Partial<Device>) => {
     setDevices((prev) =>

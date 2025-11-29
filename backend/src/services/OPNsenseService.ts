@@ -72,7 +72,7 @@ export class OPNsenseService {
         return this._request("post", "/api/dnsmasq/service/reconfigure", {});
     }
 
-    async unblockDevice(device: Device): Promise<any> {
+    async unblockDevice(device: any): Promise<any> {
         // 1. Get all host overrides
         const hosts = await this._request("post", "/api/dnsmasq/settings/search_host/");
         const row = hosts.rows.find((h: any) => h.hwaddr === device.deviceMac);

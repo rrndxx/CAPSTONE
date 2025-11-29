@@ -10,8 +10,8 @@ import { type Device } from "@/components/devicestable"
 export function DevicesStatsSummary({ devices }: { devices: Device[] }) {
   const all = devices.length
   const online = devices.filter(d => d.status === "UP").length
-  const blocked = devices.filter(d => !d.authorized).length
-  const authorized = devices.filter(d => d.authorized).length
+  const blocked = devices.filter(d => d.trustStatus === "BLACKLISTED").length
+  const authorized = devices.filter(d => d.trustStatus === "WHITELISTED").length
 
   const stats = [
     {
@@ -26,12 +26,12 @@ export function DevicesStatsSummary({ devices }: { devices: Device[] }) {
     },
     {
       icon: <Ban className="w-8 h-8 text-chart-1" />,
-      label: "Blocked",
+      label: "Blacklist",
       value: blocked,
     },
     {
       icon: <ShieldCheck className="w-8 h-8 text-chart-1" />,
-      label: "Authorized",
+      label: "Whitelist",
       value: authorized,
     },
   ]

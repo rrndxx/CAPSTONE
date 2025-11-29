@@ -26,13 +26,13 @@ const DevicesPage = () => {
   const filteredDevices = devices.filter((d: any) => {
     if (filter === "online") return d.status === "UP"
     if (filter === "offline") return d.status === "DOWN"
-    if (filter === "blocked") return !d.authorized
+    if (filter === "blocked") return d.trustStatus === "BLACKLISTED"
     return true
   })
 
   const totalDevices = devices.length
   const onlineDevices = devices.filter((d: any) => d.status === "UP").length
-  const blockedDevices = devices.filter((d: any) => !d.authorized).length
+  const blockedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "BLACKLISTED").length
 
   return (
     <SidebarInset>
@@ -117,10 +117,14 @@ const DevicesPage = () => {
         {/* Device list */}
         <section className="mt-2">
           {view === "table" ? (
-            <div className="overflow-x-auto bg-background rounded-xl shadow">
-              <DevicesTable devices={filteredDevices} viewType="all" />
-            </div>
-          ) : (
+            filteredDevices.length > 0 ? (
+              <div className="overflow-x-auto bg-background rounded-xl shadow">
+                <DevicesTable devices={filteredDevices} viewType={filter} />
+              </div>) : (
+              <div className="text-sm text-muted-foreground text-center py-12">
+                No devices found.
+              </div>
+            )) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredDevices.length > 0 ? (
                 filteredDevices.map((d: any) => <DeviceCard key={d.uid} {...d} />)

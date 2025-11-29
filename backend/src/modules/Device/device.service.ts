@@ -224,6 +224,10 @@ export class DeviceService implements IDeviceService {
             throw new Error("deviceMac and interfaceId are required");
         }
 
+        const device = await this.deviceRepo.getDeviceByMAC(deviceMac, interfaceId)
+
+        await this.opnSenseService.unblockDevice(device)
+
         return this.deviceRepo.removeDeviceFromBlacklist(deviceMac, interfaceId);
     }
 

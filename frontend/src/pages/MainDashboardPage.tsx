@@ -32,16 +32,16 @@ export default function MainDashboardPage() {
 
     const [filter, setFilter] = useState<"all" | "online" | "offline" | "blocked">("all")
 
-    const filteredDevices = devices.filter((d: { status: string; authorized: any }) => {
+    const filteredDevices = devices.filter((d: { status: string; trustStatus: string }) => {
         if (filter === "online") return d.status === "UP"
         if (filter === "offline") return d.status === "DOWN"
-        if (filter === "blocked") return !d.authorized
+        if (filter === "blocked") return d.trustStatus === "BLACKLISTED"
         return true
     })
 
     const totalDevices = devices.length
     const onlineDevices = devices.filter((d: { status: string }) => d.status === "UP").length
-    const blockedDevices = devices.filter((d: { authorized: any }) => !d.authorized).length
+    const blockedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "BLACKLISTED").length
 
     if (isLoading) {
         return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING SYSTEM</p></div>
@@ -118,7 +118,14 @@ export default function MainDashboardPage() {
                 </div>
 
                 <div className="overflow-x-auto bg-background rounded-xl shadow">
-                    <DevicesTable devices={filteredDevices} viewType="all" />
+                    {filteredDevices.length > 0 ? (
+                        <DevicesTable devices={filteredDevices} viewType={filter} />
+                    ) : (
+                        <div className="text-sm text-primary text-center py-12">
+                            No devices found.
+                        </div>
+                    )}
+
                 </div>
             </div>
         </SidebarInset>
