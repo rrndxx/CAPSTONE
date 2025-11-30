@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,10 +23,10 @@ export const PerDeviceTrafficChart = () => {
     const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
     const latestSample = usePerDeviceTraffic();
 
-    // Append latest sample to history, keep last 60 seconds
+    // Always update history when latest sample changes
     useEffect(() => {
         if (latestSample) {
-            setTrafficHistory(prev => [...prev.slice(-59), latestSample]);
+            setTrafficHistory((prev) => [...prev.slice(-59), latestSample]); // keep last 60
         }
     }, [latestSample]);
 
@@ -36,9 +34,9 @@ export const PerDeviceTrafficChart = () => {
     const deviceKeys = useMemo(() => {
         const lastSample = trafficHistory[trafficHistory.length - 1] || {};
         return Object.keys(lastSample)
-            .filter(key => key !== "date")
-            .map(k => k.replace(/-IN|-OUT/, ""))
-            .filter((v, i, a) => a.indexOf(v) === i);
+            .filter((k) => k !== "date")
+            .map((k) => k.replace(/-IN|-OUT/, ""))
+            .filter((v, i, a) => a.indexOf(v) === i); // unique devices
     }, [trafficHistory]);
 
     // Chart configs
@@ -56,7 +54,10 @@ export const PerDeviceTrafficChart = () => {
         }, {} as ChartConfig);
     }, [deviceKeys]);
 
-    // Function to render chart
+    // Early return for empty data
+    // if (!trafficHistory.length) return <div>Loading...</div>;
+
+    // Function to render a chart
     const renderChart = (data: DeviceTrafficSample[], config: ChartConfig, title: string, description: string) => (
         <Card className="pt-4 flex-1">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2 border-b py-4 px-4 sm:px-6 bg-primary">
@@ -96,7 +97,7 @@ export const PerDeviceTrafficChart = () => {
                                 cursor={false}
                                 content={<ChartTooltipContent formatter={(val) => formatBytes(Number(val))} indicator="dot" />}
                             />
-                            {Object.keys(config).map(key => (
+                            {Object.keys(config).map((key) => (
                                 <Line
                                     key={key}
                                     type="monotone"
