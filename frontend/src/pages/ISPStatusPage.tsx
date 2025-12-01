@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { Wifi, CheckCircle2, XCircle, Globe, AlertTriangle, Upload, Download, Cpu, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 type StatusType = "online" | "degraded" | "offline"
 
@@ -38,28 +37,19 @@ const ISPStatusPage = () => {
             try {
                 const parsed: SpeedInfo = JSON.parse(saved)
                 setSpeedData(parsed)
-                const download = Number(parsed.download)
-                if (download >= 50) setStatus("online")
-                else if (download >= 10) setStatus("degraded")
-                else setStatus("offline")
+                updateStatus(parsed.download)
                 setHistory([{ timestamp: parsed.timestamp, upload: Number(parsed.upload), download: Number(parsed.download) }])
             } catch {
                 console.error("Failed to parse lastSpeedTest")
             }
         }
 
-        // Listen for localStorage changes (from speed test dialog)
         const onStorage = (e: StorageEvent) => {
             if (e.key === "lastSpeedTest" && e.newValue) {
                 try {
                     const parsed: SpeedInfo = JSON.parse(e.newValue)
                     setSpeedData(parsed)
-                    const download = Number(parsed.download)
-                    if (download >= 50) setStatus("online")
-                    else if (download >= 10) setStatus("degraded")
-                    else setStatus("offline")
-
-                    // Append to history, keep last 10
+                    updateStatus(parsed.download)
                     setHistory(prev => {
                         const newHist = [...prev, { timestamp: parsed.timestamp, upload: Number(parsed.upload), download: Number(parsed.download) }]
                         return newHist.slice(-10)
@@ -71,9 +61,13 @@ const ISPStatusPage = () => {
         return () => window.removeEventListener("storage", onStorage)
     }, [])
 
-    /* ------------------------------------------ */
-    /* POPULAR OUTAGES */
-    /* ------------------------------------------ */
+    const updateStatus = (download: string) => {
+        const d = Number(download)
+        if (d >= 50) setStatus("online")
+        else if (d >= 10) setStatus("degraded")
+        else setStatus("offline")
+    }
+
     useEffect(() => {
         setOutages([
             { name: "PLDT", category: "ISP", url: "https://downdetector.ph/status/pldt/", colorClass: "bg-white text-[#ED1C24]" },
@@ -103,31 +97,38 @@ const ISPStatusPage = () => {
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center flex-wrap">
+                <CardContent className="flex flex-col gap-6">
+                    {/* Top Row: Provider + Status */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                         <div>
-                            <p className="text-xs text-gray-400">Provider</p>
-                            <p className="text-lg font-semibold">{speedData?.isp ?? "Unknown"}</p>
+                            <p className="text-xs text-gray-400 uppercase">Provider</p>
+                            <p className="text-2xl font-bold text-foreground">{speedData?.isp ?? "Unknown"}</p>
                         </div>
-                        <div className={`flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badge.color} shadow-sm`}>
+
+                        <div className={`flex items-center px-4 py-2 rounded-full text-sm font-semibold ${badge.color} shadow`}>
                             {badge.icon}
-                            {badge.label}
+                            <span>{badge.label}</span>
                         </div>
                     </div>
 
-                    {/* Metrics with icons */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-                        <Metric icon={<Globe className="w-4 h-4 text-gray-500" />} label="Client IP" value={speedData?.client_ip ?? "--"} />
-                        <Metric icon={<Globe className="w-4 h-4 text-gray-500" />} label="Server" value={speedData?.server_name ?? "--"} />
-                        <Metric icon={<Cpu className="w-4 h-4 text-gray-500" />} label="Latency" value={`${speedData?.latency ?? "0"} ms`} />
-                        <Metric icon={<Upload className="w-4 h-4 text-gray-500" />} label="Upload" value={`${speedData?.upload ?? "0"} Mbps`} />
-                        <Metric icon={<Download className="w-4 h-4 text-gray-500" />} label="Download" value={`${speedData?.download ?? "0"} Mbps`} />
-                        <Metric icon={<Clock className="w-4 h-4 text-gray-500" />} label="Ping" value={`${speedData?.ping_ms ?? "0"} ms`} />
-                        <Metric icon={<Clock className="w-4 h-4 text-gray-500" />} label="Last Scan" value={speedData?.timestamp ?? "--"} className="sm:col-span-2" />
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <Metric icon={<Globe className="w-5 h-5 text-gray-500" />} label="Client IP" value={speedData?.client_ip ?? "--"} />
+                        <Metric icon={<Globe className="w-5 h-5 text-gray-500" />} label="Server" value={speedData?.server_name ?? "--"} />
+                        <Metric icon={<Cpu className="w-5 h-5 text-gray-500" />} label="Latency" value={`${speedData?.latency ?? "0"} ms`} />
+                        <Metric icon={<Upload className="w-5 h-5 text-gray-500" />} label="Upload" value={`${speedData?.upload ?? "0"} Mbps`} />
+                        <Metric icon={<Download className="w-5 h-5 text-gray-500" />} label="Download" value={`${speedData?.download ?? "0"} Mbps`} />
+                        <Metric icon={<Clock className="w-5 h-5 text-gray-500" />} label="Ping" value={`${speedData?.ping_ms ?? "0"} ms`} />
+                        {/* Highlighted Last Scan */}
+                        <Metric
+                            icon={<Clock className="w-5 h-5 text-foreground" />}
+                            label="Last Scan"
+                            value={speedData?.timestamp ?? "--"}
+                            className="text-foreground"
+                        />
                     </div>
-
-                    
                 </CardContent>
+
             </Card>
 
             {/* Outages */}
@@ -154,19 +155,46 @@ const ISPStatusPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Footer / See more section */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border border-gray-200 rounded-2xl text-center shadow-sm flex flex-col gap-4">
+                <p className="text-sm text-gray-600 font-medium">
+                    Want to see real-time outage reports and updates?
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <a
+                        href="https://downdetector.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-700 transition-all"
+                    >
+                        <Globe className="w-4 h-4" />
+                        Downdetector.com
+                    </a>
+                    <a
+                        href="https://downdetector.ph/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow hover:from-red-600 hover:to-red-700 transition-all"
+                    >
+                        <Globe className="w-4 h-4" />
+                        Downdetector.ph
+                    </a>
+                </div>
+                <p className="text-xs text-gray-400">
+                    Stay updated on your ISP and favorite services at any time.
+                </p>
+            </div>
         </div>
     )
 }
 
-/* ----------------------- */
-/* SMALL COMPONENTS BELOW */
-/* ----------------------- */
 const Metric = ({ icon, label, value, className }: { icon: any; label: string; value: string; className?: string }) => (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className={`flex items-center gap-2 ${className}`}>
         {icon}
         <div className="flex flex-col">
             <p className="text-xs text-gray-400">{label}</p>
-            <p className="text-sm font-medium text-gray-800">{value}</p>
+            <p className="text-sm font-medium text-foreground">{value}</p>
         </div>
     </div>
 )

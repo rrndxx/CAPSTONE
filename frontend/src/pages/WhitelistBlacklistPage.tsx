@@ -25,7 +25,10 @@ const WhitelistBlacklistPage = () => {
                     <TabsContent value="whitelist">
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {whitelistedDevices.length > 0 ? (
-                                <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
+                                <div className="col gap-4">
+                                    <h1 className="m-4 text-xl text-center font-normal tracking-wide">WHITELIST</h1>
+                                    <DevicesTable devices={whitelistedDevices} viewType="whitelist" />
+                                </div>
                             ) : (
                                 <div className="text-sm text-muted-foreground text-center py-12">
                                     No whitelisted devices found.
@@ -38,7 +41,10 @@ const WhitelistBlacklistPage = () => {
                     <TabsContent value="blacklist">
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {blacklistedDevices.length > 0 ? (
-                                <DevicesTable devices={blacklistedDevices} viewType="blacklist" />
+                                <div className="col gap-4">
+                                    <h1 className="m-4 text-xl text-center font-normal tracking-wide">BLACKLIST</h1>
+                                    <DevicesTable devices={blacklistedDevices} viewType="blacklist" />
+                                </div>
                             ) : (
                                 <div className="text-sm text-muted-foreground text-center py-12">
                                     No blacklisted devices found.
@@ -51,7 +57,10 @@ const WhitelistBlacklistPage = () => {
                     <TabsContent value="neutral">
                         <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4">
                             {neutralDevices.length > 0 ? (
-                                <DevicesTable devices={neutralDevices} viewType="neutral" />
+                                <div className="col gap-4">
+                                    <h1 className="m-4 text-xl text-center font-normal tracking-wide">NEUTRAL</h1>
+                                    <DevicesTable devices={neutralDevices} viewType="neutral" />
+                                </div>
                             ) : (
                                 <div className="text-sm text-muted-foreground text-center py-12">
                                     No neutral devices found.

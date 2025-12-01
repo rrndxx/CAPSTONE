@@ -32,7 +32,6 @@ const DevicesPage = () => {
 
   const totalDevices = devices.length
   const onlineDevices = devices.filter((d: any) => d.status === "UP").length
-  const blockedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "BLACKLISTED").length
 
   return (
     <SidebarInset>
@@ -66,13 +65,6 @@ const DevicesPage = () => {
               >
                 Offline ({totalDevices - onlineDevices})
               </Badge>
-              <Badge
-                className="cursor-pointer text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md"
-                variant={filter === "blocked" ? "default" : "outline"}
-                onClick={() => setFilter("blocked")}
-              >
-                Blocked ({blockedDevices})
-              </Badge>
             </div>
 
             {/* Small/medium screens: dropdown using Select component */}
@@ -88,7 +80,6 @@ const DevicesPage = () => {
                   <SelectItem value="all">All Devices ({totalDevices})</SelectItem>
                   <SelectItem value="online">Online ({onlineDevices})</SelectItem>
                   <SelectItem value="offline">Offline ({totalDevices - onlineDevices})</SelectItem>
-                  <SelectItem value="blocked">Blocked ({blockedDevices})</SelectItem>
                 </SelectContent>
               </Select>
             </div>

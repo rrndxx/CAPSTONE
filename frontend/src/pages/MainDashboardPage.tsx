@@ -2,7 +2,7 @@ import { ChartArea } from "@/components/areachart"
 import { Gauge } from "@/components/gauge"
 import { DevicesTable } from "@/components/devicestable"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { Wifi, Smartphone, AlertCircle, BrainCircuit, Loader2 } from "lucide-react"
+import { Wifi, Smartphone, BrainCircuit, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { useDevices } from "@/hooks/useDevices"
@@ -55,11 +55,10 @@ export default function MainDashboardPage() {
                 {/* Left Column */}
                 <div className="flex-1 flex flex-col gap-4">
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         {[
                             { icon: <Smartphone className="w-8 h-8 text-chart-1" />, label: "Devices", value: devices.length },
                             { icon: <Wifi className="w-8 h-8 text-chart-1" />, label: "Uptime", value: uptime },
-                            { icon: <AlertCircle className="w-8 h-8 text-chart-1" />, label: "Critical Alerts", value: "3" },
                             { icon: <BrainCircuit className="w-8 h-8 text-chart-1" />, label: "AI Insights", value: "6" },
                         ].map((card, i) => (
                             <div key={i} className="w-full bg-card rounded-2xl shadow p-6 flex items-center gap-4 min-h-[120px]">

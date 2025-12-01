@@ -156,6 +156,10 @@ export function DevicesTable({
       const [openScanDialog, setOpenScanDialog] = useState(false)
       const [isPortLoading, setIsPortLoading] = useState(false)
 
+      const applyBandwidthRules = async () => {
+        throw new Error("Unimplemented");
+      }
+
       const handleScanPorts = async () => {
         try {
           setIsPortLoading(true)
@@ -339,7 +343,7 @@ export function DevicesTable({
                     </div>
                     <div className="space-y-4 flex-1 min-w-0">
                       <InfoRow icon={<Server className="w-5 h-5" />} label="Hostname" value={device.deviceHostname ?? "—"} />
-                      <InfoRow icon={<Globe className="w-5 h-5" />} label="IPv4" value={<code>{device.deviceIp}</code>} />
+                      <InfoRow icon={<Globe className="w-5 h-5" />} label="IP" value={<code>{device.deviceIp}</code>} />
                       <InfoRow icon={<Settings className="w-5 h-5" />} label="MAC" value={<code>{device.deviceMac}</code>} />
                       <InfoRow icon={<Monitor className="w-5 h-5" />} label="OS" value={device.deviceOS ?? "Unknown"} />
                       <InfoRow icon={<ShieldCheck className="w-5 h-5" />} label="Whitelisted" value={device.authorized ? "Yes" : "No"} />
@@ -431,7 +435,7 @@ export function DevicesTable({
                         <h2 className="text-md font-medium">Bandwidth Usage</h2>
                         <Button
                           size="sm"
-                          onClick={handleScanPorts}
+                          onClick={applyBandwidthRules}
                           className="w-28 bg-primary"
                         >
                           Apply Rules
@@ -496,7 +500,7 @@ export function DevicesTable({
     if (viewType === "all") {
       fullColumns = fullColumns.map(col =>
         (col as any).accessorKey === "deviceIp"
-          ? { ...col, header: "IPv4" }
+          ? { ...col, header: "IP" }
           : col
       )
 

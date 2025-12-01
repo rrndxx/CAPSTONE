@@ -1,4 +1,4 @@
-import { BadgeCheck, ChevronsUpDown, LogOut, Sparkles, Moon, Sun } from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogOut, Sparkles, Moon, Sun, CogIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
@@ -34,11 +34,7 @@ export function NavUser({ user }: { user: navUserProps }) {
 
   const menuItems = [
     {
-      icon: <BadgeCheck className="w-4 h-4" />,
-      label: "Account",
-    },
-    {
-      icon: isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />,
+      icon: isDark ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />,
       label: `Switch to ${isDark ? "Light" : "Dark"} Mode`,
       custom: <Switch checked={isDark} onCheckedChange={toggleTheme} />,
     }
@@ -88,8 +84,8 @@ export function NavUser({ user }: { user: navUserProps }) {
 
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Sparkles className="w-4 h-4" />
-                <span className="ml-2">Upgrade to Pro</span>
+                <CogIcon className="w-4 h-4" />
+                <span className="ml-2">Settings</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
