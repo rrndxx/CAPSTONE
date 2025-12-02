@@ -8,16 +8,18 @@ import type { NetworkService } from "../modules/Network/network.service.js";
 import { mapOPNsenseInterfaces, mapOPNsenseLeasesToDevices } from "../utils/mappers.js";
 import type { SpeedTestResult } from "../interfaces.js";
 import { normalizeMAC } from "../utils/MACnormalizer.js";
-import { deviceRepo, notificationService } from "../server.js";
-import { runAIAnalysis } from "./AIService.js";
+import { notificationService } from "../server.js";
+import db from "../config/db.js";
 
 export interface INetworkScanner {
     continuousDeviceScan(): void;
     continuousNetworkInterfaceScan(): void;
+    continuousBandwidthScan(): void;
+
     scanOpenPorts(ip: string, deviceId: number): Promise<Port[]>;
     identifyDeviceOS(ip: string): Promise<string>;
-    runSpeedTest(): Promise<SpeedTestResult>
-    runISPHealth(): Promise<any>
+    runSpeedTest(): Promise<SpeedTestResult>;
+    runISPHealth(): Promise<any>;
 }
 
 export class NetworkScanner implements INetworkScanner {
@@ -29,8 +31,132 @@ export class NetworkScanner implements INetworkScanner {
         private readonly pythonScannerURL: string
     ) { }
 
+    // ---------------------------------------------------------------------
+    // 📌 CONTINUOUS BANDWIDTH SCAN  (DIRECT DATABASE — NO SERVICES)
+    // ---------------------------------------------------------------------
+    continuousBandwidthScan(): void {
+        // Every 30 seconds
+        cron.schedule("*/30 * * * * *", async () => {
+            await this.collectBandwidthSnapshots();
+        });
+    }
+
+    private async collectBandwidthSnapshots() {
+        try {
+            // FETCH DEVICE + INTERFACE SNAPSHOTS
+            const perDeviceRes = await axios.get("http://localhost:4000/network/traffic/per-device");
+            const perInterfaceRes = await axios.get("http://localhost:4000/network/traffic/interface");
+
+            const perDeviceData = perDeviceRes.data.data; // interface -> { records: [...] }
+            const perInterfaceData = perInterfaceRes.data.data.interfaces; // interface -> stats
+
+            const now = new Date();
+            const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+            const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // -----------------------------------------------------------------
+            // 📌 SAVE PER-DEVICE BANDWIDTH
+            // -----------------------------------------------------------------
+            for (const ifaceKey of Object.keys(perDeviceData)) {
+                const iface = perDeviceData[ifaceKey];
+                if (!iface.records) continue;
+
+                for (const record of iface.records) {
+                    // Find device by IP
+                    const dev = await db.device.findFirst({ where: { deviceIp: record.address } });
+                    if (!dev) continue;
+
+                    const up = BigInt(record.cumulative_bytes_out ?? 0);
+                    const down = BigInt(record.cumulative_bytes_in ?? 0);
+
+                    // RAW SNAPSHOT
+                    await db.bandwidthUsage.create({
+                        data: {
+                            deviceId: dev.deviceId,
+                            upload: up,
+                            download: down,
+                            timestamp: new Date()
+                        }
+                    });
+
+                    // HOURLY UPSERT
+                    await db.bandwidthHourly.upsert({
+                        where: { deviceId_hour: { deviceId: dev.deviceId, hour: currentHour } },
+                        update: { upload: up, download: down },
+                        create: {
+                            deviceId: dev.deviceId,
+                            interfaceId: dev.interfaceId,
+                            hour: currentHour,
+                            upload: up,
+                            download: down
+                        }
+                    });
+
+                    // DAILY UPSERT
+                    await db.bandwidthDaily.upsert({
+                        where: { deviceId_day: { deviceId: dev.deviceId, day: currentDay } },
+                        update: { upload: up, download: down },
+                        create: {
+                            deviceId: dev.deviceId,
+                            interfaceId: dev.interfaceId,
+                            day: currentDay,
+                            upload: up,
+                            download: down
+                        }
+                    });
+                }
+            }
+
+            // -----------------------------------------------------------------
+            // 📌 SAVE INTERFACE BANDWIDTH
+            // -----------------------------------------------------------------
+            for (const ifaceKey of Object.keys(perInterfaceData)) {
+                const iface = perInterfaceData[ifaceKey];
+                const dbIface = await db.networkInterface.findUnique({ where: { identifier: iface.device } });
+                if (!dbIface) continue;
+
+                const up = BigInt(iface["bytes transmitted"] ?? 0);
+                const down = BigInt(iface["bytes received"] ?? 0);
+
+                // HOURLY UPSERT (deviceId = 0)
+                await db.bandwidthHourly.upsert({
+                    where: { deviceId_hour: { deviceId: 0, hour: currentHour } },
+                    update: { upload: up, download: down, interfaceId: dbIface.interfaceId },
+                    create: {
+                        deviceId: 0,
+                        interfaceId: dbIface.interfaceId,
+                        hour: currentHour,
+                        upload: up,
+                        download: down
+                    }
+                });
+
+                // DAILY UPSERT (deviceId = 0)
+                await db.bandwidthDaily.upsert({
+                    where: { deviceId_day: { deviceId: 0, day: currentDay } },
+                    update: { upload: up, download: down, interfaceId: dbIface.interfaceId },
+                    create: {
+                        deviceId: 0,
+                        interfaceId: dbIface.interfaceId,
+                        day: currentDay,
+                        upload: up,
+                        download: down
+                    }
+                });
+            }
+
+            console.log(
+                `[Bandwidth] Updated per-device: ${Object.keys(perDeviceData).length}, per-interface: ${Object.keys(perInterfaceData).length}`
+            );
+        } catch (err) {
+            console.error("Bandwidth scan failed:", err);
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // 📌 DO NOT TOUCH — PORT SCANNER
+    // ---------------------------------------------------------------------
     continuousPortScan(): void {
-        // Runs every 5 minutes — adjust to your liking
         cron.schedule("*/5 * * * *", async () => {
             console.log("Scheduled port scanner starting...", new Date().toISOString());
             await this.scanPortsForAllDevices();
@@ -38,28 +164,11 @@ export class NetworkScanner implements INetworkScanner {
     }
 
     async scanPortsForAllDevices(): Promise<void> {
+        const MALICIOUS_PORTS = [21, 23, 135, 139, 445, 3389, 5900, 1433, 3306, 5432, 6379, 27017];
+
         try {
-            const MALICIOUS_PORTS = [
-                21,   // FTP (often abused)
-                23,   // Telnet
-                135,  // DCOM
-                139,  // NetBIOS
-                445,  // SMB
-                3389, // RDP brute force target
-                5900, // VNC
-                1433, // SQL Server
-                3306, // MySQL (if not expected)
-                5432, // PostgreSQL
-                6379, // Redis open
-                27017 // MongoDB
-            ];
-
             const devices = await this.deviceService.getAllDevicesFromDB(2);
-
-            if (!devices || devices.length === 0) {
-                console.log("No devices found for port scanning.");
-                return;
-            }
+            if (!devices || devices.length === 0) return;
 
             for (const dev of devices) {
                 if (!dev.deviceIp || dev.status !== "UP") continue;
@@ -67,48 +176,35 @@ export class NetworkScanner implements INetworkScanner {
                 try {
                     const portResults = await this.scanOpenPorts(dev.deviceIp, dev.deviceId);
 
-                    // Save each port to DB
                     for (const port of portResults) {
                         await this.deviceService.upsertDevicePort(dev.deviceId, port);
 
-                        // --- MALICIOUS PORT DETECTION ---
                         if (MALICIOUS_PORTS.includes(port.portNumber)) {
                             await notificationService.notify({
                                 type: "ACTION",
                                 severity: "CRITICAL",
                                 interfaceId: dev.interfaceId ?? 2,
-                                message: `⚠️ Malicious port detected on ${dev.deviceIp}: Port ${port.portNumber} (${port.protocol}) is OPEN`,
-                                meta: {
-                                    ip: dev.deviceIp,
-                                    hostname: dev.deviceHostname,
-                                    port: port.portNumber
-                                }
+                                message: `⚠️ Malicious port detected on ${dev.deviceIp}: Port ${port.portNumber}`,
+                                meta: { ip: dev.deviceIp, port: port.portNumber }
                             });
-
-                            console.log(
-                                `ALERT: Malicious port ${port.portNumber} OPEN on ${dev.deviceIp} — email sent`
-                            );
                         }
                     }
-
-                    console.log(`Scanned ports for device ${dev.deviceIp}`);
-                } catch (err) {
-                    console.error(`Failed scanning ports for ${dev.deviceIp}:`, err);
+                } catch (e) {
+                    console.error(`Port scan failed for ${dev.deviceIp}`, e);
                 }
             }
-
         } catch (err) {
             console.error("Port scan job failed:", err);
         }
     }
 
-
+    // ---------------------------------------------------------------------
+    // 📌 DO NOT TOUCH — DEVICE SCANNER
+    // ---------------------------------------------------------------------
     continuousDeviceScan(): void {
         cron.schedule("*/1 * * * *", async () => {
-            console.log("Scheduled device scanner starting...", new Date().toISOString());
+            console.log("Device scan starting...");
             await this.scanDevicesNow();
-            console.log("AI Analysis starting...");
-            // await runAIAnalysis();
         });
     }
 
@@ -116,83 +212,61 @@ export class NetworkScanner implements INetworkScanner {
         try {
             const interfaces = await this.networkService.getNetworkInterfaces();
             const interfaceMap: Record<string, number> = {};
-            interfaces.forEach(iface => { interfaceMap[iface.identifier] = iface.interfaceId; });
+            interfaces.forEach(i => (interfaceMap[i.identifier] = i.interfaceId));
 
-            const leaseResponse = await this.opnSenseService.getDevicesFromDHCPLease();
-            const devices = mapOPNsenseLeasesToDevices(leaseResponse, interfaceMap);
+            const leases = await this.opnSenseService.getDevicesFromDHCPLease();
+            const devices = mapOPNsenseLeasesToDevices(leases, interfaceMap);
 
-            // const whitelistedDevices = await this.deviceService.getAllWhitelistedDevices();
-            // const whitelistedMACs = new Set(whitelistedDevices.map((w: any) => w.whitelistedDeviceMac.toLowerCase()))
-            // const unknownDevices = devices.filter(d => !whitelistedMACs.has(d.deviceMac?.toLowerCase()))
+            const allDevices = await this.deviceService.getAllDevicesFromDB(2);
 
-            // if (unknownDevices.length > 0) {
-            //     unknownDevices.forEach(async (d) => {
-            //         await notificationService.notify({
-            //             type: "CONNECTED_DEVICES_RELATED",
-            //             message: `Unauthorized device detected: ${d.deviceIp}, ${d.deviceHostname}, ${d.deviceMac} at ${Date()}.`,
-            //             severity: "WARNING",
-            //             interfaceId: 2,
-            //             meta: {
-            //                 ip: d.deviceIp,
-            //                 hostname: d.deviceHostname,
-            //                 mac: d.deviceMac
-            //             },
-            //         })
-            //     })
-            // }
-
-            const allDevicesFromDB = await this.deviceService.getAllDevicesFromDB(2);
-
-            const devicesToUpsert = devices.filter(d => d.interfaceId);
-            await Promise.all(devicesToUpsert.map(d =>
-                this.deviceService.upsertDevice(d, d.interfaceId!)
-            ));
+            await Promise.all(
+                devices
+                    .filter(d => d.interfaceId)
+                    .map(d => this.deviceService.upsertDevice(d, d.interfaceId!))
+            );
 
             const activeKeys = new Set(
-                devices.map(d => `${normalizeMAC(d.deviceMac ?? '')}-${d.interfaceId}`)
+                devices.map(d => `${normalizeMAC(d.deviceMac ?? "")}-${d.interfaceId}`)
             );
 
-            const downCandidates = allDevicesFromDB?.filter(
-                dbDev => !activeKeys.has(`${(dbDev.deviceMac)}-${dbDev.interfaceId}`)
+            const down = allDevices?.filter(
+                d => !activeKeys.has(`${d.deviceMac}-${d.interfaceId}`)
             );
 
-            if (!downCandidates) throw new Error('downCandidates are undefinedf')
-
-            await Promise.all(downCandidates.map(dev =>
-                this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN")
-            ));
-
-            // await this.cacheService.set("devices", devices, 60);
-
-            console.log(
-                `Initial device scan updated ${devices.length} devices, marked ${downCandidates.length} as DOWN.`
+            await Promise.all(
+                down.map(dev => this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN"))
             );
-        } catch (err) {
-            console.error("Device scan error:", err);
+
+            console.log(`Updated ${devices.length} devices, marked ${down.length} DOWN`);
+        } catch (e) {
+            console.error("Device scan error:", e);
         }
     }
 
-    async scanInterfacesNow() {
-        try {
-            const response = await this.opnSenseService.getInterfacesInfo();
-            const interfaces = mapOPNsenseInterfaces(response.rows);
-            await this.networkService.upsertNetworkInterfaces(interfaces);
-            console.log(`Initial network scan updated ${interfaces.length} interfaces.`);
-        } catch (err) {
-            console.error("Network scan error:", err);
-        }
-    }
-
+    // ---------------------------------------------------------------------
+    // 📌 DO NOT TOUCH — INTERFACE SCANNER
+    // ---------------------------------------------------------------------
     continuousNetworkInterfaceScan(): void {
         cron.schedule("*/60 * * * *", async () => {
-            console.log("Scheduled network interface scanner starting...", new Date().toISOString());
             await this.scanInterfacesNow();
         });
     }
 
+    async scanInterfacesNow() {
+        try {
+            const res = await this.opnSenseService.getInterfacesInfo();
+            const interfaces = mapOPNsenseInterfaces(res.rows);
+            await this.networkService.upsertNetworkInterfaces(interfaces);
+        } catch (e) {
+            console.error("Interface scan error:", e);
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // 📌 DO NOT TOUCH — PYTHON CALLS
+    // ---------------------------------------------------------------------
     async scanOpenPorts(ip: string, deviceId: number): Promise<Port[]> {
         const res = await axios.get(`${this.pythonScannerURL}/scan_ports/`, { params: { ip } });
-
         return res.data.ports.map((p: any) => ({
             portNumber: p.port,
             protocol: p.name ?? "tcp",
@@ -205,23 +279,16 @@ export class NetworkScanner implements INetworkScanner {
 
     async identifyDeviceOS(ip: string): Promise<string> {
         const res = await axios.get(`${this.pythonScannerURL}/detect_os/`, { params: { ip } });
-
         return res.data.os ?? "Unknown OS";
     }
 
     async runSpeedTest(): Promise<SpeedTestResult> {
-        const response = await axios.get<SpeedTestResult>(`${this.pythonScannerURL}/speedtest/`);
-
-        return response.data;
+        const res = await axios.get(`${this.pythonScannerURL}/speedtest/`);
+        return res.data;
     }
 
     async runISPHealth(): Promise<any> {
-        const response = await axios.get(`${this.pythonScannerURL}/isp_health/`);
-        return response.data;
+        const res = await axios.get(`${this.pythonScannerURL}/isp_health/`);
+        return res.data;
     }
-
-    async portScannerFromHostMachine(): Promise<any> {
-
-    }
-
 }

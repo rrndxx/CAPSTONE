@@ -62,6 +62,7 @@ await networkScanner.scanDevicesNow()
 networkScanner.continuousNetworkInterfaceScan()
 networkScanner.continuousDeviceScan()
 networkScanner.continuousPortScan()
+networkScanner.continuousBandwidthScan()
 
 // startLiveTrafficPoller();
 // startDbAggregationPoller();

@@ -17,7 +17,7 @@ import { authMiddleware } from "./middlewares/routesProtector.js";
 import { exporter, notificationService, pushChannel } from "./server.js";
 import { getUserFromToken, login } from "./services/authservice.js";
 import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import { detectBandwidthAnomalies, runAIAnalysis } from "./services/AIService.js";
+import { computeTrafficStats, detectBandwidthAnomalies, runAIAnalysis } from "./services/AIService.js";
 
 dotenv.config();
 
@@ -149,6 +149,17 @@ app.post("/detect-anomalies", async (req, res) => {
     }
 });
 
+app.get("/traffic-stats", async (req, res) => {
+    try {
+        const stats = await computeTrafficStats();
+        // Format peakHour nicely for display
+        const peakHourStr = `${stats.peakHour.toString().padStart(2, "0")}:00`;
+        res.json({ peakHour: peakHourStr, totalBandwidth: stats.totalBandwidth });
+    } catch (err) {
+        console.error("Error in /traffic-stats:", err);
+        res.status(500).json({ error: "Failed to compute traffic stats" });
+    }
+});
 
 // app.get("/get-alerts", (req, res) => {
 //     const alerts = 
@@ -355,7 +366,7 @@ app.get("/bandwidth/live", (_req, res) => {
 
 app.get("/bandwidth/total", (_req, res) => {
     res.setHeader("Cache-Control", "no-store");
-    
+
     res.json({ success: true, devices: totalConsumption });
 });
 
