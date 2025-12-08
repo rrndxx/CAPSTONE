@@ -212,34 +212,59 @@ export class NetworkScanner implements INetworkScanner {
         try {
             const interfaces = await this.networkService.getNetworkInterfaces();
             const interfaceMap: Record<string, number> = {};
-            interfaces.forEach(i => (interfaceMap[i.identifier] = i.interfaceId));
+            interfaces.forEach(iface => { interfaceMap[iface.identifier] = iface.interfaceId; });
 
-            const leases = await this.opnSenseService.getDevicesFromDHCPLease();
-            const devices = mapOPNsenseLeasesToDevices(leases, interfaceMap);
+            const leaseResponse = await this.opnSenseService.getDevicesFromDHCPLease();
+            const devices = mapOPNsenseLeasesToDevices(leaseResponse, interfaceMap);
 
-            const allDevices = await this.deviceService.getAllDevicesFromDB(2);
+            const whitelistedDevices = await this.deviceService.getAllWhitelistedDevices();
+            const whitelistedMACs = new Set(whitelistedDevices.map((w: any) => w.whitelistedDeviceMac.toLowerCase()))
+            const unknownDevices = devices.filter(d => !whitelistedMACs.has(d.deviceMac?.toLowerCase()))
 
-            await Promise.all(
-                devices
-                    .filter(d => d.interfaceId)
-                    .map(d => this.deviceService.upsertDevice(d, d.interfaceId!))
-            );
+            if (unknownDevices.length > 0) {
+                unknownDevices.forEach(async (d) => {
+                    await notificationService.notify({
+                        type: "CONNECTED_DEVICES_RELATED",
+                        message: `Unauthorized device detected: ${d.deviceIp}, ${d.deviceHostname}, ${d.deviceMac} at ${Date()}.`,
+                        severity: "WARNING",
+                        interfaceId: 2,
+                        meta: {
+                            ip: d.deviceIp,
+                            hostname: d.deviceHostname,
+                            mac: d.deviceMac
+                        },
+                    })
+                })
+            }
+
+            const allDevicesFromDB = await this.deviceService.getAllDevicesFromDB(2);
+
+            const devicesToUpsert = devices.filter(d => d.interfaceId);
+            await Promise.all(devicesToUpsert.map(d =>
+                this.deviceService.upsertDevice(d, d.interfaceId!)
+            ));
 
             const activeKeys = new Set(
-                devices.map(d => `${normalizeMAC(d.deviceMac ?? "")}-${d.interfaceId}`)
+                devices.map(d => `${normalizeMAC(d.deviceMac ?? '')}-${d.interfaceId}`)
             );
 
-            const down = allDevices?.filter(
-                d => !activeKeys.has(`${d.deviceMac}-${d.interfaceId}`)
+            const downCandidates = allDevicesFromDB?.filter(
+                dbDev => !activeKeys.has(`${(dbDev.deviceMac)}-${dbDev.interfaceId}`)
             );
 
-            await Promise.all(
-                down.map(dev => this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN"))
-            );
+            if (!downCandidates) throw new Error('downCandidates are undefinedf')
 
-            console.log(`Updated ${devices.length} devices, marked ${down.length} DOWN`);
-        } catch (e) {
-            console.error("Device scan error:", e);
+            await Promise.all(downCandidates.map(dev =>
+                this.deviceService.updateDeviceStatus(dev.deviceId, "DOWN")
+            ));
+
+            // await this.cacheService.set("devices", devices, 60);
+
+            console.log(
+                `Initial device scan updated ${devices.length} devices, marked ${downCandidates.length} as DOWN.`
+            );
+        } catch (err) {
+            console.error("Device scan error:", err);
         }
     }
 

@@ -2,23 +2,33 @@ import type { NextFunction, Request, Response } from "express";
 import { deviceRepo, deviceService } from "../../server.js";
 import { runNmapScan } from "../../services/nmapScannerService.js";
 
+/* --------------------- BigInt Serialization Fix --------------------- */
+function sanitize(obj: any) {
+    return JSON.parse(
+        JSON.stringify(obj, (_, v) =>
+            typeof v === "bigint" ? Number(v) : v
+        )
+    );
+}
+/* -------------------------------------------------------------------- */
+
 export async function scanPorts(req: Request, res: Response) {
     const ip = req.query.ip as string | undefined;
 
-    if (typeof ip !== 'string' || ip.trim() === '') {
+    if (typeof ip !== "string" || ip.trim() === "") {
         return res.status(400).json({ error: 'Invalid or missing "ip" query parameter' });
     }
 
     try {
         const result = await runNmapScan(ip);
-        return res.json(result);
+        return res.json(sanitize(result));
     } catch (error: any) {
         return res.status(500).json({
-            error: 'Scan failed',
+            error: "Scan failed",
             message: error.message,
         });
     }
-};
+}
 
 export async function blockDevice(req: Request, res: Response, next: NextFunction) {
     try {
@@ -33,7 +43,7 @@ export async function blockDevice(req: Request, res: Response, next: NextFunctio
         res.json({
             success: true,
             message: `Device ${device.deviceMac} blocked successfully`,
-            result
+            result: sanitize(result),
         });
     } catch (err: unknown) {
         next(err);
@@ -53,7 +63,7 @@ export async function unblockDevice(req: Request, res: Response, next: NextFunct
         res.json({
             success: true,
             message: `Device ${device.deviceMac} unblocked successfully`,
-            result
+            result: sanitize(result),
         });
     } catch (err: unknown) {
         next(err);
@@ -64,12 +74,13 @@ export async function getAllDevices(req: Request, res: Response, next: NextFunct
     try {
         const { interfaceId } = req.query;
 
-        if (!interfaceId || typeof interfaceId !== "string")
+        if (!interfaceId || typeof interfaceId !== "string") {
             return res.status(400).json({ message: "interfaceId is required as query param." });
+        }
 
         const devices = await deviceService.getAllDevices(Number(interfaceId));
 
-        res.status(200).json({ success: true, data: devices });
+        res.status(200).json({ success: true, data: sanitize(devices) });
     } catch (err) {
         next(err);
     }
@@ -85,11 +96,13 @@ export async function getAllDevicesFromDB(req: Request, res: Response, next: Nex
 
         const parsedInterfaceId = Number(interfaceId);
 
-        const devices = (await deviceService.getAllDevicesFromDB(parsedInterfaceId)) ?? [];
+        const devices =
+            (await deviceService.getAllDevicesFromDB(parsedInterfaceId)) ?? [];
 
         const devicesWithTrust = await Promise.all(
-            devices.map(async dev => {
-                let trustStatus: "WHITELISTED" | "BLACKLISTED" | "NEUTRAL" = "NEUTRAL";
+            devices.map(async (dev) => {
+                let trustStatus: "WHITELISTED" | "BLACKLISTED" | "NEUTRAL" =
+                    "NEUTRAL";
 
                 const isWhitelisted = await deviceRepo.isDeviceWhitelist(
                     dev.deviceMac,
@@ -118,9 +131,8 @@ export async function getAllDevicesFromDB(req: Request, res: Response, next: Nex
 
         return res.status(200).json({
             success: true,
-            data: devicesWithTrust
+            data: sanitize(devicesWithTrust),
         });
-
     } catch (err) {
         next(err);
     }
@@ -132,11 +144,15 @@ export async function getDeviceByMAC(req: Request, res: Response, next: NextFunc
         const { interfaceId } = req.query;
 
         if (!mac) return res.status(400).json({ message: "MAC is required." });
-        if (!interfaceId || typeof interfaceId !== "string") return res.status(400).json({ message: "interfaceId is required." });
+        if (!interfaceId || typeof interfaceId !== "string")
+            return res.status(400).json({ message: "interfaceId is required." });
 
-        const device = await deviceService.getDeviceByMAC(mac, Number(interfaceId));
+        const device = await deviceService.getDeviceByMAC(
+            mac,
+            Number(interfaceId)
+        );
 
-        res.status(200).json({ success: true, data: device });
+        res.status(200).json({ success: true, data: sanitize(device) });
     } catch (err) {
         next(err);
     }
@@ -145,16 +161,27 @@ export async function getDeviceByMAC(req: Request, res: Response, next: NextFunc
 export async function scanDevicePorts(req: Request, res: Response, next: NextFunction) {
     try {
         const { deviceMac, interfaceId } = req.body;
-        if (!deviceMac || !interfaceId) return res.status(400).json({ message: "deviceMac and interfaceId are required." });
 
-        const dbDevice = await deviceService.getDeviceByMAC(deviceMac, interfaceId);
-        if (!dbDevice) return res.status(404).json({ message: "Device not found." });
+        if (!deviceMac || !interfaceId)
+            return res
+                .status(400)
+                .json({ message: "deviceMac and interfaceId are required." });
 
-        const ports = await deviceService.scanAndUpsertDeviceOpenPorts(dbDevice);
+        const dbDevice = await deviceService.getDeviceByMAC(
+            deviceMac,
+            interfaceId
+        );
+
+        if (!dbDevice)
+            return res.status(404).json({ message: "Device not found." });
+
+        const ports = await deviceService.scanAndUpsertDeviceOpenPorts(
+            dbDevice
+        );
 
         res.status(200).json({
             success: true,
-            data: { device: dbDevice, ports }
+            data: sanitize({ device: dbDevice, ports }),
         });
     } catch (err) {
         next(err);
@@ -164,8 +191,10 @@ export async function scanDevicePorts(req: Request, res: Response, next: NextFun
 export async function getDevicesFromDHCPLease(req: Request, res: Response, next: NextFunction) {
     try {
         const devices = await deviceService.getDevicesFromDHCPLease();
-        res.status(200).json({ success: true, data: devices });
-    } catch (err) { next(err); }
+        res.status(200).json({ success: true, data: sanitize(devices) });
+    } catch (err) {
+        next(err);
+    }
 }
 
 export async function whitelistDevice(req: Request, res: Response, next: NextFunction) {
@@ -173,16 +202,20 @@ export async function whitelistDevice(req: Request, res: Response, next: NextFun
         const { deviceMac, interfaceId } = req.body;
 
         if (!deviceMac || !interfaceId)
-            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+            return res
+                .status(400)
+                .json({ error: "deviceMac and interfaceId are required" });
 
-        const result = await deviceService.addDeviceToWhitelist(deviceMac, interfaceId);
+        const result = await deviceService.addDeviceToWhitelist(
+            deviceMac,
+            interfaceId
+        );
 
         return res.json({
             success: true,
             message: `Device ${deviceMac} added to whitelist.`,
-            result
+            result: sanitize(result),
         });
-
     } catch (err) {
         next(err);
     }
@@ -193,16 +226,20 @@ export async function unwhitelistDevice(req: Request, res: Response, next: NextF
         const { deviceMac, interfaceId } = req.body;
 
         if (!deviceMac || !interfaceId)
-            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+            return res
+                .status(400)
+                .json({ error: "deviceMac and interfaceId are required" });
 
-        const result = await deviceService.removeDeviceFromWhitelist(deviceMac, interfaceId);
+        const result = await deviceService.removeDeviceFromWhitelist(
+            deviceMac,
+            interfaceId
+        );
 
         return res.json({
             success: true,
             message: `Device ${deviceMac} removed from whitelist.`,
-            result
+            result: sanitize(result),
         });
-
     } catch (err) {
         next(err);
     }
@@ -213,16 +250,20 @@ export async function blacklistDevice(req: Request, res: Response, next: NextFun
         const { deviceMac, interfaceId } = req.body;
 
         if (!deviceMac || !interfaceId)
-            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+            return res
+                .status(400)
+                .json({ error: "deviceMac and interfaceId are required" });
 
-        const result = await deviceService.addDeviceToBlacklist(deviceMac, interfaceId);
+        const result = await deviceService.addDeviceToBlacklist(
+            deviceMac,
+            interfaceId
+        );
 
         return res.json({
             success: true,
             message: `Device ${deviceMac} added to blacklist.`,
-            result
+            result: sanitize(result),
         });
-
     } catch (err) {
         next(err);
     }
@@ -233,19 +274,21 @@ export async function unblacklistDevice(req: Request, res: Response, next: NextF
         const { deviceMac, interfaceId } = req.body;
 
         if (!deviceMac || !interfaceId)
-            return res.status(400).json({ error: "deviceMac and interfaceId are required" });
+            return res
+                .status(400)
+                .json({ error: "deviceMac and interfaceId are required" });
 
-        const result = await deviceService.removeDeviceFromBlacklist(deviceMac, interfaceId);
+        const result = await deviceService.removeDeviceFromBlacklist(
+            deviceMac,
+            interfaceId
+        );
 
         return res.json({
             success: true,
             message: `Device ${deviceMac} removed from blacklist.`,
-            result
+            result: sanitize(result),
         });
-
     } catch (err) {
         next(err);
     }
 }
-
-
