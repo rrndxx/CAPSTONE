@@ -111,6 +111,33 @@ export async function getDNSStats(req: Request, res: Response, next: NextFunctio
     }
 }
 
+export async function getTopClients(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await networkService.getTopClients();
+        res.status(200).json({ success: true, data: result });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+export async function getTopDomains(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await networkService.getTopDomains();
+        res.status(200).json({ success: true, data: result });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+export async function getNetworkDevices(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await networkService.getNetworkDevices();
+        res.status(200).json({ success: true, data: result });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
 export async function getDeviceQueryLogs(req: Request, res: Response, next: NextFunction) {
     try {
         const { deviceIp } = req.query

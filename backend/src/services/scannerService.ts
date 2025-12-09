@@ -221,21 +221,21 @@ export class NetworkScanner implements INetworkScanner {
             const whitelistedMACs = new Set(whitelistedDevices.map((w: any) => w.whitelistedDeviceMac.toLowerCase()))
             const unknownDevices = devices.filter(d => !whitelistedMACs.has(d.deviceMac?.toLowerCase()))
 
-            if (unknownDevices.length > 0) {
-                unknownDevices.forEach(async (d) => {
-                    await notificationService.notify({
-                        type: "CONNECTED_DEVICES_RELATED",
-                        message: `Unauthorized device detected: ${d.deviceIp}, ${d.deviceHostname}, ${d.deviceMac} at ${Date()}.`,
-                        severity: "WARNING",
-                        interfaceId: 2,
-                        meta: {
-                            ip: d.deviceIp,
-                            hostname: d.deviceHostname,
-                            mac: d.deviceMac
-                        },
-                    })
-                })
-            }
+            // if (unknownDevices.length > 0) {
+            //     unknownDevices.forEach(async (d) => {
+            //         await notificationService.notify({
+            //             type: "CONNECTED_DEVICES_RELATED",
+            //             message: `Unauthorized device detected: ${d.deviceIp}, ${d.deviceHostname}, ${d.deviceMac} at ${Date()}.`,
+            //             severity: "WARNING",
+            //             interfaceId: 2,
+            //             meta: {
+            //                 ip: d.deviceIp,
+            //                 hostname: d.deviceHostname,
+            //                 mac: d.deviceMac
+            //             },
+            //         })
+            //     })
+            // }
 
             const allDevicesFromDB = await this.deviceService.getAllDevicesFromDB(2);
 

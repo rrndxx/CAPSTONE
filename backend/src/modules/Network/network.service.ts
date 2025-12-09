@@ -3,7 +3,7 @@ import type { ICacheService } from "../../services/cacheService.js";
 import type { OPNsenseService } from "../../services/OPNsenseService.js";
 import type { INetworkRepository } from "./network.repository.js";
 import type { SpeedTestResult } from "../../interfaces.js";
-import { adGuardService, networkScanner } from "../../server.js";
+import { adGuardService, networkScanner, piholeService } from "../../server.js";
 
 export class NetworkService {
     constructor(
@@ -60,8 +60,6 @@ export class NetworkService {
         await this.cacheService.set(`networkInterfaces`, interfaces, 60 * 60);
     }
 
-
-
     async upsertNetworkInterfaces(interfaces: Partial<NetworkInterface>[]): Promise<NetworkInterface[]> {
         const networkInterfaces = await this.networkRepository.upsertNetworkInterfaces(interfaces);
         await this.setNetworkInterfacesToCache(networkInterfaces);
@@ -77,7 +75,19 @@ export class NetworkService {
     }
 
     async getDNSStats(): Promise<any> {
-        return adGuardService.getAllStats()
+        return piholeService.getSummary()
+    }
+
+    async getTopClients(): Promise<any> {
+        return piholeService.getTopClients()
+    }
+    
+    async getTopDomains(): Promise<any> {
+        return piholeService.getTopDomains()
+    }
+
+    async getNetworkDevices(): Promise<any> {
+        return piholeService.getNetworkDevices()
     }
 
     async getNetworkInterfaceNames(): Promise<any> {

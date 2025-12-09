@@ -12,6 +12,8 @@ const envSchema = z.object({
     OPNSENSE_SECRET: z.string(),
     PYTHON_SCANNER_URL: z.string(),
     ADGUARD_URL: z.string(),
+    PIHOLE_URL: z.string(),
+    PIHOLE_TOKEN: z.string(),
     ADGUARD_USERNAME: z.string(),
     ADGUARD_PASSWORD: z.string(),
     VAPID_PUBLIC_KEY: z.string(),

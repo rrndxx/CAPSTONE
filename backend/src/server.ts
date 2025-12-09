@@ -13,6 +13,7 @@ import { OPNsenseService } from "./services/OPNsenseService.js";
 import { AdGuardService } from "./services/AdGuardService.js";
 import { AlertRepository, EmailChannel, NotificationService, PushChannel } from "./services/NotificationService.js";
 import { ReportsExport } from "./services/exportService.js";
+import { PiHoleService } from "./services/PiholeService.js";
 
 const PORT = config.PORT;
 const OPNSENSE_URL = config.OPNSENSE_URL
@@ -20,6 +21,8 @@ const OPNSENSE_KEY = config.OPNSENSE_KEY
 const OPNSENSE_SECRET = config.OPNSENSE_SECRET
 const PYTHON_SCANNER_URL = config.PYTHON_SCANNER_URL
 const ADGUARD_URL = config.ADGUARD_URL
+const PIHOLE_URL = config.PIHOLE_URL
+const PIHOLE_TOKEN = config.PIHOLE_TOKEN
 const ADGUARD_USERNAME = config.ADGUARD_USERNAME
 const ADGUARD_PASSWORD = config.ADGUARD_PASSWORD
 const USER = config.EMAIL_USER
@@ -43,6 +46,7 @@ export const bandwidthService = new BandwidthService(bandwidthRepo, opnSenseServ
 export const networkService = new NetworkService(networkRepo, cache, opnSenseService)
 export const networkScanner = new NetworkScanner(deviceService, networkService, cache, opnSenseService, PYTHON_SCANNER_URL)
 export const adGuardService = new AdGuardService(ADGUARD_URL, ADGUARD_USERNAME, ADGUARD_PASSWORD)
+export const piholeService = new PiHoleService(PIHOLE_URL, "IO4wjH2N")
 export const notificationService = new NotificationService([pushChannel, emailChannel], alertsRepo)
 export const exporter = new ReportsExport(db)
 
@@ -63,45 +67,3 @@ networkScanner.continuousNetworkInterfaceScan()
 networkScanner.continuousDeviceScan()
 networkScanner.continuousPortScan()
 networkScanner.continuousBandwidthScan()
-
-// startLiveTrafficPoller();
-// startDbAggregationPoller();
-
-// await notificationService.notify({
-//     type: "CONNECTED_DEVICES_RELATED",
-//     message: "Unauthorized device detected: MAC 00:11:22:33:44:55",
-//     severity: "CRITICAL",
-//     interfaceId: 2,
-//     meta: { deviceMac: "00:11:22:33:44:55", ip: "192.168.1.105" },
-// });
-
-
-// async function checkForUnapprovedDevices(
-//   db: PrismaClient,
-//   scannedDevices: { deviceMac: string; deviceIp: string }[], // shape of your scan results
-// ) {
-//   const deviceRepo = new DeviceRepository(db);
-
-//   // 1. Get all whitelisted devices
-//   const whitelisted = await deviceRepo.getAllWhitelistedDevices();
-
-//   // 2. Normalize MACs for easy comparison
-//   const whitelistedMacs = new Set(
-//     whitelisted.map(w => w.whitelistedDeviceMac.toLowerCase())
-//   );
-
-//   // 3. Find scanned devices that are not in the whitelist
-//   const unknownDevices = scannedDevices.filter(
-//     d => !whitelistedMacs.has(d.deviceMac.toLowerCase())
-//   );
-
-//   // 4. Trigger notification logic if needed
-//   if (unknownDevices.length > 0) {
-//     // Replace with your actual notification system
-//     console.log("⚠️ Unknown devices detected:", unknownDevices);
-//     // notifyAdmin(unknownDevices);
-//   } else {
-//     console.log("✅ All scanned devices are whitelisted");
-//   }
-// }
-
