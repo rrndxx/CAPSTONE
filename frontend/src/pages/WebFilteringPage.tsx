@@ -196,7 +196,7 @@ const WebFilteringPage: React.FC = () => {
                     <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 overflow-x-auto">
                         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Server /> Top Clients</h2>
                         <Table className="w-full">
-                            <TableHeader>
+                            <TableHeader className="bg-primary">
                                 {clientTable.getHeaderGroups().map(headerGroup => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map(header => <TableHead key={header.id} className="text-center">{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>)}
@@ -220,7 +220,7 @@ const WebFilteringPage: React.FC = () => {
                             <Button size="sm" variant="destructive" className="rounded-none" onClick={() => setBlockDomainModalOpen(true)}>Add</Button>
                         </div>
                         <Table className="w-full">
-                            <TableHeader>
+                            <TableHeader className="bg-primary">
                                 <TableRow>
                                     <TableHead className="text-center">Domain</TableHead>
                                     <TableHead className="text-center">Date Added</TableHead>
@@ -271,7 +271,7 @@ const WebFilteringPage: React.FC = () => {
                     <div className="bg-white dark:bg-muted/50 rounded-xl shadow-sm p-4 overflow-x-auto">
                         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Globe /> Top Domains</h2>
                         <Table className="w-full">
-                            <TableHeader>
+                            <TableHeader className="bg-primary">
                                 {domainTable.getHeaderGroups().map(headerGroup => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map(header => <TableHead key={header.id} className="text-center">{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>)}
@@ -294,15 +294,13 @@ const WebFilteringPage: React.FC = () => {
                     <Dialog open={true} onOpenChange={() => setSelectedClient(null)}>
                         <DialogContent className="min-w-4xl">
                             <DialogTitle>Device Details</DialogTitle>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2 text-sm">
+                            <div className="grid grid-cols-1 gap-4 my-2 text-md text-primary">
                                 <InfoRow icon={<Server />} label="Hostname" value={selectedClient.hostname} />
                                 <InfoRow icon={<Globe />} label="IP" value={selectedClient.ip} />
-                                <InfoRow icon={<Settings />} label="MAC" value={selectedClient.mac} />
-                                <InfoRow icon={<Monitor />} label="OS" value={selectedClient.os} />
                             </div>
-                            <div className="w-full h-96 overflow-auto border border-gray-200 rounded-lg mt-4">
+                            <div className="w-full h-96 overflow-auto border border-gray-200 rounded-lg">
                                 <Table className="w-full">
-                                    <TableHeader>
+                                    <TableHeader className="bg-primary">
                                         <TableRow className="text-center">
                                             <TableHead>Time</TableHead>
                                             <TableHead>Domain</TableHead>

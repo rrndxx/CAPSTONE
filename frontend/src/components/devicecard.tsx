@@ -48,9 +48,9 @@ export function DeviceCard(device: Device) {
 
       <div className="mt-auto flex flex-col gap-2">
         <Dialog>
-          <DialogTrigger asChild>
+          {/* <DialogTrigger asChild>
             <Button size="sm" variant="outline" className="w-full">View Details</Button>
-          </DialogTrigger>
+          </DialogTrigger> */}
 
           <DialogContent className="min-w-[85vw] max-w-6xl h-[95vh] sm:h-[90vh] flex flex-col overflow-hidden">
             {/* Use exact same detailed layout from DevicesTable */}

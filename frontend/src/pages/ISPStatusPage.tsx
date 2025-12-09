@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Wifi, CheckCircle2, XCircle, Globe, AlertTriangle, Upload, Download, Cpu, Clock } from "lucide-react"
+import { Wifi, CheckCircle2, XCircle, Globe, AlertTriangle, Upload, Download, Cpu, Clock, Dot } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 type StatusType = "online" | "degraded" | "offline"
@@ -105,9 +105,9 @@ const ISPStatusPage = () => {
                             <p className="text-2xl font-bold text-foreground">{speedData?.isp ?? "Unknown"}</p>
                         </div>
 
-                        <div className={`flex items-center px-4 py-2 rounded-full text-sm font-semibold ${badge.color} shadow`}>
-                            {badge.icon}
-                            <span>{badge.label}</span>
+                        <div className={`flex items-center justify-between gap-2 px-4 py-2 rounded-full text-sm font-semibold text-green-600 shadow`}>
+                            <span className="text-4xl">•</span>
+                            <span>Online</span>
                         </div>
                     </div>
 

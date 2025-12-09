@@ -2,7 +2,7 @@ import { ChartArea } from "@/components/areachart"
 import { Gauge } from "@/components/gauge"
 import { DevicesTable } from "@/components/devicestable"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { Wifi, Smartphone, BrainCircuit, Loader2 } from "lucide-react"
+import { Wifi, Smartphone, Loader2, BarChart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { useDevices } from "@/hooks/useDevices"
@@ -25,10 +25,25 @@ export default function MainDashboardPage() {
     const { data: devices = [] } = useDevices(2)
     const { data: systemTime, isLoading } = useSystemTime()
     const [uptime, setUptime] = useState("")
+    const [totalDnsQueries, setTotalDnsQueries] = useState<number | null>(null)
 
     useEffect(() => {
         setUptime(formatUptime(systemTime?.uptime))
     }, [systemTime])
+
+    // Fetch total DNS queries
+    useEffect(() => {
+        const fetchDnsStats = async () => {
+            try {
+                const res = await fetch("http://localhost:4000/network/dns/all-stats")
+                const data = await res.json()
+                if (data.success) setTotalDnsQueries(data.data.queries.total || 0)
+            } catch (err) {
+                console.error("Failed to fetch DNS stats", err)
+            }
+        }
+        fetchDnsStats()
+    }, [])
 
     const [filter, setFilter] = useState<"all" | "online" | "offline" | "blocked">("all")
 
@@ -44,7 +59,10 @@ export default function MainDashboardPage() {
     const blockedDevices = devices.filter((d: { trustStatus: string }) => d.trustStatus === "BLACKLISTED").length
 
     if (isLoading) {
-        return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING SYSTEM</p></div>
+        return <div className="h-full w-full flex flex-col justify-center items-center gap-4">
+            <Loader2 className="h-16 w-16 animate-spin" />
+            <p className="text-lg">LOADING SYSTEM</p>
+        </div>
     }
 
     if (!systemTime) return <p className="p-4">No data available</p>
@@ -55,10 +73,11 @@ export default function MainDashboardPage() {
                 {/* Left Column */}
                 <div className="flex-6 flex flex-col gap-4">
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         {[
                             { icon: <Smartphone className="w-8 h-8 text-chart-1" />, label: "Devices", value: devices.length },
                             { icon: <Wifi className="w-8 h-8 text-chart-1" />, label: "Uptime", value: uptime },
+                            { icon: <BarChart className="w-8 h-8 text-chart-1" />, label: "Total DNS Queries", value: totalDnsQueries ?? "—" }
                         ].map((card, i) => (
                             <div key={i} className="w-full bg-card rounded-2xl shadow p-6 flex items-center gap-4 min-h-[120px]">
                                 <div className="flex-shrink-0">{card.icon}</div>
@@ -123,7 +142,6 @@ export default function MainDashboardPage() {
                             No devices found.
                         </div>
                     )}
-
                 </div>
             </div>
         </SidebarInset>

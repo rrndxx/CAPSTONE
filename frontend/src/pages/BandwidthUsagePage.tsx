@@ -4,6 +4,7 @@ import { PerInterfaceTrafficTable } from "@/components/perinterfacetraffictable"
 import { SidebarInset } from "@/components/ui/sidebar";
 import { useInterfaceTraffic, type DeltaTraffic } from "@/hooks/useInterfaceTraffic.ts";
 import { Loader2 } from "lucide-react";
+import { ChartArea } from "@/components/areachart";
 
 const BandwidthUsagePage = () => {
     const { data: newSample } = useInterfaceTraffic();
@@ -22,7 +23,8 @@ const BandwidthUsagePage = () => {
             <div className="flex flex-col gap-6 p-4 pt-0">
                 <section className="space-y-6">
                     <div className="bg-background min-h-[300px]">
-                        <InterfaceTrafficChart data={trafficHistory} />
+                        <ChartArea/>
+                        {/* <InterfaceTrafficChart data={trafficHistory} /> */}
                     </div>
                 </section>
                 <section className="space-y-6">

@@ -68,7 +68,7 @@ async function runSpeedTest(): Promise<SpeedInfo> {
   const uploadMbps = data.upload_bps / 1_000_000
   const downloadMbps = data.download_bps / 1_000_000
 
-  return {
+  const scanResult: SpeedInfo = {
     isp: data.isp,
     client_ip: data.client_ip,
     server_name: data.server.name,
@@ -78,29 +78,47 @@ async function runSpeedTest(): Promise<SpeedInfo> {
     download: downloadMbps.toFixed(2),
     timestamp: new Date(data.timestamp).toLocaleTimeString(),
   }
+
+  // Save latest scan
+  localStorage.setItem("lastSpeedTest", JSON.stringify(scanResult))
+
+  // Save history
+  const historyKey = "speedTestHistory"
+  const savedHistory = localStorage.getItem(historyKey)
+  let history: SpeedInfo[] = savedHistory ? JSON.parse(savedHistory) : []
+  history.unshift(scanResult)
+  if (history.length > 10) history = history.slice(0, 10)
+  localStorage.setItem(historyKey, JSON.stringify(history))
+
+  return scanResult
 }
 
 export function Gauge({ className }: GaugeProps) {
   const queryClient = useQueryClient()
   const [openDialog, setOpenDialog] = React.useState(false)
+  const [storedSpeed, setStoredSpeed] = React.useState<SpeedInfo | null>(null)
 
-  // Cached speed result
-  const speedInfo = queryClient.getQueryData<SpeedInfo>(["speedtest"])
+  // Load stored last scan from localStorage
+  React.useEffect(() => {
+    const saved = localStorage.getItem("lastSpeedTest")
+    if (saved) {
+      try {
+        const parsed: SpeedInfo = JSON.parse(saved)
+        setStoredSpeed(parsed)
+        queryClient.setQueryData(["speedtest"], parsed)
+      } catch {
+        setStoredSpeed(null)
+      }
+    }
+  }, [queryClient])
+
+  const speedInfo = queryClient.getQueryData<SpeedInfo>(["speedtest"]) ?? storedSpeed
 
   const { mutate, isPending, isError } = useMutation({
     mutationFn: runSpeedTest,
     onSuccess: (data) => {
       queryClient.setQueryData(["speedtest"], data)
-
-      // --- Handle history (up to 10 entries) ---
-      const historyKey = "speedTestHistory"
-      const savedHistory = localStorage.getItem(historyKey)
-      let history: SpeedInfo[] = savedHistory ? JSON.parse(savedHistory) : []
-
-      history.unshift(data) // add newest at start
-      if (history.length > 10) history = history.slice(0, 10)
-
-      localStorage.setItem(historyKey, JSON.stringify(history))
+      setStoredSpeed(data)
       setOpenDialog(true)
     },
     onError: () => {
@@ -125,21 +143,25 @@ export function Gauge({ className }: GaugeProps) {
       { icon: <Clock className="h-4 w-4" />, label: "Ping", value: `${speedInfo.ping_ms} ms` },
       { icon: <Clock className="h-4 w-4" />, label: "Last Scan", value: speedInfo.timestamp },
     ]
-    : []
-
-  // Load history
-  const history: SpeedInfo[] = JSON.parse(localStorage.getItem("speedTestHistory") || "[]")
+    : [
+      { icon: <Globe className="h-4 w-4" />, label: "ISP", value: "--" },
+      { icon: <Wifi className="h-4 w-4" />, label: "Client IP", value: "--" },
+      { icon: <Server className="h-4 w-4" />, label: "Server", value: "--" },
+      { icon: <Cpu className="h-4 w-4" />, label: "Latency", value: "--" },
+      { icon: <Upload className="h-4 w-4" />, label: "Upload", value: "--" },
+      { icon: <Download className="h-4 w-4" />, label: "Download", value: "--" },
+      { icon: <Clock className="h-4 w-4" />, label: "Ping", value: "--" },
+      { icon: <Clock className="h-4 w-4" />, label: "Last Scan", value: "--" },
+    ]
 
   return (
     <>
       <Card className={cn("flex flex-col w-full h-full justify-between", className)}>
-        {/* Header */}
         <CardHeader className="items-center justify-center pb-0 mt-2 text-center">
           <CardTitle className="text-lg">Network Speed</CardTitle>
           <CardDescription>Upload vs Download Ratio</CardDescription>
         </CardHeader>
 
-        {/* Gauge */}
         <CardContent className="flex flex-col items-center gap-4 py-4">
           {isPending ? (
             <div className="aspect-square w-48 flex justify-center items-center">
@@ -186,28 +208,10 @@ export function Gauge({ className }: GaugeProps) {
                 </RadialBarChart>
               </ChartContainer>
 
-              {/* Latency + Last scan */}
-              <div className="text-center mt-2 flex flex-col gap-1">
-                {speedInfo ? (
-                  <>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      Latency: <span className="text-foreground">{speedInfo.latency} ms</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Last Scan: {speedInfo.timestamp}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-muted-foreground text-xs"></span>
-                  </>
-                )}
-              </div>
             </>
           )}
         </CardContent>
 
-        {/* Button */}
         <CardFooter className="flex flex-col gap-4 text-sm">
           <Button
             className="w-full h-18 rounded-2xl flex items-center justify-center gap-2 bg-chart-2"
@@ -220,7 +224,6 @@ export function Gauge({ className }: GaugeProps) {
         </CardFooter>
       </Card>
 
-      {/* Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         {isError ? (
           <DialogContent className="w-[70vw] h-[60vh] max-w-none max-h-none">
