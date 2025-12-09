@@ -17,13 +17,12 @@ router.get("/dns/all-stats", networkController.getDNSStats); //external pihole s
 router.get("/dns/top-clients", networkController.getTopClients); //external pihole service
 router.get("/dns/top-domains", networkController.getTopDomains); //external pihole service
 router.get("/dns/network-devices", networkController.getNetworkDevices); //external pihole service
+router.get("/dns/query-types", networkController.getQueryTypes); //external pihole service
+router.get("/dns/blocked-domains", networkController.getBlockedDomains); //external pihole service
+router.post("/dns/block", networkController.blockSite); //external pihole service
+router.post("/dns/unblock", networkController.unblockSite); //external pihole service
+router.get("/dns/queries", networkController.getClientQueries);
 
-
-router.get("/dns/querylogs", networkController.getDeviceQueryLogs); //external pihole service
-router.post("/dns/domain/block", networkController.blockDomain); //external pihole service
-router.post("/dns/user/block/:deviceIp", networkController.blockUser); //external pihole service
-router.post("/dns/user/unblock/:deviceIp", networkController.unblockUser); //external pihole service
-router.get("/dns/access-list", networkController.getAccessList); //external pihole service
 
 router.get("/traffic/interface", networkController.getInterfaceTraffic)
 router.get("/traffic/per-device", networkController.getPerDeviceTraffic)

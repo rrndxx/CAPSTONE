@@ -45,8 +45,19 @@ export class NetworkService {
     }
 
     async blockDomain(domain: string): Promise<any> {
-        return adGuardService.blockDomain(domain)
+        return piholeService.blockDomain(domain)
     }
+
+    async getClientQueries(client_ip: string, length: number = 100) {
+
+        return piholeService.getClientQueries(client_ip, length)
+    }
+
+
+    async unblockDomain(domain: string): Promise<any> {
+        return piholeService.unblockDomain(domain);
+    }
+
 
     async getDeviceQueryLogs(deviceIp: Device['deviceIp']): Promise<any> {
         return adGuardService.getDeviceQueryLog(deviceIp)
@@ -81,13 +92,21 @@ export class NetworkService {
     async getTopClients(): Promise<any> {
         return piholeService.getTopClients()
     }
-    
+
     async getTopDomains(): Promise<any> {
         return piholeService.getTopDomains()
     }
 
     async getNetworkDevices(): Promise<any> {
         return piholeService.getNetworkDevices()
+    }
+
+    async getQueryTypes(): Promise<any> {
+        return piholeService.getQueryTypes()
+    }
+
+    async getBlockedDomains(): Promise<any> {
+        return piholeService.getBlockedDomains()
     }
 
     async getNetworkInterfaceNames(): Promise<any> {

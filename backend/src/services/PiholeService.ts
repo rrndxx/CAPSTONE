@@ -3,14 +3,16 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 export class PiHoleService {
     private baseUrl: string;
     private password: string;
+
     private sid: string | null = null;
+    private csrf: string | null = null;
+
     private client: AxiosInstance;
 
     constructor(baseUrl: string, password: string) {
         this.baseUrl = baseUrl.replace(/\/$/, "");
         this.password = password;
 
-        // Axios instance for Pi-hole API requests
         this.client = axios.create({
             baseURL: this.baseUrl,
             headers: {
@@ -20,122 +22,145 @@ export class PiHoleService {
         });
     }
 
-    // ---------------------------
-    // LOGIN TO PI-HOLE
-    // ---------------------------
-    async login(): Promise<void> {
-        const res = await this.client.post("/api/auth", { password: this.password });
+    // --------------------------------------------------
+    // LOGIN + TOKEN SETUP
+    // --------------------------------------------------
+    private async login(totp?: string): Promise<void> {
+        const res = await this.client.post("/api/auth", {
+            password: this.password,
+            totp,
+        });
 
-        if (!res.data?.session?.sid) {
-            throw new Error("Login failed: No SID received");
+        const session = res.data?.session;
+        if (!session?.sid) {
+            throw new Error("Login failed: missing session SID");
         }
 
-        this.sid = res.data.session.sid;
+        this.sid = session.sid;
+        this.csrf = session.csrf;
 
-        // Pi-hole uses a HEADER, not a cookie
-        this.client.defaults.headers.common["sid"] = this.sid;
+        this.client.defaults.headers.common["Cookie"] = `sid=${this.sid}`;
+        if (this.csrf) {
+            this.client.defaults.headers.common["X-CSRF-Token"] = this.csrf;
+        }
     }
 
-    // ---------------------------
-    // GENERIC DYNAMIC REQUEST
-    // ---------------------------
+    // --------------------------------------------------
+    // GENERIC REQUEST WRAPPER (auto retry on 401/403)
+    // --------------------------------------------------
     private async request<T = any>(
         method: "get" | "post" | "put" | "delete",
         endpoint: string,
         params?: any,
         data?: any
     ): Promise<T> {
-        // Auto-login if no SID yet
         if (!this.sid) {
             await this.login();
         }
 
-        const config: AxiosRequestConfig = {
-            method,
-            url: endpoint,
-            params,
-            data,
-        };
+        const config: AxiosRequestConfig = { method, url: endpoint, params };
+        if (data) config.data = data;
 
         try {
             const res = await this.client.request(config);
             return res.data;
         } catch (err: any) {
-            // Retry once if 401 Unauthorized
-            if (err.response?.status === 401) {
+            const status = err.response?.status;
+
+            // Token expired → relogin & retry once
+            if (status === 401 || status === 403) {
+                this.sid = null;
+                this.csrf = null;
                 await this.login();
+
                 const retryRes = await this.client.request(config);
                 return retryRes.data;
             }
+
             throw err;
         }
     }
 
-    // ---------------------------
-    // API METHODS
-    // ---------------------------
-
-    /** GET /api/stats/summary */
-    async getSummary(): Promise<any> {
+    // --------------------------------------------------
+    // PI-HOLE API WRAPPERS
+    // --------------------------------------------------
+    async getSummary() {
         return this.request("get", "/api/stats/summary");
     }
 
-    /** GET /api/queries/all */
-    async getTopClients(): Promise<any> {
+    async getTopClients() {
         return this.request("get", "/api/stats/top_clients");
     }
 
-    /** GET /api/queries/all */
-    async getTopDomains(): Promise<any> {
+    async getTopDomains() {
         return this.request("get", "/api/stats/top_domains");
     }
 
-    /** GET /api/queries/all */
-    async getNetworkDevices(): Promise<any> {
+    async getNetworkDevices() {
         return this.request("get", "/api/network/devices");
     }
 
-
-
-
-
-
-    /** GET /api/queries/all?client=IP */
-    async getDeviceQueryLog(deviceIp: string): Promise<any> {
-        return this.request("get", "/api/queries/all", { client: deviceIp });
+    async getQueryTypes() {
+        return this.request("get", "/api/stats/query_types");
     }
 
-    /** GET /api/stats/all */
-    async getAllStats(): Promise<any> {
-        return this.request("get", "/api/stats/all");
+    async getBlockedDomains() {
+        return this.request("get", "/api/domains/deny");
     }
 
-    /** GET /api/lists/denylist */
-    async getBlockedDomains(): Promise<any> {
-        return this.request("get", "/api/lists/denylist");
+    // --------------------------------------------------
+    // BLOCK DOMAIN
+    // --------------------------------------------------
+    async blockDomain(
+        domain: string | string[],
+        kind: "exact" | "regex" = "exact"
+    ) {
+        const domainsArray = Array.isArray(domain) ? domain : [domain];
+
+        const payload = {
+            domain: domainsArray,
+            comment: "",
+            type: "deny",
+            kind,
+            groups: [0],
+            enabled: true,
+        };
+
+        const endpoint =
+            kind === "exact"
+                ? "/api/domains/deny/exact"
+                : "/api/domains/deny/regex";
+
+        return this.request("post", endpoint, undefined, payload);
     }
 
-    /** POST /api/lists/denylist/add */
-    async blockDomain(domain: string): Promise<any> {
-        return this.request("post", "/api/lists/denylist/add", null, { domain });
+    // --------------------------------------------------
+    // UNBLOCK DOMAIN (batch delete)
+    // --------------------------------------------------
+    async unblockDomain(
+        domain: string | string[],
+        kind: "exact" | "regex" = "exact"
+    ) {
+        const items = (Array.isArray(domain) ? domain : [domain]).map(d => ({
+            item: d,
+            type: "deny",
+            kind,
+        }));
+
+        return this.request("post", "/api/domains:batchDelete", undefined, items);
     }
 
-    /** POST /api/lists/denylist/remove */
-    async unblockDomain(domain: string): Promise<any> {
-        return this.request("post", "/api/lists/denylist/remove", null, { domain });
+
+    // In your PiHoleService class
+    async getClientQueries(client_ip: string, length: number = 100) {
+        const params = { client_ip, length };
+        try {
+            const data = await this.request("get", "/api/queries", params);
+            return data; // This will return the raw response from Pi-hole
+        } catch (err) {
+            console.error("Failed to fetch client queries:", err);
+            throw err;
+        }
     }
 
-    /** Custom block/unblock user (simulated via API endpoint) */
-    async blockUser(ip: string): Promise<any> {
-        return this.request("post", "/api/custom/block-client", null, { ip });
-    }
-
-    async unblockUser(ip: string): Promise<any> {
-        return this.request("post", "/api/custom/unblock-client", null, { ip });
-    }
-
-    /** GET /api/lists/all */
-    async getControlAccessList(): Promise<any> {
-        return this.request("get", "/api/lists/all");
-    }
 }

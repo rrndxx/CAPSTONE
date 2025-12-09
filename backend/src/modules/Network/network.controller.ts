@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { networkService } from "../../server.js";
+import { networkService, piholeService } from "../../server.js";
 
 export async function getPerDeviceTraffic(req: Request, res: Response, next: NextFunction) {
     try {
@@ -89,7 +89,7 @@ export async function blockUser(req: Request, res: Response, next: NextFunction)
     }
 }
 
-export async function blockDomain(req: Request, res: Response, next: NextFunction) {
+export async function blockSite(req: Request, res: Response, next: NextFunction) {
     try {
         const { domain } = req.body
 
@@ -102,9 +102,64 @@ export async function blockDomain(req: Request, res: Response, next: NextFunctio
     }
 }
 
+export async function unblockSite(req: Request, res: Response, next: NextFunction) {
+    try {
+        const body = req.body;
+
+        if (!Array.isArray(body) || !body[0]?.item) {
+            return res.status(400).json({ message: "item is required" });
+        }
+
+        const domain = body[0].item;
+
+        await networkService.unblockDomain(domain);
+
+        res.status(200).json({ success: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+export async function getClientQueries(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { client_ip, length = 100 } = req.query;
+
+        if (!client_ip) return res.status(400).json({ message: "client_ip is required" });
+
+        const queries = await networkService.getClientQueries(client_ip as string, Number(length));
+
+        res.status(200).json({ success: true, queries });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+
 export async function getDNSStats(req: Request, res: Response, next: NextFunction) {
     try {
         const result = await networkService.getDNSStats();
+        res.status(200).json({ success: true, data: result });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+
+
+export async function getBlockedDomains(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await piholeService.getBlockedDomains();
+        res.status(200).json({ success: true, data: result });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+export async function getQueryTypes(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await piholeService.getQueryTypes();
         res.status(200).json({ success: true, data: result });
     } catch (err: unknown) {
         next(err);

@@ -19,7 +19,7 @@ import {
 
 const chartConfig = {
     inBytes: { label: "Bytes In", color: "var(--color-primary)" },
-    outBytes: { label: "Bytes Out", color: "var(--color-chart-4)" },
+    outBytes: { label: "Bytes Out", color: "var(--color-destructive)" },
 } satisfies ChartConfig
 
 export function ChartArea() {
@@ -81,11 +81,6 @@ export function ChartArea() {
                     <CardTitle className="text-lg">{title}</CardTitle>
                     <CardDescription className="text-black">{description}</CardDescription>
                 </div>
-                {/* {data.length > 0 && (
-                    <div className="text-sm">
-                        Latest: In {formatBytes(data[data.length - 1].inBytes)} · Out {formatBytes(data[data.length - 1].outBytes)}
-                    </div>
-                )} */}
             </CardHeader>
 
             <CardContent className="px-4 sm:px-6 pb-6 pt-4">
@@ -145,19 +140,13 @@ export function ChartArea() {
     return (
         <div className="flex flex-col md:flex-row gap-4 text-[color:var(--color-foreground)]">
             <div className="flex-1 min-w-0">
-                {renderChart(lanData, "Wired Traffic", "Showing LAN interface in/out bytes over time.")}
+                {renderChart(lanData, "Bandwidth Traffic Overview", "Showing LAN interface in/out bytes over time.")}
             </div>
-            <div className="flex-1 min-w-0">
+            {/* <div className="flex-1 min-w-0">
                 {renderChart(wifiData, "Wireless Traffic", "Showing Wireless interface in/out bytes over time.")}
-            </div>
+            </div> */}
         </div>
     )
 }
 
-// function formatBytes(bytes: number) {
-//     if (bytes < 1024) return `${bytes} B`
-//     const kb = bytes / 1024
-//     if (kb < 1024) return `${kb.toFixed(1)} KB`
-//     const mb = kb / 1024
-//     return `${mb.toFixed(1)} MB`
-// }
+

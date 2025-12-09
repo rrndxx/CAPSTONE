@@ -199,8 +199,7 @@ export function Gauge({ className }: GaugeProps) {
                   </>
                 ) : (
                   <>
-                    <span className="text-muted-foreground text-sm">Latency: 0 ms</span>
-                    <span className="text-muted-foreground text-xs">Last Scan: --</span>
+                    <span className="text-muted-foreground text-xs"></span>
                   </>
                 )}
               </div>
@@ -252,13 +251,6 @@ export function Gauge({ className }: GaugeProps) {
                   <span className="text-muted-foreground">{item.value}</span>
                 </div>
               ))}
-
-              {/* <h3 className="font-semibold text-lg mt-4">History (Last 10)</h3>
-              {history.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{item.timestamp}</span> - Upload: {item.upload} Mbps, Download: {item.download} Mbps
-                </div>
-              ))} */}
             </div>
 
             <DialogFooter>

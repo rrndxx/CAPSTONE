@@ -53,13 +53,12 @@ export default function MainDashboardPage() {
         <SidebarInset>
             <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-x-hidden h-full w-full">
                 {/* Left Column */}
-                <div className="flex-1 flex flex-col gap-4">
+                <div className="flex-6 flex flex-col gap-4">
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {[
                             { icon: <Smartphone className="w-8 h-8 text-chart-1" />, label: "Devices", value: devices.length },
                             { icon: <Wifi className="w-8 h-8 text-chart-1" />, label: "Uptime", value: uptime },
-                            { icon: <BrainCircuit className="w-8 h-8 text-chart-1" />, label: "AI Insights", value: "6" },
                         ].map((card, i) => (
                             <div key={i} className="w-full bg-card rounded-2xl shadow p-6 flex items-center gap-4 min-h-[120px]">
                                 <div className="flex-shrink-0">{card.icon}</div>
@@ -78,7 +77,7 @@ export default function MainDashboardPage() {
                 </div>
 
                 {/* Right Column: Gauge */}
-                <div className="w-full lg:w-auto bg-background rounded-xl shadow flex justify-center min-w-0">
+                <div className="w-full flex-2 lg:w-auto bg-background rounded-xl shadow flex justify-center min-w-0">
                     <Gauge className="max-w-full" />
                 </div>
             </div>
