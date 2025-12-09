@@ -174,3 +174,21 @@ export async function deleteBandwidthQueue(req: ExpressRequest, res: ExpressResp
         next(err);
     }
 }
+
+export async function perDevice(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
+    try {
+        const devices = await bandwidthService.perDevice();
+        res.status(200).json({ success: true, data: devices });
+    } catch (err: unknown) {
+        next(err);
+    }
+}
+
+export async function perDeviceTotal(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
+    try {
+        const totals = await bandwidthService.perDeviceTotal();
+        res.status(200).json({ success: true, data: totals });
+    } catch (err: unknown) {
+        next(err);
+    }
+}

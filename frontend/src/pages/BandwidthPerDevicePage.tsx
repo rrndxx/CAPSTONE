@@ -1,23 +1,59 @@
+import { useEffect, useState } from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { PerDeviceTrafficTable } from "@/components/perdevicetraffictable";
-import { PerDeviceTrafficChart } from "@/components/perdevicetrafficchart";
-import { usePerDeviceTraffic } from "@/hooks/usePerDeviceTraffic";
+import { PerDeviceTrafficChart, type DeviceTrafficEntry } from "@/components/perdevicetrafficchart";
 import { Loader2 } from "lucide-react";
 
 const BandwidthPerDevicePage = () => {
-  const latestSample = usePerDeviceTraffic();
+  const [trafficData, setTrafficData] = useState<DeviceTrafficEntry[]>([]);
+  const [totalsData, setTotalsData] = useState<DeviceTrafficEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!latestSample) return <div className="h-full w-full flex flex-col justify-center items-center gap-4"><Loader2 className="h-16 w-16 animate-spin" /><p className="text-lg ">LOADING BANDWIDTH USAGE</p></div>
+  useEffect(() => {
+    const fetchTraffic = async () => {
+      try {
+        const [perDeviceRes, totalsRes] = await Promise.all([
+          fetch("http://localhost:4000/bandwidth/per-device"),
+          fetch("http://localhost:4000/bandwidth/per-device-total")
+        ]);
+
+        const perDeviceJson = await perDeviceRes.json();
+        const totalsJson = await totalsRes.json();
+
+        if (perDeviceJson.success && totalsJson.success) {
+          setTrafficData(perDeviceJson.data);
+          setTotalsData(totalsJson.data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch traffic:", err);
+      }
+    };
+
+    fetchTraffic(); // initial fetch
+    const interval = setInterval(fetchTraffic, 3000); // poll every 3s
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <SidebarInset>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="animate-spin w-8 h-8 text-gray-500" />
+        </div>
+      </SidebarInset>
+    );
+  }
 
   return (
     <SidebarInset>
       <div className="flex flex-col gap-6 p-4 pt-0">
         <section className="space-y-6">
-          <PerDeviceTrafficChart />
+          <PerDeviceTrafficChart trafficData={trafficData} />
         </section>
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold mb-2">Per-Device Traffic</h2>
-          <PerDeviceTrafficTable />
+          <h2 className="text-lg font-semibold mb-2">Per-Device Traffic (Totals)</h2>
+          <PerDeviceTrafficTable trafficData={totalsData} />
         </section>
       </div>
     </SidebarInset>

@@ -124,4 +124,12 @@ export class BandwidthService {
     async deleteBandwidthQueue(id: string) {
         return this.opnSenseService.deleteQueue(id);
     }
+
+    async perDevice() {
+        return this.bandwidthRepo.perDevice();
+    }
+
+    async perDeviceTotal() {
+        return this.bandwidthRepo.perDeviceTotal();
+    }
 }

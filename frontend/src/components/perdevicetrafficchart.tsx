@@ -9,7 +9,21 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart";
-import { usePerDeviceTraffic, type DeviceTrafficSample } from "@/hooks/usePerDeviceTraffic";
+
+export interface DeviceTrafficEntry {
+    deviceId: number;
+    deviceMac: string;
+    deviceIp: string;
+    last10BandwidthUsage: {
+        upload: number;
+        download: number;
+        timestamp: string;
+    }[];
+}
+
+export interface PerDeviceTrafficChartProps {
+    trafficData: DeviceTrafficEntry[];
+}
 
 export const formatBytes = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -19,27 +33,35 @@ export const formatBytes = (bytes: number) => {
     return `${mb.toFixed(1)} MB`;
 };
 
-export const PerDeviceTrafficChart = () => {
-    const [trafficHistory, setTrafficHistory] = useState<DeviceTrafficSample[]>([]);
-    const latestSample = usePerDeviceTraffic();
+export const PerDeviceTrafficChart = ({ trafficData }: PerDeviceTrafficChartProps) => {
+    const [trafficHistory, setTrafficHistory] = useState<Record<string, any>[]>([]);
 
-    // Always update history when latest sample changes
     useEffect(() => {
-        if (latestSample) {
-            setTrafficHistory((prev) => [...prev.slice(-59), latestSample]); // keep last 60
-        }
-    }, [latestSample]);
+        if (!trafficData.length) return;
 
-    // Compute unique device keys
+        const timestamp = new Date().toISOString();
+        const newSample: Record<string, number | string> = { date: timestamp };
+
+        trafficData.forEach((device) => {
+            const lastEntry = device.last10BandwidthUsage[device.last10BandwidthUsage.length - 1];
+            if (lastEntry) {
+                newSample[`${device.deviceMac}-IN`] = lastEntry.download;
+                newSample[`${device.deviceMac}-OUT`] = lastEntry.upload;
+            }
+        });
+
+        setTrafficHistory((prev) => [...prev.slice(-59), newSample]);
+    }, [trafficData]);
+
+
     const deviceKeys = useMemo(() => {
         const lastSample = trafficHistory[trafficHistory.length - 1] || {};
         return Object.keys(lastSample)
             .filter((k) => k !== "date")
             .map((k) => k.replace(/-IN|-OUT/, ""))
-            .filter((v, i, a) => a.indexOf(v) === i); // unique devices
+            .filter((v, i, a) => a.indexOf(v) === i);
     }, [trafficHistory]);
 
-    // Chart configs
     const chartConfigIn: ChartConfig = useMemo(() => {
         return deviceKeys.reduce((acc, key, i) => {
             acc[`${key}-IN`] = { label: key, color: `hsl(${(i * 70) % 360}, 70%, 50%)` };
@@ -54,27 +76,13 @@ export const PerDeviceTrafficChart = () => {
         }, {} as ChartConfig);
     }, [deviceKeys]);
 
-    // Early return for empty data
-    // if (!trafficHistory.length) return <div>Loading...</div>;
-
-    // Function to render a chart
-    const renderChart = (data: DeviceTrafficSample[], config: ChartConfig, title: string, description: string) => (
+    const renderChart = (data: typeof trafficHistory, config: ChartConfig, title: string, description: string) => (
         <Card className="pt-4 flex-1">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2 border-b py-4 px-4 sm:px-6 bg-primary">
                 <div className="flex-1 space-y-1">
                     <CardTitle className="text-lg">{title}</CardTitle>
                     <CardDescription className="text-black">{description}</CardDescription>
                 </div>
-                {data.length > 0 && (
-                    <div className="text-sm">
-                        {Object.keys(config).map((key, i) => (
-                            <span key={key}>
-                                {config[key].label}: {formatBytes(Number(data[data.length - 1][key] ?? 0))}
-                                {i < Object.keys(config).length - 1 ? " | " : ""}
-                            </span>
-                        ))}
-                    </div>
-                )}
             </CardHeader>
             <CardContent className="px-4 sm:px-6 pb-6 pt-4">
                 <div className="w-full overflow-x-auto">
@@ -87,8 +95,8 @@ export const PerDeviceTrafficChart = () => {
                                 axisLine={false}
                                 tickMargin={8}
                                 minTickGap={32}
-                                tickFormatter={(value: string | number) => {
-                                    const date = typeof value === "string" ? new Date(value) : new Date(value);
+                                tickFormatter={(value) => {
+                                    const date = new Date(value);
                                     return date.toLocaleTimeString();
                                 }}
                             />

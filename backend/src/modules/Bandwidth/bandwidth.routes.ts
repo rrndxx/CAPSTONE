@@ -33,4 +33,8 @@ router.post("/speedcaps", bandwidthController.createSpeedCaps);
 router.put("/speedcaps/:ruleId", bandwidthController.updateSpeedCap);
 router.delete("/speedcaps/:target", bandwidthController.deleteSpeedCap);
 
+
+router.get("/per-device", bandwidthController.perDevice)
+router.get("/per-device-total", bandwidthController.perDeviceTotal)
+
 export default router;
