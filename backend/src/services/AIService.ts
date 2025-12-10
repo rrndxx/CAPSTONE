@@ -1,11 +1,13 @@
-import { PrismaClient, AlertSeverity, AlertType } from "@prisma/client";
+import { PrismaClient, AlertSeverity, AlertType, type Device } from "@prisma/client";
+import express from "express";
 
 const prisma = new PrismaClient();
+const app = express();
+app.use(express.json());
 
-// Threshold multiplier for anomaly detection
 const THRESHOLD_MULTIPLIER = 3;
 
-interface BandwidthPredictions {
+interface BandwidthPredictionsMap {
     [deviceMac: string]: { timestamp: Date; predicted: number }[];
 }
 
@@ -24,9 +26,8 @@ function calculateStd(arr: number[], mean: number): number {
     return Math.sqrt(arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / (arr.length || 1));
 }
 
-/**
- * Detect abnormal bandwidth usage per device.
- */
+/** ================== Core AI Functions ================== **/
+
 export async function detectBandwidthAnomalies() {
     const devices = await prisma.device.findMany({
         include: { bandwidthUsage: true, interface: true },
@@ -37,13 +38,11 @@ export async function detectBandwidthAnomalies() {
         message: string;
         severity: AlertSeverity;
         interfaceId: number;
-        createdAt: Date;
     }[] = [];
 
     for (const device of devices) {
         const uploads = device.bandwidthUsage?.map(b => Number(b.upload)) ?? [];
         const downloads = device.bandwidthUsage?.map(b => Number(b.download)) ?? [];
-
         if (uploads.length < 2 && downloads.length < 2) continue;
 
         const meanUpload = calculateMean(uploads);
@@ -53,28 +52,25 @@ export async function detectBandwidthAnomalies() {
 
         const latestUpload = uploads[uploads.length - 1] ?? 0;
         const latestDownload = downloads[downloads.length - 1] ?? 0;
-
         const mac = device.deviceMac ?? "unknown";
 
-        if (latestUpload > meanUpload + THRESHOLD_MULTIPLIER * stdUpload) {
-            alertsToCreate.push({
-                alertType: AlertType.BANDWIDTH_RELATED,
-                message: `High upload detected for device ${mac}: ${latestUpload} bytes`,
-                severity: AlertSeverity.CRITICAL,
-                interfaceId: device.interfaceId ?? 0,
-                createdAt: new Date(),
-            });
-        }
+        // if (latestUpload > meanUpload + THRESHOLD_MULTIPLIER * stdUpload) {
+        //     alertsToCreate.push({
+        //         alertType: AlertType.BANDWIDTH_RELATED,
+        //         message: `High upload detected for device ${mac}: ${latestUpload} bytes`,
+        //         severity: AlertSeverity.CRITICAL,
+        //         interfaceId: device.interfaceId ?? 0,
+        //     });
+        // }
 
-        if (latestDownload > meanDownload + THRESHOLD_MULTIPLIER * stdDownload) {
-            alertsToCreate.push({
-                alertType: AlertType.BANDWIDTH_RELATED,
-                message: `High download detected for device ${mac}: ${latestDownload} bytes`,
-                severity: AlertSeverity.CRITICAL,
-                interfaceId: device.interfaceId ?? 0,
-                createdAt: new Date(),
-            });
-        }
+        // if (latestDownload > meanDownload + THRESHOLD_MULTIPLIER * stdDownload) {
+        //     alertsToCreate.push({
+        //         alertType: AlertType.BANDWIDTH_RELATED,
+        //         message: `High download detected for device ${mac}: ${latestDownload} bytes`,
+        //         severity: AlertSeverity.CRITICAL,
+        //         interfaceId: device.interfaceId ?? 0,
+        //     });
+        // }
     }
 
     if (alertsToCreate.length > 0) {
@@ -85,67 +81,53 @@ export async function detectBandwidthAnomalies() {
     }
 }
 
-/**
- * Predict next N minutes bandwidth for a device using a weighted recent slope.
- */
-export async function predictBandwidthFuture(
-    deviceId: number,
-    intervalMinutes = 1,
-    totalMinutes = 20
-): Promise<{ timestamp: Date; predicted: number }[]> {
+export async function predictBandwidthFuture(deviceId: number, intervalMinutes = 1, totalMinutes = 20) {
     const device = await prisma.device.findUnique({
         where: { deviceId },
         include: { bandwidthUsage: true },
     });
 
-    const history = device?.bandwidthUsage
-        ?.filter((b): b is { timestamp: Date; upload: number; download: number } => !!b)
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        .map(b => ({ t: b.timestamp.getTime(), value: Number(b.upload) + Number(b.download) })) ?? [];
+    const history: { t: number; value: number }[] =
+        device?.bandwidthUsage
+            ?.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+            .map(b => ({ t: b.timestamp.getTime(), value: Number(b.upload) + Number(b.download) })) ?? [];
 
     if (history.length < 2) return [];
 
-    const lastN = history.slice(-5); // last 5 points
-    const slope = lastN.reduce((sum, val, idx) => sum + val.value * (idx + 1), 0) / ((lastN.length * (lastN.length + 1)) / 2);
+    const lastN = history.slice(-5);
+    const weightedSum = lastN.reduce((sum, val, idx) => sum + val.value * Math.pow(0.7, lastN.length - idx - 1), 0);
+    const weightTotal = lastN.reduce((sum, _, idx) => sum + Math.pow(0.7, lastN.length - idx - 1), 0);
+    const slope = weightedSum / weightTotal;
 
     const lastTimestamp = history[history.length - 1].t;
     const lastValue = history[history.length - 1].value;
 
     return Array.from({ length: totalMinutes / intervalMinutes }, (_, i) => {
         const futureTime = new Date(lastTimestamp + (i + 1) * intervalMinutes * 60 * 1000);
-        const predictedValue = Math.max(0, lastValue + slope * (i + 1));
-        return { timestamp: futureTime, predicted: predictedValue };
+        return { timestamp: futureTime, predicted: Math.max(0, lastValue + slope * (i + 1)) };
     });
 }
 
-/**
- * Run AI analysis:
- * - Detect anomalies
- * - Generate future predictions for all devices
- */
-export async function runAIAnalysis(): Promise<BandwidthPredictions> {
+export async function runAIAnalysis(): Promise<BandwidthPredictionsMap> {
     await detectBandwidthAnomalies();
 
     const devices = await prisma.device.findMany();
-    const allPredictions: BandwidthPredictions = {};
+    const allPredictions: BandwidthPredictionsMap = {};
 
-    await Promise.all(devices.map(async device => {
-        const mac = device.deviceMac;
-        if (!mac) return;
-        allPredictions[mac] = await predictBandwidthFuture(device.deviceId, 1, 20);
-    }));
+    await Promise.all(
+        devices.map(async device => {
+            const mac = device.deviceMac;
+            if (!mac) return;
+            allPredictions[mac] = await predictBandwidthFuture(device.deviceId, 1, 20);
+        })
+    );
 
     await savePredictions(allPredictions, devices);
-
     return allPredictions;
 }
 
-/**
- * Save predictions into the database (batch insert)
- */
-async function savePredictions(predictions: BandwidthPredictions, devices: typeof prisma.device[]): Promise<void> {
+async function savePredictions(predictions: BandwidthPredictionsMap, devices: Device[]) {
     const devicesMap = new Map(devices.map(d => [d.deviceMac, d]));
-
     const allDataToInsert: { deviceId: number; predicted: bigint; timestamp: Date }[] = [];
 
     for (const [mac, futurePredictions] of Object.entries(predictions)) {
@@ -166,28 +148,52 @@ async function savePredictions(predictions: BandwidthPredictions, devices: typeo
     }
 }
 
-/**
- * Compute peak and traffic hours based on historical data.
- */
 export async function computeTrafficStats(): Promise<TrafficStats> {
     const devices = await prisma.device.findMany({
-        include: { bandwidthUsage: true },
+        include: { bandwidthUsage: true, bandwidthPredictions: true }, // corrected plural
     });
 
-    const trafficByHour: Record<number, number> = {}; // 0-23
+    const trafficByHour: Record<number, number> = {};
     let totalBandwidth = 0;
 
     for (const device of devices) {
         device.bandwidthUsage?.forEach(b => {
-            if (!b) return;
             const hour = b.timestamp.getHours();
             const usage = Number(b.upload) + Number(b.download);
             trafficByHour[hour] = (trafficByHour[hour] ?? 0) + usage;
             totalBandwidth += usage;
         });
+
+        device.bandwidthPredictions?.forEach(p => {
+            const hour = p.timestamp.getHours();
+            const usage = Number(p.predicted);
+            trafficByHour[hour] = (trafficByHour[hour] ?? 0) + usage;
+            totalBandwidth += usage;
+        });
     }
 
-    const peakHour = Number(Object.entries(trafficByHour).reduce((a, b) => (b[1] > a[1] ? b : a), [0, 0])[0]);
+    const peakHour = Number(
+        Object.entries(trafficByHour).reduce(
+            (a, b) => (b[1] > a[1] ? b : a),
+            [0, 0] as unknown as [string, number]
+        )[0]
+    );
 
     return { trafficByHour, peakHour, totalBandwidth };
 }
+
+export async function getTotalExpectedBandwidth(): Promise<number> {
+    const devices = await prisma.device.findMany({
+        include: { bandwidthUsage: true, bandwidthPredictions: true },
+    });
+
+    let total = 0;
+    for (const device of devices) {
+        device.bandwidthUsage?.forEach(b => (total += Number(b.upload) + Number(b.download)));
+        device.bandwidthPredictions?.forEach(p => (total += Number(p.predicted)));
+    }
+
+    return total;
+}
+
+

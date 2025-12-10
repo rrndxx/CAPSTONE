@@ -143,7 +143,7 @@ export class AlertRepository {
     async getRecent(limit: number) {
         const alerts = await this.prisma.alert.findMany({
             orderBy: { timestamp: "desc" },
-            take: limit,
+            take: 250,
         });
 
         return alerts.map(alert => ({
@@ -152,6 +152,7 @@ export class AlertRepository {
             severity: alert.severity,
             interfaceId: alert.interfaceId,
             meta: undefined,
+            time: alert.timestamp
         })) as unknown as NotificationEvent[];
     }
 }

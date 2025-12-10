@@ -80,18 +80,7 @@ export function NavUser({ user }: { user: navUserProps }) {
               </div>
             </DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CogIcon className="w-4 h-4" />
-                <span className="ml-2">Settings</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
+            <DropdownMenuGroup className="mt-2">
               {menuItems.map((item, index) => (
                 <DropdownMenuItem asChild key={index}>
                   <div className="flex w-full items-center justify-between gap-4 px-2 py-1.5">

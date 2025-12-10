@@ -1,5 +1,5 @@
 import type { ChartConfig } from "@/components/ui/chart";
-import { Wifi, SquareTerminal, Gauge, Settings2, Laptop, FileText, Brain, History, CircleAlert, ShieldCheck } from "lucide-react";
+import { Wifi, SquareTerminal, Gauge, Settings2, Laptop, FileText, Brain, History, CircleAlert, ShieldCheck, File } from "lucide-react";
 
 // export const sidebarNavs = {
 //   user: {
@@ -136,14 +136,14 @@ export const sidebarNavs = {
     //   icon: FileText,
     // },
     {
+      title: "Reports",
+      url: "/settings",
+      icon: FileText,
+    },
+    {
       title: "Alerts",
       url: "/alerts",
       icon: CircleAlert,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
     },
   ],
 };

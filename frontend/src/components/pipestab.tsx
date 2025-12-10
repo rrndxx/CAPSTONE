@@ -166,6 +166,7 @@ const PipesTab: React.FC = () => {
                                     type="number"
                                     value={form.bandwidth}
                                     onChange={(e) => setForm({ ...form, bandwidth: e.target.value })}
+                                    required
                                 />
                             </label>
                             <label>
@@ -218,6 +219,7 @@ const PipesTab: React.FC = () => {
                                 type="text"
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                required
                             />
                         </label>
 

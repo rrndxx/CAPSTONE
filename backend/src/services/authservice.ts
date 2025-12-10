@@ -12,7 +12,7 @@ export async function login(email: string, password: string) {
 
     await notificationService.notify({
         type: "LOGIN",
-        message: `Admin ${email} logged in at ${Date()}.`,
+        message: `Admin ${email} logged in.`,
         severity: "INFO",
         interfaceId: 2,
         meta: { email },

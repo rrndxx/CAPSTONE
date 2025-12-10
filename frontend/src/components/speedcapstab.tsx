@@ -371,6 +371,7 @@ const SpeedCapsTab: React.FC = () => {
                                                     : "Any (disabled)"
                                         }
                                         onChange={(e) => updateSource(idx, e.target.value)}
+                                        required
                                     />
                                     <Button variant="outline" className="text-red-600" onClick={() => removeSource(idx)}>
                                         X
@@ -413,6 +414,7 @@ const SpeedCapsTab: React.FC = () => {
                                                     : "Any (disabled)"
                                         }
                                         onChange={(e) => updateDestination(idx, e.target.value)}
+                                        required
                                     />
                                     <Button variant="outline" className="text-red-600" onClick={() => removeDestination(idx)}>
                                         X
@@ -550,6 +552,7 @@ const SpeedCapsTab: React.FC = () => {
                                     onChange={(e) => setForm({ ...form, sequence: e.target.value })}
                                     placeholder="Enter sequence number"
                                     min={1}
+                                    required
                                 />
                             </label>
                         </div>
@@ -562,6 +565,7 @@ const SpeedCapsTab: React.FC = () => {
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                                 placeholder="Enter a description"
+                                required
                             />
                         </label>
                     </div>

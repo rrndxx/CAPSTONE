@@ -8,13 +8,13 @@ import { ShieldAlert, WifiOff, LogIn } from "lucide-react"
 
 type AlertEntry = {
     id: string
-    timestamp: string
+    time: string
     type: "Login-Related" | "Device-Connected" | "Security-Connected"
     message: string
     severity: "Low" | "Medium" | "High"
 }
 
-// Map alert type to icons
+// Icons for alert types
 const alertIcons: Record<AlertEntry["type"], any> = {
     "Login-Related": <LogIn className="text-blue-500" size={20} />,
     "Device-Connected": <WifiOff className="text-yellow-500" size={20} />,
@@ -28,7 +28,7 @@ const severityColors: Record<AlertEntry["severity"], string> = {
     High: "bg-red-100 text-red-700",
 }
 
-// Filter buttons, including "All"
+// Filter buttons
 const filterButtons: ("All" | AlertEntry["type"])[] = [
     "All",
     "Login-Related",
@@ -36,28 +36,25 @@ const filterButtons: ("All" | AlertEntry["type"])[] = [
     "Security-Connected",
 ]
 
-// Function to map database alertType to frontend type
+// Map database types to frontend types
 const mapAlertType = (dbType: string): AlertEntry["type"] => {
     switch (dbType) {
         case "LOGIN":
             return "Login-Related"
         case "CONNECTED_DEVICES_RELATED":
             return "Device-Connected"
-        case "ACTION":
-        case "BANDWIDTH_RELATED":
         default:
             return "Security-Connected"
     }
 }
 
-// Function to map database severity to frontend severity
+// Map severity
 const mapAlertSeverity = (dbSeverity: string): AlertEntry["severity"] => {
     switch (dbSeverity) {
         case "CRITICAL":
             return "High"
         case "WARNING":
             return "Medium"
-        case "INFO":
         default:
             return "Low"
     }
@@ -68,14 +65,19 @@ const Alerts = () => {
     const [search, setSearch] = useState("")
     const [filterType, setFilterType] = useState<"All" | AlertEntry["type"]>("All")
 
-    // Fetch alerts from backend
+    // Fetch alerts
     useEffect(() => {
         const fetchAlerts = async () => {
             try {
                 const res = await axios.get("http://localhost:4000/alerts/all")
                 const mapped: AlertEntry[] = res.data.alerts.map((a: any) => ({
                     id: a.alertId?.toString() ?? crypto.randomUUID(),
-                    timestamp: a.timestamp ? new Date(a.timestamp).toLocaleString() : "Unknown",
+                    time: a.time ? new Date(a.time).toLocaleString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true
+                    }) : "Unknown",
                     message: a.message ?? "No message",
                     type: mapAlertType(a.type),
                     severity: mapAlertSeverity(a.severity),
@@ -101,18 +103,10 @@ const Alerts = () => {
     })
 
     return (
-        <div className="p-4 sm:p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-6">
             <Card>
-                <CardContent className="p-4 space-y-4">
-                    {/* Search + Filter */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Search alerts..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="max-w-sm"
-                        />
+                <CardContent className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end mb-8 gap-2">
                         <div className="flex gap-2 flex-wrap">
                             {filterButtons.map(type => (
                                 <Button
@@ -126,25 +120,26 @@ const Alerts = () => {
                         </div>
                     </div>
 
-                    {/* Alerts List */}
-                    <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                         {filteredAlerts.length > 0 ? (
                             filteredAlerts.map(alert => (
                                 <div
                                     key={alert.id}
-                                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted transition dark:hover:bg-gray-800"
+                                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                                 >
                                     <div className="mt-1">{alertIcons[alert.type]}</div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 space-y-1">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                             <h2 className="font-semibold text-base">{alert.message}</h2>
                                             <Badge className={severityColors[alert.severity]}>
                                                 {alert.severity}
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            {alert.type} • {alert.timestamp}
-                                        </p>
+                                        <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
+                                            <span className="font-medium">{alert.type}</span>
+                                            <span>•</span>
+                                            <span>{alert.time}</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))

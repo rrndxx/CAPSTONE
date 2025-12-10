@@ -17,7 +17,11 @@ import { authMiddleware } from "./middlewares/routesProtector.js";
 import { exporter, notificationService, pushChannel } from "./server.js";
 import { getUserFromToken, login } from "./services/authservice.js";
 import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import { computeTrafficStats, detectBandwidthAnomalies, runAIAnalysis } from "./services/AIService.js";
+import { computeTrafficStats, detectBandwidthAnomalies, getTotalExpectedBandwidth, runAIAnalysis } from "./services/AIService.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
 
 dotenv.config();
 
@@ -66,6 +70,48 @@ app.get("/reports/:model/pdf", async (req, res) => {
     }
 })
 
+const getPreviewData = async (reportType: string) => {
+  switch (reportType) {
+    case "Device":
+      return prisma.device.findMany({ take: 10, include: { interface: true } })
+    case "BandwidthUsage":
+      return prisma.bandwidthUsage.findMany({ take: 10, include: { device: true } })
+    case "BandwidthHourly":
+      return prisma.bandwidthHourly.findMany({ take: 10, include: { device: true, interface: true } })
+    case "BandwidthDaily":
+      return prisma.bandwidthDaily.findMany({ take: 10, include: { device: true, interface: true } })
+    case "Alert":
+      return prisma.alert.findMany({ take: 10, include: { interface: true } })
+    case "Users":
+      return prisma.user.findMany({ take: 10 })
+    case "NetworkInterface":
+      return prisma.networkInterface.findMany({ take: 10 })
+    case "Ports":
+      return prisma.port.findMany({ take: 10, include: { device: true } })
+    case "VisitedSites":
+      return prisma.visitedSite.findMany({ take: 10, include: { device: true } })
+    case "BlockedSites":
+      return prisma.blockedSite.findMany({ take: 10 })
+    case "WhitelistedDevices":
+      return prisma.whitelistedDevice.findMany({ take: 10, include: { interface: true } })
+    case "BlacklistedDevices":
+      return prisma.blacklistedDevice.findMany({ take: 10, include: { interface: true } })
+    default:
+      return []
+  }
+}
+
+// Preview endpoint
+app.get("/reports/preview/:reportType", async (req, res) => {
+  const { reportType } = req.params
+  try {
+    const data = await getPreviewData(reportType)
+    res.json(data)
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch preview" })
+  }
+})
+
 
 
 // LOGIN
@@ -110,7 +156,6 @@ app.post("/alerts/subscribe", authMiddleware, async (req, res) => {
 
 app.get("/alerts/all", async (req, res) => {
     try {
-        // If you want truly all alerts, remove or increase the limit
         const alerts = await notificationService.getRecent(100);
 
         res.status(200).json({
@@ -127,14 +172,20 @@ app.get("/alerts/all", async (req, res) => {
 });
 
 
-// AI Endpoints
 app.get("/predictions", async (req, res) => {
     try {
         const predictions = await runAIAnalysis();
-        console.log("Predictions returned:", predictions);
-        res.json(predictions);
+        const trafficStats = await computeTrafficStats();
+        const totalExpectedBandwidth = await getTotalExpectedBandwidth();
+
+        res.json({
+            success: true,
+            predictions,
+            peakHour: `${trafficStats.peakHour.toString().padStart(2, "0")}:00`,
+            totalExpectedBandwidth,
+        });
     } catch (err) {
-        console.error("Error in /predictions:", err);
+        console.error(err);
         res.status(500).json({ error: "Failed to run AI analysis" });
     }
 });
@@ -152,14 +203,14 @@ app.post("/detect-anomalies", async (req, res) => {
 app.get("/traffic-stats", async (req, res) => {
     try {
         const stats = await computeTrafficStats();
-        // Format peakHour nicely for display
         const peakHourStr = `${stats.peakHour.toString().padStart(2, "0")}:00`;
         res.json({ peakHour: peakHourStr, totalBandwidth: stats.totalBandwidth });
     } catch (err) {
-        console.error("Error in /traffic-stats:", err);
+        console.error(err);
         res.status(500).json({ error: "Failed to compute traffic stats" });
     }
 });
+
 
 // app.get("/get-alerts", (req, res) => {
 //     const alerts = 
@@ -256,9 +307,7 @@ app.get("/stream/cpu", async (req, res) => {
 
 
 // per device bandwidth consumption poller
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
 
 interface DeviceTraffic {
     ip: string;

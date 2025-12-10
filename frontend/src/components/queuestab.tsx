@@ -217,6 +217,7 @@ const QueuesTab: React.FC = () => {
                                     value={form.weight}
                                     onChange={(e) => setForm({ ...form, weight: e.target.value })}
                                     placeholder="1-100"
+                                    required
                                 />
                             </label>
                             <label>
@@ -247,6 +248,7 @@ const QueuesTab: React.FC = () => {
                                 type="text"
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                required
                             />
                         </label>
 

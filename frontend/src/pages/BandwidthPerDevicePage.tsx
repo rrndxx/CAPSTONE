@@ -21,7 +21,8 @@ const BandwidthPerDevicePage = () => {
         const totalsJson = await totalsRes.json();
 
         if (perDeviceJson.success && totalsJson.success) {
-          setTrafficData(perDeviceJson.data);
+          // Append new points to the chart data for smooth animation
+          setTrafficData(prev => [...prev, ...perDeviceJson.data].slice(-50)); // keep last 50 points
           setTotalsData(totalsJson.data);
           setLoading(false);
         }
@@ -30,10 +31,11 @@ const BandwidthPerDevicePage = () => {
       }
     };
 
-    fetchTraffic(); // initial fetch
+    fetchTraffic();
     const interval = setInterval(fetchTraffic, 3000); // poll every 3s
     return () => clearInterval(interval);
   }, []);
+
 
   if (loading) {
     return (
